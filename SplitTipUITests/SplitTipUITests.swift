@@ -5,8 +5,10 @@ final class SplitTipUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    @MainActor
     func testCalculateAndOpenSettings() {
         let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
         app.launchArguments = [
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
             "-settings.tipOne", "15", "-settings.tipTwo", "18",
@@ -26,22 +28,31 @@ final class SplitTipUITests: XCTestCase {
         XCTAssertTrue(app.switches["Dark appearance"].exists)
     }
 
+    @MainActor
     func testItemizedSplitAndSharedBillNavigation() {
         let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
         app.launch()
 
         app.buttons["openItemizedBill"].tap()
+        XCTAssertTrue(app.navigationBars["Itemized split"].waitForExistence(timeout: 15))
         let itemName = app.textFields["New item name"]
-        XCTAssertTrue(itemName.waitForExistence(timeout: 5))
+        for _ in 0..<3 where !itemName.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(itemName.waitForExistence(timeout: 15))
         itemName.tap()
         itemName.typeText("Coffee")
-        let price = app.textFields["Price"]
+        let price = app.textFields["newItemPrice"]
         price.tap()
         price.typeText("10")
         app.buttons["Add item"].tap()
 
         XCTAssertTrue(app.staticTexts["Split result"].exists)
-        app.buttons["Share or join a bill"].tap()
+        app.swipeUp()
+        let sharedBillLink = app.buttons["openSharedBill"]
+        XCTAssertTrue(sharedBillLink.waitForExistence(timeout: 5))
+        sharedBillLink.tap()
         XCTAssertTrue(app.navigationBars["Shared bill"].waitForExistence(timeout: 5))
     }
 }

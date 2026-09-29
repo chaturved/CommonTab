@@ -21,9 +21,9 @@ From the repository root:
 
 ```sh
 python3 -m venv backend/.venv
-backend/.venv/bin/pip install -e './backend[test]'
+backend/.venv/bin/python -m pip install -e './backend[test]'
 SPLITTIP_METRICS_TOKEN=replace-with-a-long-secret \
-  backend/.venv/bin/uvicorn splittip_api.main:app --app-dir backend --reload
+  backend/.venv/bin/python -m uvicorn splittip_api.main:app --app-dir backend --reload
 ```
 
 Check that it is running with `curl http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location.
@@ -57,12 +57,12 @@ An invite code grants read and edit access to its bill. Share it only with inten
 
 ```sh
 swift test
-backend/.venv/bin/pytest -q backend/tests
+backend/.venv/bin/python -m pytest -q backend/tests
 ```
 
 The Swift package tests cover calculations, rounding, input and receipt parsing, session requests, conflicts, and analytics payloads. API tests cover sessions, authentication, validation, expiry, and metrics access. `SplitTipUITests` contains calculator and itemized-flow tests; run them through **Product → Test** in Xcode when a simulator is available. CI runs the Swift and API tests and builds the iOS app for a generic simulator destination.
 
-The project has not yet completed simulator, physical-device, camera, accessibility, or TestFlight validation. The API has no hosted deployment or real user metrics. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, backups, and a database suited to the expected scale; the current SQLite setup targets one service instance.
+The automated iOS suite passed on an iPhone 17 Pro simulator running iOS 26.3. Manual simulator, physical-device, camera, accessibility, and TestFlight validation remain. The API has no hosted deployment or real user metrics. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, backups, and a database suited to the expected scale; the current SQLite setup targets one service instance.
 
 ## License
 

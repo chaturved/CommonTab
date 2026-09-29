@@ -73,6 +73,7 @@ struct ItemizedBillView: View {
                     HStack {
                         TextField("Price", text: $newItemPrice)
                             .keyboardType(.decimalPad)
+                            .accessibilityIdentifier("newItemPrice")
                         Button("Add item") { addItem() }
                             .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty ||
                                       (MoneyInputParser.parse(newItemPrice) ?? 0) <= 0)
@@ -126,6 +127,7 @@ struct ItemizedBillView: View {
                     } label: {
                         Label("Share or join a bill", systemImage: "person.2")
                     }
+                    .accessibilityIdentifier("openSharedBill")
                 }
             }
             .navigationTitle("Itemized split")

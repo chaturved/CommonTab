@@ -144,10 +144,15 @@ struct CalculatorView: View {
         .onAppear {
             if scanVariant.isEmpty { scanVariant = Bool.random() ? "A" : "B" }
             track(.calculatorOpened)
-            restoreRecentBill()
-            if let stored = try? JSONDecoder().decode(ItemizedBill.self, from: itemizedDraftData) {
+            if ProcessInfo.processInfo.environment["SPLITTIP_UI_TEST_RESET_STATE"] == "1" {
+                lastBill = ""
+                lastEditedAt = 0
+                itemizedDraftData = Data()
+                itemizedBill = ItemizedBill()
+            } else if let stored = try? JSONDecoder().decode(ItemizedBill.self, from: itemizedDraftData) {
                 itemizedBill = stored
             }
+            restoreRecentBill()
         }
         .sheet(isPresented: $showingScanner, onDismiss: {
             if openEditorAfterScan {
