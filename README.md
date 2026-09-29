@@ -9,7 +9,7 @@ SplitTip is an iOS app for calculating tips and splitting an itemized bill. You 
 **Requirements:** Xcode with Swift 6 and an iOS 16 or newer SDK. The API requires Python 3.11 or newer.
 
 1. Open `SplitTip.xcodeproj` and run the `SplitTip` scheme on an iPhone simulator or device.
-2. Enter a bill amount and choose a tip preset to see the total and exact per-person shares.
+2. Enter a bill amount and choose a tip preset or Other for a custom percentage to see the total and exact per-person shares.
 3. Tap **Scan receipt** to take or choose a photo. Review the suggested amount before using it. If line items are detected, review them in the itemized editor and assign them to people.
 4. To use shared bills, start the API below, then open **Assign items to people → Share or join a bill**. Create a session and copy its invite code, or join with a code from another device.
 

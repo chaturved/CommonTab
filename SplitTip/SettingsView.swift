@@ -5,11 +5,17 @@ struct SettingsView: View {
     @AppStorage("settings.tipTwo") private var tipTwo = 18
     @AppStorage("settings.tipThree") private var tipThree = 20
     @AppStorage("settings.selectedTip") private var selectedTip = 0
+    @AppStorage("settings.customTip") private var customTip = "18"
     @AppStorage("settings.darkAppearance") private var darkAppearance = false
     @AppStorage("settings.converterEnabled") private var converterEnabled = false
     @AppStorage("settings.targetCurrency") private var targetCurrency = "EUR"
     @AppStorage("settings.serverURL") private var serverURL = "http://localhost:8000"
     @AppStorage("analytics.enabled") private var analyticsEnabled = false
+
+    private var customTipIsValid: Bool {
+        guard let percentage = MoneyInputParser.parse(customTip) else { return false }
+        return (0...100).contains(percentage)
+    }
 
     private let currencies = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR"]
 
@@ -24,6 +30,21 @@ struct SettingsView: View {
                     Text("First").tag(0)
                     Text("Second").tag(1)
                     Text("Third").tag(2)
+                    Text("Other").tag(3)
+                }
+                if selectedTip == 3 {
+                    HStack {
+                        TextField("Custom tip", text: $customTip)
+                            .keyboardType(.decimalPad)
+                            .accessibilityIdentifier("settingsCustomTipPercentage")
+                        Text("%")
+                            .foregroundStyle(.secondary)
+                    }
+                    if !customTipIsValid {
+                        Text("Enter a tip percentage from 0 to 100.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
                 }
             }
 

@@ -17,6 +17,16 @@ final class SplitTipTests: XCTestCase {
         XCTAssertEqual(result.shares.map(\.total), [59, 59])
     }
 
+    func testFractionalTipPercentage() throws {
+        let result = try TipCalculator.calculate(
+            bill: 100, tipPercentage: Decimal(string: "17.5")!, people: 2
+        )
+
+        XCTAssertEqual(result.tip, Decimal(string: "17.50"))
+        XCTAssertEqual(result.total, Decimal(string: "117.50"))
+        XCTAssertEqual(result.shares.map(\.total), [Decimal(string: "58.75"), Decimal(string: "58.75")].compactMap { $0 })
+    }
+
     func testRemainderIsDistributedWithoutLosingMoney() throws {
         let result = try TipCalculator.calculate(bill: 100, tipPercentage: 10, people: 3)
 

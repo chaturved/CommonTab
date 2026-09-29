@@ -29,6 +29,33 @@ final class SplitTipUITests: XCTestCase {
     }
 
     @MainActor
+    func testCustomTipPercentage() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        app.launchArguments = [
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-settings.tipOne", "15", "-settings.tipTwo", "18",
+            "-settings.tipThree", "20"
+        ]
+        app.launch()
+
+        let billField = app.textFields["billAmount"]
+        XCTAssertTrue(billField.waitForExistence(timeout: 5))
+        billField.tap()
+        billField.typeText("100")
+
+        let tipPicker = app.segmentedControls["tipPercentage"]
+        tipPicker.buttons["15%"].tap()
+        tipPicker.buttons["Other"].tap()
+        let customTipField = app.textFields["customTipPercentage"]
+        XCTAssertTrue(customTipField.waitForExistence(timeout: 5))
+        customTipField.tap()
+        let existingValue = customTipField.value as? String ?? ""
+        customTipField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingValue.count) + "17.5")
+        XCTAssertTrue(app.staticTexts["$117.50"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testItemizedSplitAndSharedBillNavigation() {
         let app = XCUIApplication()
         app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"

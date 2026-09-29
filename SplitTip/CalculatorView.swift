@@ -5,6 +5,7 @@ struct CalculatorView: View {
     @AppStorage("settings.tipTwo") private var tipTwo = 18
     @AppStorage("settings.tipThree") private var tipThree = 20
     @AppStorage("settings.selectedTip") private var selectedTip = 0
+    @AppStorage("settings.customTip") private var customTip = "18"
     @AppStorage("settings.converterEnabled") private var converterEnabled = false
     @AppStorage("settings.targetCurrency") private var targetCurrency = "EUR"
     @AppStorage("calculator.lastBill") private var lastBill = ""
@@ -27,15 +28,24 @@ struct CalculatorView: View {
     @State private var rateService = ExchangeRateService()
     private var currencyCode: String { Locale.current.currency?.identifier ?? "USD" }
     private var tipOptions: [Int] { [tipOne, tipTwo, tipThree] }
-    private var selectedPercentage: Int {
-        tipOptions.indices.contains(selectedTip) ? tipOptions[selectedTip] : tipOne
+    private var selectedPercentage: Decimal? {
+        if selectedTip == 3 {
+            guard let percentage = MoneyInputParser.parse(customTip), (0...100).contains(percentage) else { return nil }
+            return percentage
+        }
+        return Decimal(tipOptions.indices.contains(selectedTip) ? tipOptions[selectedTip] : tipOne)
+    }
+
+    private var enteredBill: Decimal? {
+        guard let bill = MoneyInputParser.parse(billText), (0...1_000_000_000).contains(bill) else { return nil }
+        return bill
     }
 
     private var calculation: TipCalculation? {
-        guard let bill = MoneyInputParser.parse(billText) else { return nil }
+        guard let bill = enteredBill, let selectedPercentage else { return nil }
         return try? TipCalculator.calculate(
             bill: bill,
-            tipPercentage: Decimal(selectedPercentage),
+            tipPercentage: selectedPercentage,
             people: people,
             fractionDigits: currencyFormatter.maximumFractionDigits
         )
@@ -59,7 +69,7 @@ struct CalculatorView: View {
                         .focused($billIsFocused)
                         .accessibilityIdentifier("billAmount")
                 }
-                if !billText.isEmpty && calculation == nil {
+                if !billText.isEmpty && enteredBill == nil {
                     Text("Enter a valid amount from 0 to 1,000,000,000.")
                         .font(.footnote)
                         .foregroundStyle(.red)
@@ -71,9 +81,24 @@ struct CalculatorView: View {
                     ForEach(tipOptions.indices, id: \.self) { index in
                         Text("\(tipOptions[index])%").tag(index)
                     }
+                    Text("Other").tag(3)
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("tipPercentage")
+                if selectedTip == 3 {
+                    HStack {
+                        TextField("Custom tip", text: $customTip)
+                            .keyboardType(.decimalPad)
+                            .accessibilityIdentifier("customTipPercentage")
+                        Text("%")
+                            .foregroundStyle(.secondary)
+                    }
+                    if selectedPercentage == nil {
+                        Text("Enter a tip percentage from 0 to 100.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
 
             Section("Split") {
@@ -234,7 +259,9 @@ struct CalculatorView: View {
         guard !items.isEmpty else { return }
         itemizedBill.items = items
         itemizedBill.receiptTotal = result.amount
-        itemizedBill.tipPercentage = Decimal(selectedPercentage)
+        if let selectedPercentage {
+            itemizedBill.tipPercentage = selectedPercentage
+        }
         let subtotal = items.reduce(Decimal(0)) { $0 + $1.price }
         itemizedBill.tax = max(0, result.amount - subtotal)
         openEditorAfterScan = true
