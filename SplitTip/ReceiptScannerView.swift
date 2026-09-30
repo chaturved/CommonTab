@@ -5,6 +5,7 @@ import UIKit
 struct ReceiptScanResult {
     let amount: Decimal
     let lines: [String]
+    let imageData: Data
 }
 
 struct ReceiptScannerView: View {
@@ -91,10 +92,11 @@ struct ReceiptScannerView: View {
                         .accessibilityIdentifier("scannedAmount")
                     Button("Use amount") {
                         guard let enteredAmount, isValidAmount else { return }
-                        useReceipt(ReceiptScanResult(amount: enteredAmount, lines: recognizedLines))
+                        guard let imageData else { return }
+                        useReceipt(ReceiptScanResult(amount: enteredAmount, lines: recognizedLines, imageData: imageData))
                         dismiss()
                     }
-                    .disabled(!isValidAmount)
+                    .disabled(!isValidAmount || imageData == nil)
                     .accessibilityIdentifier("useScannedAmount")
                 }
             }

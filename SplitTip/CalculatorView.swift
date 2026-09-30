@@ -124,6 +124,15 @@ struct CalculatorView: View {
                 }
             }
 
+            Section("Expenses") {
+                NavigationLink {
+                    ExpenseLibraryView()
+                } label: {
+                    Label("Saved expenses and receipts", systemImage: "receipt")
+                }
+                .accessibilityIdentifier("openExpenseLibrary")
+            }
+
             if let calculation {
                 Section("Total") {
                     amountRow("Tip", amount: calculation.tip)
@@ -190,11 +199,11 @@ struct CalculatorView: View {
         .sheet(isPresented: $showingItemizedEditor) {
             ItemizedBillView(bill: $itemizedBill)
         }
-        .onChange(of: billText) { value in
+        .onChange(of: billText) { _, value in
             lastBill = value
             lastEditedAt = Date().timeIntervalSince1970
         }
-        .onChange(of: itemizedBill) { value in
+        .onChange(of: itemizedBill) { _, value in
             if let encoded = try? JSONEncoder().encode(value) {
                 itemizedDraftData = encoded
             }

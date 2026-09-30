@@ -258,3 +258,50 @@ final class SplitTipTests: XCTestCase {
         try await analytics.record(.scanOpened, variant: "B")
     }
 }
+
+extension SplitTipTests {
+    func testExpenseStorePersistsReceiptAndEditsWithoutLosingIt() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ExpenseStore(directory: directory)
+        let original = SavedExpense(
+            merchant: "Market", category: .groceries, currencyCode: "USD",
+            amount: Decimal(string: "23.45")!, notes: "Weekly groceries"
+        )
+        let image = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let saved = try store.save(original, receiptData: image)
+        XCTAssertEqual(try store.load(), [saved])
+        XCTAssertEqual(try store.receiptData(for: saved), image)
+        XCTAssertTrue(try Data(contentsOf: directory.appendingPathComponent("expenses.json"))
+            .range(of: Data("\"amount\":\"23.45\"".utf8)) != nil)
+
+        var edited = saved
+        edited.notes = "Corrected note"
+        let updated = try store.save(edited)
+        XCTAssertEqual(updated.receiptFilename, saved.receiptFilename)
+        XCTAssertEqual(try store.receiptData(for: updated), image)
+
+        let withoutReceipt = try store.save(updated, removeReceipt: true)
+        XCTAssertNil(withoutReceipt.receiptFilename)
+        XCTAssertNil(try store.receiptData(for: withoutReceipt))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent(saved.receiptFilename!).path))
+        try store.delete(withoutReceipt.id)
+        XCTAssertTrue(try store.load().isEmpty)
+    }
+
+    func testExpenseStoreRejectsInvalidInputWithoutSaving() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ExpenseStore(directory: directory)
+        XCTAssertThrowsError(try store.save(SavedExpense(merchant: " ", currencyCode: "USD", amount: 1))) {
+            XCTAssertEqual($0 as? ExpenseStoreError, .invalidMerchant)
+        }
+        XCTAssertThrowsError(try store.save(SavedExpense(merchant: "Shop", currencyCode: "USD", amount: -1))) {
+            XCTAssertEqual($0 as? ExpenseStoreError, .invalidAmount)
+        }
+        XCTAssertThrowsError(try store.save(SavedExpense(merchant: "Shop", currencyCode: "US", amount: 1))) {
+            XCTAssertEqual($0 as? ExpenseStoreError, .invalidCurrency)
+        }
+        XCTAssertTrue(try store.load().isEmpty)
+    }
+}

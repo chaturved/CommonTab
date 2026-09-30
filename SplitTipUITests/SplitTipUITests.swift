@@ -83,3 +83,32 @@ final class SplitTipUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Shared bill"].waitForExistence(timeout: 5))
     }
 }
+
+extension SplitTipUITests {
+    @MainActor
+    func testSaveManualExpense() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        app.launch()
+        let merchantName = "UI Test Market \(UUID().uuidString.prefix(8))"
+
+        let library = app.buttons["openExpenseLibrary"]
+        if !library.isHittable { app.swipeUp() }
+        XCTAssertTrue(library.waitForExistence(timeout: 5))
+        library.tap()
+        XCTAssertTrue(app.navigationBars["Expenses"].waitForExistence(timeout: 5))
+        app.buttons["addExpense"].tap()
+
+        let merchant = app.textFields["expenseMerchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5))
+        merchant.tap()
+        merchant.typeText(merchantName)
+        let amount = app.textFields["expenseAmount"]
+        amount.tap()
+        amount.typeText("12.34")
+        app.buttons["saveExpense"].tap()
+
+        XCTAssertTrue(app.staticTexts[merchantName].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["$12.34"].exists)
+    }
+}

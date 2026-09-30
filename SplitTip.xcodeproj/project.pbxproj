@@ -27,6 +27,9 @@
 		A1000000000000000000001C /* SharedBillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* SharedBillView.swift */; };
 		A1000000000000000000001E /* SharedSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* SharedSessionStore.swift */; };
 		A10000000000000000000020 /* ProductAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* ProductAnalytics.swift */; };
+		A10000000000000000000022 /* SavedExpense.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* SavedExpense.swift */; };
+		A10000000000000000000024 /* ExpenseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000023 /* ExpenseStore.swift */; };
+		A10000000000000000000026 /* ExpenseLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000025 /* ExpenseLibraryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +76,9 @@
 		A1000000000000000000001B /* SharedBillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedBillView.swift; sourceTree = "<group>"; };
 		A1000000000000000000001D /* SharedSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSessionStore.swift; sourceTree = "<group>"; };
 		A1000000000000000000001F /* ProductAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductAnalytics.swift; sourceTree = "<group>"; };
+		A10000000000000000000021 /* SavedExpense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedExpense.swift; sourceTree = "<group>"; };
+		A10000000000000000000023 /* ExpenseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000025 /* ExpenseLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseLibraryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +144,9 @@
 				A1000000000000000000001B /* SharedBillView.swift */,
 				A1000000000000000000001D /* SharedSessionStore.swift */,
 				A1000000000000000000001F /* ProductAnalytics.swift */,
+				A10000000000000000000025 /* ExpenseLibraryView.swift */,
+				A10000000000000000000023 /* ExpenseStore.swift */,
+				A10000000000000000000021 /* SavedExpense.swift */,
 				A10000000000000000000001 /* TipCalculation.swift */,
 				9C3F0F542772756400C0DD55 /* Assets.xcassets */,
 				9C3F0F562772756400C0DD55 /* LaunchScreen.storyboard */,
@@ -308,6 +317,9 @@
 				A1000000000000000000001C /* SharedBillView.swift in Sources */,
 				A1000000000000000000001E /* SharedSessionStore.swift in Sources */,
 				A10000000000000000000020 /* ProductAnalytics.swift in Sources */,
+				A10000000000000000000026 /* ExpenseLibraryView.swift in Sources */,
+				A10000000000000000000024 /* ExpenseStore.swift in Sources */,
+				A10000000000000000000022 /* SavedExpense.swift in Sources */,
 				A10000000000000000000002 /* TipCalculation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -406,7 +418,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -461,7 +473,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -517,7 +529,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
 				INFOPLIST_FILE = SplitTipTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -539,7 +551,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
 				INFOPLIST_FILE = SplitTipTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
