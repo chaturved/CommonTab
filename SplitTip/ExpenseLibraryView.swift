@@ -21,6 +21,12 @@ struct ExpenseLibraryView: View {
 
     var body: some View {
         List {
+            Section {
+                NavigationLink { ExpenseGroupsView(store: store) } label: {
+                    Label("Groups and balances", systemImage: "person.3")
+                }
+                .accessibilityIdentifier("openExpenseGroups")
+            }
             if expenses.isEmpty {
                 ContentUnavailableView(
                     "No saved expenses",
@@ -103,9 +109,10 @@ struct ExpenseLibraryView: View {
     }
 }
 
-private struct ExpenseEditorView: View {
+struct ExpenseEditorView: View {
     let store: ExpenseStore
     let expense: SavedExpense?
+    let preferredGroupID: UUID?
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -121,11 +128,19 @@ private struct ExpenseEditorView: View {
     @State private var removeReceipt = false
     @State private var showingScanner = false
     @State private var errorMessage: String?
+    @State private var groups: [ExpenseGroup] = []
+    @State private var selectedGroupID: UUID?
+    @State private var payerID: UUID?
+    @State private var participants: Set<UUID> = []
+    @State private var splitMethod: ExpenseSplitMethod = .equal
+    @State private var inputTexts: [UUID: String] = [:]
 
-    init(store: ExpenseStore, expense: SavedExpense?, onSaved: @escaping () -> Void) {
+    init(store: ExpenseStore, expense: SavedExpense?, preferredGroupID: UUID? = nil, onSaved: @escaping () -> Void) {
         self.store = store
         self.expense = expense
+        self.preferredGroupID = preferredGroupID
         self.onSaved = onSaved
+        _selectedGroupID = State(initialValue: expense?.split?.groupID ?? preferredGroupID)
         _merchant = State(initialValue: expense?.merchant ?? "")
         _date = State(initialValue: expense?.date ?? .now)
         _category = State(initialValue: expense?.category ?? .other)
@@ -149,6 +164,7 @@ private struct ExpenseEditorView: View {
         NavigationStack {
             Form {
                 expenseFields
+                groupFields
                 receiptFields
             }
             .navigationTitle(expense == nil ? "Add expense" : "Edit expense")
@@ -163,10 +179,14 @@ private struct ExpenseEditorView: View {
                 }
             }
             .onAppear {
+                loadGroups()
                 if let expense {
                     do { existingImageData = try store.receiptData(for: expense) }
                     catch { errorMessage = "Could not open the saved receipt." }
                 }
+            }
+            .onChange(of: selectedGroupID) { _, id in
+                configureGroup(id)
             }
             .onChange(of: selectedPhoto) { _, item in
                 Task {
@@ -226,6 +246,54 @@ private struct ExpenseEditorView: View {
         }
     }
 
+    private var selectedGroup: ExpenseGroup? {
+        groups.first { $0.id == selectedGroupID }
+    }
+
+    private var groupFields: some View {
+        Section("Split with group") {
+            Picker("Group", selection: $selectedGroupID) {
+                Text("Personal expense").tag(Optional<UUID>.none)
+                ForEach(groups) { group in Text(group.name).tag(Optional(group.id)) }
+            }
+            if let group = selectedGroup {
+                Picker("Paid by", selection: $payerID) {
+                    ForEach(group.members) { member in Text(member.name).tag(Optional(member.id)) }
+                }
+                Picker("Split", selection: $splitMethod) {
+                    ForEach(ExpenseSplitMethod.allCases) { method in
+                        Text(method.title).tag(method)
+                    }
+                }
+                ForEach(group.members) { member in
+                    Toggle(member.name, isOn: Binding(
+                        get: { participants.contains(member.id) },
+                        set: { enabled in
+                            if enabled { participants.insert(member.id) }
+                            else { participants.remove(member.id) }
+                        }
+                    ))
+                    if participants.contains(member.id) && splitMethod != .equal {
+                        HStack {
+                            Text(member.name).foregroundStyle(.secondary)
+                            Spacer()
+                            TextField(splitMethod == .exact ? "Amount" : "Percent", text: Binding(
+                                get: { inputTexts[member.id] ?? "" },
+                                set: { inputTexts[member.id] = $0 }
+                            ))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 100)
+                            if splitMethod == .percentage { Text("%") }
+                        }
+                    }
+                }
+                Text("Shares must add up to the expense total. The payer can also have a share.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+    }
+
     private var receiptFields: some View {
         Section {
             if let previewData, let image = UIImage(data: previewData) {
@@ -256,19 +324,69 @@ private struct ExpenseEditorView: View {
         }
     }
 
+    private func loadGroups() {
+        do {
+            groups = try store.loadGroups()
+            if let split = expense?.split {
+                payerID = split.payerID
+                participants = Set(split.allocations.map(\.memberID))
+                splitMethod = split.method
+                inputTexts = Dictionary(uniqueKeysWithValues: split.allocations.compactMap { allocation in
+                    allocation.inputValue.map { (allocation.memberID, $0) }
+                })
+            } else {
+                configureGroup(selectedGroupID)
+            }
+        } catch { errorMessage = "Could not load groups." }
+    }
+
+    private func configureGroup(_ id: UUID?) {
+        guard let group = groups.first(where: { $0.id == id }) else {
+            payerID = nil
+            participants = []
+            inputTexts = [:]
+            return
+        }
+        payerID = group.members.first?.id
+        currencyCode = group.currencyCode
+        participants = Set(group.members.map(\.id))
+        splitMethod = .equal
+        inputTexts = [:]
+    }
+
     private func save() {
         guard let amount else { return }
-        let record = SavedExpense(
+        var record = SavedExpense(
             id: expense?.id ?? UUID(), merchant: merchant, date: date,
             category: category, currencyCode: currencyCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
             amount: amount, notes: notes, receiptFilename: expense?.receiptFilename
         )
         do {
+            if let groupID = selectedGroupID {
+                guard let group = selectedGroup, let payerID else { throw GroupLedgerError.invalidGroup }
+                let memberIDs = group.members.map(\.id).filter { participants.contains($0) }
+                var values: [UUID: Decimal] = [:]
+                if splitMethod != .equal {
+                    for id in memberIDs {
+                        guard let value = MoneyInputParser.parse(inputTexts[id] ?? "") else {
+                            throw GroupLedgerError.invalidAllocation
+                        }
+                        values[id] = value
+                    }
+                }
+                let allocations = try ExpenseSplitter.allocate(
+                    amount: amount, currencyCode: record.currencyCode,
+                    participants: memberIDs, method: splitMethod, values: values
+                )
+                record.split = ExpenseSplit(
+                    groupID: groupID, payerID: payerID, method: splitMethod, allocations: allocations
+                )
+            }
             try store.save(record, receiptData: newImageData, removeReceipt: removeReceipt)
             onSaved()
             dismiss()
         } catch {
-            errorMessage = "Review the amount, three-letter currency, and receipt. \(error.localizedDescription)"
+            errorMessage = "Review the amount, currency, payer, and split. Shares must add up to the total."
         }
     }
 

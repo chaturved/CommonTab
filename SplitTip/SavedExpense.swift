@@ -27,11 +27,13 @@ struct SavedExpense: Codable, Equatable, Identifiable {
     var amount: Decimal
     var notes: String
     var receiptFilename: String?
+    var split: ExpenseSplit?
 
     init(
         id: UUID = UUID(), merchant: String, date: Date = .now,
         category: ExpenseCategory = .other, currencyCode: String,
-        amount: Decimal, notes: String = "", receiptFilename: String? = nil
+        amount: Decimal, notes: String = "", receiptFilename: String? = nil,
+        split: ExpenseSplit? = nil
     ) {
         self.id = id
         self.merchant = merchant
@@ -41,10 +43,11 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         self.amount = amount
         self.notes = notes
         self.receiptFilename = receiptFilename
+        self.split = split
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, merchant, date, category, currencyCode, amount, notes, receiptFilename
+        case id, merchant, date, category, currencyCode, amount, notes, receiptFilename, split
     }
 
     init(from decoder: Decoder) throws {
@@ -61,6 +64,7 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         amount = parsed
         notes = try values.decode(String.self, forKey: .notes)
         receiptFilename = try values.decodeIfPresent(String.self, forKey: .receiptFilename)
+        split = try values.decodeIfPresent(ExpenseSplit.self, forKey: .split)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -73,5 +77,6 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         try values.encode(NSDecimalNumber(decimal: amount).stringValue, forKey: .amount)
         try values.encode(notes, forKey: .notes)
         try values.encodeIfPresent(receiptFilename, forKey: .receiptFilename)
+        try values.encodeIfPresent(split, forKey: .split)
     }
 }

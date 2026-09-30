@@ -305,3 +305,85 @@ extension SplitTipTests {
         XCTAssertTrue(try store.load().isEmpty)
     }
 }
+
+extension SplitTipTests {
+    func testGroupSplitsPreserveEveryCentAcrossModes() throws {
+        let ids = (0..<3).map { _ in UUID() }
+        let equal = try ExpenseSplitter.allocate(
+            amount: Decimal(string: "10.01")!, currencyCode: "USD", participants: ids, method: .equal
+        )
+        XCTAssertEqual(equal.map(\.minorUnits), [334, 334, 333])
+        let percentage = try ExpenseSplitter.allocate(
+            amount: Decimal(string: "0.05")!, currencyCode: "USD", participants: ids,
+            method: .percentage, values: [ids[0]: 34, ids[1]: 33, ids[2]: 33]
+        )
+        XCTAssertEqual(percentage.map(\.minorUnits), [2, 2, 1])
+        let exact = try ExpenseSplitter.allocate(
+            amount: Decimal(string: "10.01")!, currencyCode: "USD", participants: ids,
+            method: .exact, values: [ids[0]: 5, ids[1]: 5, ids[2]: Decimal(string: "0.01")!]
+        )
+        XCTAssertEqual(exact.map(\.minorUnits), [500, 500, 1])
+        XCTAssertThrowsError(try ExpenseSplitter.allocate(
+            amount: 10, currencyCode: "USD", participants: ids,
+            method: .exact, values: [ids[0]: 5, ids[1]: 5, ids[2]: 1]
+        ))
+        XCTAssertEqual(try CurrencyUnits.units(123, currencyCode: "JPY"), 123)
+        XCTAssertThrowsError(try CurrencyUnits.units(Decimal(string: "123.45")!, currencyCode: "JPY"))
+    }
+
+    func testGroupLedgerAndSettlementPersist() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ExpenseStore(directory: directory)
+        let group = try store.createGroup(name: "Apartment", currencyCode: "USD", memberNames: ["Alex", "Blair", "Casey"])
+        let ids = group.members.map(\.id)
+        let allocations = try ExpenseSplitter.allocate(
+            amount: Decimal(string: "10.01")!, currencyCode: "USD", participants: ids, method: .equal
+        )
+        let expense = SavedExpense(
+            merchant: "Groceries", currencyCode: "USD", amount: Decimal(string: "10.01")!,
+            split: ExpenseSplit(groupID: group.id, payerID: ids[0], method: .equal, allocations: allocations)
+        )
+        try store.save(expense)
+        let before = try GroupLedger.balances(group: group, expenses: store.load())
+        XCTAssertEqual(before.map(\.minorUnits), [667, -334, -333])
+        XCTAssertEqual(before.map(\.minorUnits).reduce(0, +), 0)
+
+        let settled = try store.recordSettlement(
+            groupID: group.id, fromID: ids[1], toID: ids[0], amount: Decimal(string: "3.34")!
+        )
+        XCTAssertEqual(try GroupLedger.balances(group: settled, expenses: store.load()).map(\.minorUnits), [333, 0, -333])
+        XCTAssertEqual(try store.loadGroups().first?.settlements.count, 1)
+        XCTAssertThrowsError(try store.recordSettlement(groupID: group.id, fromID: ids[1], toID: ids[0], amount: 1))
+
+        var revised = expense
+        revised.amount = Decimal(string: "20.01")!
+        revised.split?.allocations = try ExpenseSplitter.allocate(
+            amount: revised.amount, currencyCode: "USD", participants: ids, method: .equal
+        )
+        try store.save(revised)
+        let afterEdit = try GroupLedger.balances(group: settled, expenses: store.load())
+        XCTAssertEqual(afterEdit.map(\.minorUnits), [1000, -333, -667])
+        var invalid = revised
+        invalid.split?.allocations[0].memberID = UUID()
+        XCTAssertThrowsError(try store.save(invalid))
+        XCTAssertEqual(try store.load(), [revised])
+    }
+
+    func testLegacyExpenseArchiveMigratesWhenGroupIsCreated() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let expense = SavedExpense(merchant: "Old receipt", currencyCode: "USD", amount: 7)
+        let encoded = try JSONEncoder().encode(expense)
+        let legacy = Data("{\"schemaVersion\":1,\"expenses\":[\(String(decoding: encoded, as: UTF8.self))]}".utf8)
+        try legacy.write(to: directory.appendingPathComponent("expenses.json"))
+
+        let store = ExpenseStore(directory: directory)
+        XCTAssertEqual(try store.load(), [expense])
+        XCTAssertTrue(try store.loadGroups().isEmpty)
+        _ = try store.createGroup(name: "Trip", currencyCode: "USD", memberNames: ["Alex", "Blair"])
+        XCTAssertEqual(try store.load(), [expense])
+        XCTAssertEqual(try store.loadGroups().count, 1)
+    }
+}

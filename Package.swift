@@ -12,12 +12,12 @@ let package = Package(
             path: "SplitTip",
             exclude: ["SplitTipApp.swift", "CalculatorView.swift", "SettingsView.swift",
                       "ItemizedBillView.swift", "SharedBillView.swift", "SharedSessionStore.swift",
-                      "ReceiptOCR.swift", "ReceiptScannerView.swift", "ExpenseLibraryView.swift",
+                      "ReceiptOCR.swift", "ReceiptScannerView.swift", "ExpenseLibraryView.swift", "ExpenseGroupsView.swift",
                       "Info.plist", "Base.lproj", "Assets.xcassets"],
             sources: ["TipCalculation.swift", "ExchangeRateService.swift", "ReceiptAmountParser.swift",
                       "MoneyInputParser.swift", "ItemizedBill.swift", "ReceiptItemParser.swift",
                       "SharedBillClient.swift", "ProductAnalytics.swift",
-                      "SavedExpense.swift", "ExpenseStore.swift"]
+                      "SavedExpense.swift", "ExpenseStore.swift", "ExpenseGroup.swift"]
         ),
         .testTarget(
             name: "SplitTipCoreTests",

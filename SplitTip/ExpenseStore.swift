@@ -7,12 +7,29 @@ enum ExpenseStoreError: Error, Equatable {
     case invalidNotes
     case invalidReceipt
     case unsupportedSchema
+    case groupMissing
 }
 
 struct ExpenseStore {
     private struct Archive: Codable {
-        let schemaVersion: Int
-        let expenses: [SavedExpense]
+        var schemaVersion: Int
+        var expenses: [SavedExpense]
+        var groups: [ExpenseGroup]
+
+        init(schemaVersion: Int = 2, expenses: [SavedExpense] = [], groups: [ExpenseGroup] = []) {
+            self.schemaVersion = schemaVersion
+            self.expenses = expenses
+            self.groups = groups
+        }
+
+        private enum CodingKeys: String, CodingKey { case schemaVersion, expenses, groups }
+
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
+            expenses = try values.decode([SavedExpense].self, forKey: .expenses)
+            groups = try values.decodeIfPresent([ExpenseGroup].self, forKey: .groups) ?? []
+        }
     }
 
     let directory: URL
@@ -24,11 +41,71 @@ struct ExpenseStore {
     }
 
     func load() throws -> [SavedExpense] {
-        let url = directory.appendingPathComponent("expenses.json")
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        let archive = try JSONDecoder().decode(Archive.self, from: Data(contentsOf: url))
-        guard archive.schemaVersion == 1 else { throw ExpenseStoreError.unsupportedSchema }
-        return archive.expenses.sorted { $0.date > $1.date }
+        try readArchive().expenses.sorted { $0.date > $1.date }
+    }
+
+    func loadGroups() throws -> [ExpenseGroup] {
+        try readArchive().groups.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    @discardableResult
+    func createGroup(name: String, currencyCode: String, memberNames: [String]) throws -> ExpenseGroup {
+        let cleanedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanedMembers = memberNames.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard !cleanedName.isEmpty, cleanedName.count <= 120,
+              (2...20).contains(cleanedMembers.count),
+              cleanedMembers.allSatisfy({ !$0.isEmpty && $0.count <= 80 }),
+              Set(cleanedMembers.map { $0.lowercased() }).count == cleanedMembers.count else {
+            throw GroupLedgerError.invalidGroup
+        }
+        guard CurrencyUnits.fractionDigits(for: currencyCode) != nil else {
+            throw GroupLedgerError.invalidCurrency
+        }
+        var archive = try readArchive()
+        let group = ExpenseGroup(
+            name: cleanedName, currencyCode: currencyCode,
+            members: cleanedMembers.map { GroupMember(name: $0) }
+        )
+        archive.groups.append(group)
+        try write(archive)
+        return group
+    }
+
+    @discardableResult
+    func addMember(named name: String, to groupID: UUID) throws -> ExpenseGroup {
+        var archive = try readArchive()
+        guard let index = archive.groups.firstIndex(where: { $0.id == groupID }) else {
+            throw ExpenseStoreError.groupMissing
+        }
+        let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty, cleaned.count <= 80,
+              archive.groups[index].members.count < 20,
+              !archive.groups[index].members.contains(where: { $0.name.caseInsensitiveCompare(cleaned) == .orderedSame }) else {
+            throw GroupLedgerError.invalidMember
+        }
+        archive.groups[index].members.append(GroupMember(name: cleaned))
+        try write(archive)
+        return archive.groups[index]
+    }
+
+    @discardableResult
+    func recordSettlement(groupID: UUID, fromID: UUID, toID: UUID, amount: Decimal) throws -> ExpenseGroup {
+        var archive = try readArchive()
+        guard let index = archive.groups.firstIndex(where: { $0.id == groupID }) else {
+            throw ExpenseStoreError.groupMissing
+        }
+        let group = archive.groups[index]
+        let units = try CurrencyUnits.units(amount, currencyCode: group.currencyCode)
+        guard fromID != toID, units > 0 else { throw GroupLedgerError.invalidSettlement }
+        let balances = try GroupLedger.balances(group: group, expenses: archive.expenses)
+        guard let from = balances.first(where: { $0.member.id == fromID })?.minorUnits,
+              let to = balances.first(where: { $0.member.id == toID })?.minorUnits,
+              from < 0, to > 0, units <= min(-from, to) else {
+            throw GroupLedgerError.invalidSettlement
+        }
+        archive.groups[index].settlements.append(GroupSettlement(fromID: fromID, toID: toID, minorUnits: units))
+        try write(archive)
+        return archive.groups[index]
     }
 
     @discardableResult
@@ -38,34 +115,38 @@ struct ExpenseStore {
         saved.notes = saved.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !saved.merchant.isEmpty, saved.merchant.count <= 120 else { throw ExpenseStoreError.invalidMerchant }
         guard (0...1_000_000_000).contains(saved.amount), saved.amount > 0 else { throw ExpenseStoreError.invalidAmount }
-        guard saved.currencyCode.count == 3,
-              saved.currencyCode.utf8.allSatisfy({ (65...90).contains($0) }) else {
-            throw ExpenseStoreError.invalidCurrency
-        }
+        guard CurrencyUnits.fractionDigits(for: saved.currencyCode) != nil else { throw ExpenseStoreError.invalidCurrency }
         guard saved.notes.count <= 2_000 else { throw ExpenseStoreError.invalidNotes }
-        guard receiptData == nil || (!receiptData!.isEmpty && receiptData!.count <= 10_000_000) else {
-            throw ExpenseStoreError.invalidReceipt
+        if let receiptData {
+            guard !receiptData.isEmpty, receiptData.count <= 10_000_000 else { throw ExpenseStoreError.invalidReceipt }
         }
 
-        var expenses = try load()
-        let previous = expenses.first { $0.id == saved.id }
+        var archive = try readArchive()
+        if let split = saved.split {
+            guard let group = archive.groups.first(where: { $0.id == split.groupID }) else {
+                throw ExpenseStoreError.groupMissing
+            }
+            try ExpenseSplitter.validate(split, for: saved, in: group)
+        }
+        let previous = archive.expenses.first { $0.id == saved.id }
         let oldFilename = previous?.receiptFilename
         var newFilename: String?
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         if let receiptData {
-            newFilename = "\(saved.id.uuidString)-\(UUID().uuidString).jpg"
-            try receiptData.write(to: directory.appendingPathComponent(newFilename!), options: .atomic)
-            saved.receiptFilename = newFilename
+            let filename = "\(saved.id.uuidString)-\(UUID().uuidString).jpg"
+            try receiptData.write(to: directory.appendingPathComponent(filename), options: .atomic)
+            newFilename = filename
+            saved.receiptFilename = filename
         } else if removeReceipt {
             saved.receiptFilename = nil
         } else {
             saved.receiptFilename = oldFilename
         }
 
-        expenses.removeAll { $0.id == saved.id }
-        expenses.append(saved)
+        archive.expenses.removeAll { $0.id == saved.id }
+        archive.expenses.append(saved)
         do {
-            try write(expenses)
+            try write(archive)
         } catch {
             if let newFilename { try? FileManager.default.removeItem(at: directory.appendingPathComponent(newFilename)) }
             throw error
@@ -77,10 +158,10 @@ struct ExpenseStore {
     }
 
     func delete(_ id: UUID) throws {
-        var expenses = try load()
-        guard let expense = expenses.first(where: { $0.id == id }) else { return }
-        expenses.removeAll { $0.id == id }
-        try write(expenses)
+        var archive = try readArchive()
+        guard let expense = archive.expenses.first(where: { $0.id == id }) else { return }
+        archive.expenses.removeAll { $0.id == id }
+        try write(archive)
         if let filename = expense.receiptFilename { removeImage(named: filename, for: id) }
     }
 
@@ -90,12 +171,25 @@ struct ExpenseStore {
         return try Data(contentsOf: directory.appendingPathComponent(filename))
     }
 
-    private func write(_ expenses: [SavedExpense]) throws {
+    private func readArchive() throws -> Archive {
+        let url = directory.appendingPathComponent("expenses.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return Archive() }
+        let archive = try JSONDecoder().decode(Archive.self, from: Data(contentsOf: url))
+        guard archive.schemaVersion == 1 || archive.schemaVersion == 2 else {
+            throw ExpenseStoreError.unsupportedSchema
+        }
+        return archive
+    }
+
+    private func write(_ archive: Archive) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        try encoder.encode(Archive(schemaVersion: 1, expenses: expenses))
-            .write(to: directory.appendingPathComponent("expenses.json"), options: .atomic)
+        var archive = archive
+        archive.schemaVersion = 2
+        try encoder.encode(archive).write(
+            to: directory.appendingPathComponent("expenses.json"), options: .atomic
+        )
     }
 
     private func removeImage(named filename: String, for id: UUID) {
