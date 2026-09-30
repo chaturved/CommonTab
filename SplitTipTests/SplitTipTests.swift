@@ -499,3 +499,45 @@ extension SplitTipTests {
         XCTAssertEqual(imageFiles, [try XCTUnwrap(original.receiptFilename)])
     }
 }
+
+final class SharedExpenseClientTests: XCTestCase {
+    func testRegisterSendsAccountAndDecodesSession() async throws {
+        let userID = UUID()
+        let json = #"{"accessToken":"token-123","expiresAt":"2026-10-30T00:00:00Z","user":{"id":"\#(userID)","email":"ada@example.com","name":"Ada"}}"#
+        let client = try SharedExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.url?.path, "/v1/accounts")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
+            let body = try XCTUnwrap(request.httpBody)
+            let account = try JSONSerialization.jsonObject(with: body) as? [String: String]
+            XCTAssertEqual(account?["email"], "ada@example.com")
+            return (Data(json.utf8), HTTPURLResponse(url: request.url!, statusCode: 201,
+                                                      httpVersion: nil, headerFields: nil)!)
+        }
+        let session = try await client.register(email: "ada@example.com", name: "Ada",
+                                                password: "correct horse battery staple")
+        XCTAssertEqual(session.user.id, userID)
+        XCTAssertEqual(session.accessToken, "token-123")
+    }
+
+    func testDeleteExpenseIncludesVersionAndAuthorization() async throws {
+        let id = UUID()
+        let groupID = UUID()
+        let json = #"{"id":"\#(id)","groupID":"\#(groupID)","merchant":"Lunch","occurredAt":"2026-09-30T00:00:00Z","category":"dining","notes":"","amountMinor":1250,"payerID":"\#(UUID())","method":"equal","allocations":[],"values":[],"version":4,"hasReceipt":false}"#
+        let expense = try JSONDecoder().decode(SharedExpense.self, from: Data(json.utf8))
+        let client = try SharedExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+            XCTAssertEqual(request.httpMethod, "DELETE")
+            XCTAssertEqual(request.url?.path, "/v1/groups/\(groupID)/expenses/\(id)")
+            XCTAssertEqual(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?
+                .queryItems?.first?.value, "4")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
+            return (Data(), HTTPURLResponse(url: request.url!, statusCode: 204,
+                                            httpVersion: nil, headerFields: nil)!)
+        }
+        try await client.deleteExpense(expense, token: "secret")
+    }
+
+    func testRejectsInsecureRemoteURL() {
+        XCTAssertThrowsError(try SharedExpenseClient(baseURL: URL(string: "http://example.com")!))
+    }
+}

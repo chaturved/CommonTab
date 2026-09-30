@@ -1,6 +1,16 @@
 import XCTest
 
 final class SplitTipUITests: XCTestCase {
+    @MainActor
+    func testSharedExpensesEntryShowsAccountForm() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        app.launch()
+        app.buttons["openSharedExpenses"].tap()
+        XCTAssertTrue(app.navigationBars["Shared expenses"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["sharedAuthenticate"].exists)
+    }
+
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
@@ -15,6 +25,7 @@ final class SplitTipUITests: XCTestCase {
             "-settings.tipThree", "20", "-settings.selectedTip", "0"
         ]
         app.launch()
+        app.buttons["openCalculator"].tap()
 
         let billField = app.textFields["billAmount"]
         XCTAssertTrue(billField.waitForExistence(timeout: 5))
@@ -38,6 +49,7 @@ final class SplitTipUITests: XCTestCase {
             "-settings.tipThree", "20"
         ]
         app.launch()
+        app.buttons["openCalculator"].tap()
 
         let billField = app.textFields["billAmount"]
         XCTAssertTrue(billField.waitForExistence(timeout: 5))
@@ -63,6 +75,7 @@ final class SplitTipUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
         app.launch()
+        app.buttons["openCalculator"].tap()
 
         app.buttons["openItemizedBill"].tap()
         XCTAssertTrue(app.navigationBars["Itemized split"].waitForExistence(timeout: 15))
@@ -95,12 +108,9 @@ extension SplitTipUITests {
         app.launch()
         let merchantName = "UI Test Market \(UUID().uuidString.prefix(8))"
 
-        let library = app.buttons["openExpenseLibrary"]
-        if !library.isHittable { app.swipeUp() }
-        XCTAssertTrue(library.waitForExistence(timeout: 5))
-        library.tap()
-        XCTAssertTrue(app.navigationBars["Expenses"].waitForExistence(timeout: 5))
-        app.buttons["addExpense"].tap()
+        let addExpense = app.buttons["addExpenseFromHome"]
+        XCTAssertTrue(addExpense.waitForExistence(timeout: 5))
+        addExpense.tap()
 
         let merchant = app.textFields["expenseMerchant"]
         XCTAssertTrue(merchant.waitForExistence(timeout: 5))
@@ -111,8 +121,13 @@ extension SplitTipUITests {
         amount.typeText("12.34")
         app.buttons["saveExpense"].tap()
 
-        XCTAssertTrue(app.staticTexts[merchantName].waitForExistence(timeout: 5))
+        let savedExpense = app.staticTexts[merchantName]
+        for _ in 0..<3 where !savedExpense.exists { app.swipeUp() }
+        XCTAssertTrue(savedExpense.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["$12.34"].exists)
+        savedExpense.tap()
+        XCTAssertTrue(app.navigationBars[merchantName].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["editExpense"].exists)
     }
 }
 
@@ -123,6 +138,7 @@ extension SplitTipUITests {
         app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        app.buttons["openCalculator"].tap()
         app.buttons["openItemizedBill"].tap()
 
         let itemName = app.textFields["New item name"]
@@ -146,5 +162,27 @@ extension SplitTipUITests {
         merchant.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + name)
         app.buttons["saveExpense"].tap()
         XCTAssertTrue(app.staticTexts["Saved to Expenses"].waitForExistence(timeout: 5))
+    }
+}
+
+
+extension SplitTipUITests {
+    @MainActor
+    func testExpenseHomeCreatesGroup() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.buttons["addExpenseFromHome"].waitForExistence(timeout: 5))
+        app.buttons["createGroupFromHome"].tap()
+
+        let name = "Trip \(UUID().uuidString.prefix(8))"
+        let groupName = app.textFields["groupName"]
+        XCTAssertTrue(groupName.waitForExistence(timeout: 5))
+        groupName.tap()
+        groupName.typeText(name)
+        app.buttons["saveGroup"].tap()
+
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["2 members · Settled"].exists)
     }
 }

@@ -19,6 +19,7 @@ let package = Package(
                 "Domain/Models/ItemizedBill.swift",
                 "Domain/Parsing/ReceiptItemParser.swift",
                 "Data/Remote/SharedBillClient.swift",
+                "Data/Remote/SharedExpenseClient.swift",
                 "Data/Remote/ProductAnalytics.swift",
                 "Domain/Models/SavedExpense.swift",
                 "Application/ExpenseStore.swift",

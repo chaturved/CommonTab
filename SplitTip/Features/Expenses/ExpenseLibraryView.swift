@@ -7,7 +7,6 @@ struct ExpenseLibraryView: View {
     @State private var expenses: [SavedExpense] = []
     @State private var searchText = ""
     @State private var categoryFilter = "all"
-    @State private var editingExpense: SavedExpense?
     @State private var showingEditor = false
     @State private var errorMessage: String?
 
@@ -44,9 +43,8 @@ struct ExpenseLibraryView: View {
                 }
                 Section {
                     ForEach(visibleExpenses) { expense in
-                        Button {
-                            editingExpense = expense
-                            showingEditor = true
+                        NavigationLink {
+                            ExpenseDetailView(store: store, expense: expense, onUpdated: reload)
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -73,7 +71,6 @@ struct ExpenseLibraryView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    editingExpense = nil
                     showingEditor = true
                 } label: {
                     Label("Add expense", systemImage: "plus")
@@ -83,7 +80,7 @@ struct ExpenseLibraryView: View {
         }
         .onAppear(perform: reload)
         .sheet(isPresented: $showingEditor) {
-            ExpenseEditorView(store: store, expense: editingExpense, onSaved: reload)
+            ExpenseEditorView(store: store, expense: nil, onSaved: reload)
         }
         .alert("Expense library error", isPresented: Binding(
             get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }

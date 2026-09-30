@@ -47,7 +47,7 @@ struct ExpenseGroupsView: View {
     }
 }
 
-private struct CreateExpenseGroupView: View {
+struct CreateExpenseGroupView: View {
     let store: ExpenseStore
     let onSaved: () -> Void
     @Environment(\.dismiss) private var dismiss
@@ -104,13 +104,31 @@ private struct CreateExpenseGroupView: View {
     }
 }
 
+private enum GroupActivityEntry: Identifiable {
+    case expense(SavedExpense)
+    case settlement(GroupSettlement)
+
+    var id: String {
+        switch self {
+        case .expense(let expense): "expense-\(expense.id)"
+        case .settlement(let settlement): "settlement-\(settlement.id)"
+        }
+    }
+
+    var date: Date {
+        switch self {
+        case .expense(let expense): expense.date
+        case .settlement(let settlement): settlement.date
+        }
+    }
+}
+
 struct ExpenseGroupDetailView: View {
     let store: ExpenseStore
     let groupID: UUID
     @State private var group: ExpenseGroup?
     @State private var expenses: [SavedExpense] = []
     @State private var showingExpense = false
-    @State private var editingExpense: SavedExpense?
     @State private var showingSettlement = false
     @State private var showingAddMember = false
     @State private var newMemberName = ""
@@ -118,6 +136,12 @@ struct ExpenseGroupDetailView: View {
 
     private var groupExpenses: [SavedExpense] {
         expenses.filter { $0.split?.groupID == groupID }
+    }
+
+    private var activity: [GroupActivityEntry] {
+        let expenses = groupExpenses.map(GroupActivityEntry.expense)
+        let settlements = group?.settlements.map(GroupActivityEntry.settlement) ?? []
+        return (expenses + settlements).sorted { $0.date > $1.date }
     }
 
     private var balances: [GroupBalance] {
@@ -142,31 +166,38 @@ struct ExpenseGroupDetailView: View {
                     ForEach(group.members) { member in Text(member.name) }
                     Button("Add member") { showingAddMember = true }
                 }
-                Section("Expenses") {
-                    if groupExpenses.isEmpty {
-                        Text("No shared expenses yet.").foregroundStyle(.secondary)
+                Section("Activity") {
+                    if activity.isEmpty {
+                        Text("No shared activity yet.").foregroundStyle(.secondary)
                     }
-                    ForEach(groupExpenses) { expense in
-                        Button {
-                            editingExpense = expense
-                        } label: {
-                            HStack {
-                                Text(expense.merchant)
-                                Spacer()
-                                Text(expense.amount.formatted(.currency(code: group.currencyCode)))
+                    ForEach(activity) { entry in
+                        switch entry {
+                        case .expense(let expense):
+                            NavigationLink {
+                                ExpenseDetailView(store: store, expense: expense, onUpdated: reload)
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(expense.merchant)
+                                        Text(expense.date.formatted(date: .abbreviated, time: .omitted))
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Text(expense.amount.formatted(.currency(code: group.currencyCode)))
+                                }
                             }
-                            .foregroundStyle(.primary)
+                        case .settlement(let settlement):
+                            let from = group.members.first { $0.id == settlement.fromID }?.name ?? "Member"
+                            let to = group.members.first { $0.id == settlement.toID }?.name ?? "Member"
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("\(from) paid \(to)")
+                                Text("\(CurrencyUnits.amount(settlement.minorUnits, currencyCode: group.currencyCode).formatted(.currency(code: group.currencyCode))) · \(settlement.date.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                     }
                     Button("Add shared expense") { showingExpense = true }
                         .accessibilityIdentifier("addGroupExpense")
-                }
-                Section("Settlements") {
-                    ForEach(group.settlements) { settlement in
-                        let from = group.members.first { $0.id == settlement.fromID }?.name ?? "Member"
-                        let to = group.members.first { $0.id == settlement.toID }?.name ?? "Member"
-                        Text("\(from) paid \(to) · \(CurrencyUnits.amount(settlement.minorUnits, currencyCode: group.currencyCode).formatted(.currency(code: group.currencyCode)))")
-                    }
                     Button("Record settlement") { showingSettlement = true }
                         .disabled(!balances.contains(where: { $0.minorUnits < 0 }) ||
                                   !balances.contains(where: { $0.minorUnits > 0 }))
@@ -177,9 +208,6 @@ struct ExpenseGroupDetailView: View {
         .onAppear(perform: reload)
         .sheet(isPresented: $showingExpense) {
             ExpenseEditorView(store: store, expense: nil, preferredGroupID: groupID, onSaved: reload)
-        }
-        .sheet(item: $editingExpense) { expense in
-            ExpenseEditorView(store: store, expense: expense, onSaved: reload)
         }
         .sheet(isPresented: $showingSettlement) {
             if let group {
