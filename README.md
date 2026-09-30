@@ -51,10 +51,17 @@ An invite code grants read and edit access to its bill. Share it only with inten
 
 | Area | Source |
 | --- | --- |
-| SwiftUI app and flows | `SplitTip/CalculatorView.swift`, `ReceiptScannerView.swift`, `ItemizedBillView.swift`, `SharedBillView.swift`, `ExpenseLibraryView.swift`, `ExpenseGroupsView.swift` |
-| Calculation and parsing | `SplitTip/TipCalculation.swift`, `ItemizedBill.swift`, `ReceiptAmountParser.swift`, `ReceiptItemParser.swift`, `SavedExpense.swift`, `ExpenseStore.swift`, `ExpenseGroup.swift`, `ItemizedExpenseMapper.swift` |
-| Networking and analytics | `SplitTip/SharedBillClient.swift`, `ExchangeRateService.swift`, `ProductAnalytics.swift` |
-| API and storage | `backend/splittip_api/main.py`, `models.py`, `storage.py` |
+| App and SwiftUI features | `SplitTip/App`, `SplitTip/Features` |
+| Business models, calculations, parsing, validation | `SplitTip/Domain` |
+| Expense operations | `SplitTip/Application` |
+| Local storage, API clients, analytics | `SplitTip/Data` |
+| Camera and on-device OCR | `SplitTip/Platform` |
+| Icons, launch screen, configuration | `SplitTip/Resources` |
+| API and server storage | `backend/splittip_api` |
+
+## Architecture
+
+The expense service coordinates pure validation and separate archive and receipt repositories. The existing JSON archive remains a local persistence format. See [architecture and client expansion](docs/architecture.md) for dependency boundaries and the plan for web or React Native clients. The shared-bill API exposes its contract at `/openapi.json`; saved expenses and groups are still local only.
 
 ## Tests and release status
 
@@ -63,7 +70,7 @@ swift test
 backend/.venv/bin/python -m pytest -q backend/tests
 ```
 
-The Swift package tests cover expense persistence, group splits, balances, settlements, archive migration, itemized-to-group mapping, money rounding, receipt parsing, session conflicts, and analytics payloads. API tests cover sessions, authentication, validation, expiry, and metrics access. `SplitTipUITests` contains calculator, itemized-flow, and manual-expense and itemized-save tests; run them through **Product → Test** in Xcode when a simulator is available. CI runs the Swift and API tests and builds the iOS app for a generic simulator destination.
+The Swift package tests cover archive-write rollback, expense persistence, group splits, balances, settlements, archive migration, itemized-to-group mapping, money rounding, receipt parsing, session conflicts, and analytics payloads. API tests cover sessions, authentication, validation, expiry, and metrics access. `SplitTipUITests` contains calculator, itemized-flow, and manual-expense and itemized-save tests; run them through **Product → Test** in Xcode when a simulator is available. CI runs the Swift and API tests and builds the iOS app for a generic simulator destination.
 
 The earlier automated iOS suite passed on an iPhone 17 Pro simulator running iOS 26.3. The new expense and itemized-save UI tests are pending simulator validation. Manual simulator, physical-device, camera, accessibility, and TestFlight validation remain. The API has no hosted deployment or real user metrics. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, backups, and a database suited to the expected scale; the current SQLite setup targets one service instance.
 
