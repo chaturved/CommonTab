@@ -72,7 +72,7 @@ backend/.venv/bin/python -m pytest -q backend/tests
 
 The Swift package tests cover archive-write rollback, expense persistence, group splits, balances, settlements, archive migration, itemized-to-group mapping, money rounding, receipt parsing, session conflicts, and analytics payloads. API tests cover sessions, authentication, validation, expiry, and metrics access. `SplitTipUITests` contains calculator, itemized-flow, and manual-expense and itemized-save tests; run them through **Product → Test** in Xcode when a simulator is available. CI runs the Swift and API tests and builds the iOS app for a generic simulator destination.
 
-The earlier automated iOS suite passed on an iPhone 17 Pro simulator running iOS 26.3. The new expense and itemized-save UI tests are pending simulator validation. Manual simulator, physical-device, camera, accessibility, and TestFlight validation remain. The API has no hosted deployment or real user metrics. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, backups, and a database suited to the expected scale; the current SQLite setup targets one service instance.
+On an iPhone 17 Pro simulator running iOS 26.3, all 27 iOS unit tests and the calculator, itemized, and expense UI test cases passed. The custom-tip UI case passed after its assertion was updated to scroll the total into view. Manual simulator, physical-device, camera, accessibility, and TestFlight validation remain. The API has no hosted deployment or real user metrics. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, backups, and a database suited to the expected scale; the current SQLite setup targets one service instance.
 
 ## License
 

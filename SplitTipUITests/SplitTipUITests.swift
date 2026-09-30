@@ -52,7 +52,10 @@ final class SplitTipUITests: XCTestCase {
         customTipField.tap()
         let existingValue = customTipField.value as? String ?? ""
         customTipField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingValue.count) + "17.5")
-        XCTAssertTrue(app.staticTexts["$117.50"].waitForExistence(timeout: 5))
+        XCTAssertEqual(customTipField.value as? String, "17.5")
+        let total = app.staticTexts["$117.50"]
+        for _ in 0..<3 where !total.exists { app.swipeUp() }
+        XCTAssertTrue(total.waitForExistence(timeout: 5))
     }
 
     @MainActor
