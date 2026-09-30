@@ -6,9 +6,13 @@ from pathlib import Path
 from uuid import UUID
 
 from fastapi import FastAPI, Header, HTTPException, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from .models import CreateSession, CreatedSession, ProductEvent, Session, UpdateSession
 from .storage import SessionExpired, SessionMissing, SessionStore, VersionConflict
+from .shared_routes import router_for
+from .shared_storage import SharedError, SharedStore
 
 
 def create_app(database_path: Path | None = None, lifetime_seconds: int = 7 * 24 * 60 * 60) -> FastAPI:
@@ -16,7 +20,20 @@ def create_app(database_path: Path | None = None, lifetime_seconds: int = 7 * 24
         "SPLITTIP_DB_PATH", str(Path(__file__).resolve().parent.parent / "data" / "splittip.sqlite3")
     ))
     store = SessionStore(path, lifetime_seconds=lifetime_seconds)
-    app = FastAPI(title="SplitTip API", version="0.1.0")
+    shared_store = SharedStore(path)
+    app = FastAPI(title="SplitTip API", version="0.2.0")
+
+    @app.exception_handler(SharedError)
+    def shared_error_handler(_request, error: SharedError):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=error.status, content={"detail": error.message})
+
+    app.include_router(router_for(shared_store))
+    app.mount("/app", StaticFiles(directory=Path(__file__).parent / "web", html=True), name="web")
+
+    @app.get("/", include_in_schema=False)
+    def web_home():
+        return RedirectResponse("/app/")
 
     def token_from_header(authorization: str | None) -> str:
         if not authorization or not authorization.startswith("Bearer "):
