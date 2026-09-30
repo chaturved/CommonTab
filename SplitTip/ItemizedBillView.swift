@@ -3,6 +3,7 @@ import SwiftUI
 struct ItemizedBillView: View {
     @Binding var bill: ItemizedBill
     var receiptImageData: Data? = nil
+    var currencyCode: String = Locale.current.currency?.identifier ?? "USD"
     var allowSaveExpense = true
     @Environment(\.dismiss) private var dismiss
     @State private var newItemName = ""
@@ -18,10 +19,8 @@ struct ItemizedBillView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.locale = .current
-        return formatter.maximumFractionDigits
+        return CurrencyUnits.fractionDigits(for: currencyCode) ?? formatter.maximumFractionDigits
     }
-
-    private var currencyCode: String { Locale.current.currency?.identifier ?? "USD" }
 
     var body: some View {
         NavigationStack {

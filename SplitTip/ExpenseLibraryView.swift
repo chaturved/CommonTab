@@ -245,7 +245,7 @@ struct ExpenseEditorView: View {
             }
             .sheet(isPresented: $showingItemizedEditor) {
                 if itemizedBillDraft != nil {
-                    ItemizedBillView(bill: itemizedBinding, allowSaveExpense: false)
+                    ItemizedBillView(bill: itemizedBinding, currencyCode: currencyCode, allowSaveExpense: false)
                 }
             }
             .alert("Could not save expense", isPresented: Binding(
