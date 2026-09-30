@@ -13,7 +13,7 @@ struct ExpenseHomeView: View {
         List {
             Section("Across devices") {
                 NavigationLink {
-                    SharedExpensesView()
+                    GroupExpensesView()
                 } label: {
                     Label("Shared expenses", systemImage: "person.2")
                 }

@@ -3,7 +3,7 @@ import Foundation
 import FoundationNetworking
 #endif
 
-struct SharedBillSession: Codable, Equatable {
+struct BillSession: Codable, Equatable {
     let id: UUID
     let version: Int
     let expiresAt: String
@@ -17,8 +17,8 @@ struct CreatedBillSession: Codable, Equatable {
     let expiresAt: String
     let bill: ItemizedBill
 
-    var session: SharedBillSession {
-        SharedBillSession(id: id, version: version, expiresAt: expiresAt, bill: bill)
+    var session: BillSession {
+        BillSession(id: id, version: version, expiresAt: expiresAt, bill: bill)
     }
 
     var inviteCode: String { "\(id.uuidString).\(accessToken)" }
@@ -42,7 +42,7 @@ struct BillSessionCredentials: Equatable {
     var inviteCode: String { "\(id.uuidString).\(token)" }
 }
 
-enum SharedBillClientError: Error, Equatable {
+enum BillSessionClientError: Error, Equatable {
     case invalidServerURL
     case invalidResponse
     case unauthorized
@@ -52,18 +52,15 @@ enum SharedBillClientError: Error, Equatable {
     case server(Int)
 }
 
-struct SharedBillClient: Sendable {
+struct BillSessionClient: Sendable {
     typealias Loader = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
     let baseURL: URL
     private let load: Loader
 
     init(baseURL: URL, load: @escaping Loader = { try await URLSession.shared.data(for: $0) }) throws {
-        guard let scheme = baseURL.scheme?.lowercased(),
-              let host = baseURL.host?.lowercased(), !host.isEmpty,
-              scheme == "https" || (scheme == "http" && ["localhost", "127.0.0.1"].contains(host)),
-              baseURL.user == nil, baseURL.password == nil, baseURL.query == nil, baseURL.fragment == nil else {
-            throw SharedBillClientError.invalidServerURL
+        guard ServerURLValidator.isAllowed(baseURL) else {
+            throw BillSessionClientError.invalidServerURL
         }
         self.baseURL = baseURL
         self.load = load
@@ -75,17 +72,17 @@ struct SharedBillClient: Sendable {
         return try JSONDecoder().decode(CreatedBillSession.self, from: data)
     }
 
-    func fetch(_ credentials: BillSessionCredentials) async throws -> SharedBillSession {
+    func fetch(_ credentials: BillSessionCredentials) async throws -> BillSession {
         let data = try await request("v1/sessions/\(credentials.id.uuidString)", token: credentials.token)
-        return try JSONDecoder().decode(SharedBillSession.self, from: data)
+        return try JSONDecoder().decode(BillSession.self, from: data)
     }
 
-    func update(_ bill: ItemizedBill, version: Int, credentials: BillSessionCredentials) async throws -> SharedBillSession {
+    func update(_ bill: ItemizedBill, version: Int, credentials: BillSessionCredentials) async throws -> BillSession {
         let body = try JSONEncoder().encode(UpdateRequest(version: version, bill: bill))
         let data = try await request(
             "v1/sessions/\(credentials.id.uuidString)", method: "PUT", token: credentials.token, body: body
         )
-        return try JSONDecoder().decode(SharedBillSession.self, from: data)
+        return try JSONDecoder().decode(BillSession.self, from: data)
     }
 
     private func request(
@@ -105,14 +102,14 @@ struct SharedBillClient: Sendable {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
         let (data, response) = try await load(request)
-        guard let response = response as? HTTPURLResponse else { throw SharedBillClientError.invalidResponse }
+        guard let response = response as? HTTPURLResponse else { throw BillSessionClientError.invalidResponse }
         switch response.statusCode {
         case expectedStatus: return data
-        case 401: throw SharedBillClientError.unauthorized
-        case 404: throw SharedBillClientError.missing
-        case 409: throw SharedBillClientError.conflict
-        case 410: throw SharedBillClientError.expired
-        default: throw SharedBillClientError.server(response.statusCode)
+        case 401: throw BillSessionClientError.unauthorized
+        case 404: throw BillSessionClientError.missing
+        case 409: throw BillSessionClientError.conflict
+        case 410: throw BillSessionClientError.expired
+        default: throw BillSessionClientError.server(response.statusCode)
         }
     }
 

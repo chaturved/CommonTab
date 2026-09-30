@@ -10,7 +10,7 @@ let package = Package(
         .target(
             name: "SplitTipCore",
             path: "SplitTip",
-            exclude: ["App", "Features", "Platform", "Resources", "Data/Local/SharedSessionStore.swift"],
+            exclude: ["App", "Features", "Platform", "Resources", "Data/Local/BillSessionCredentialStore.swift"],
             sources: [
                 "Domain/Calculations/TipCalculation.swift",
                 "Data/Remote/ExchangeRateService.swift",
@@ -18,8 +18,11 @@ let package = Package(
                 "Domain/Parsing/MoneyInputParser.swift",
                 "Domain/Models/ItemizedBill.swift",
                 "Domain/Parsing/ReceiptItemParser.swift",
-                "Data/Remote/SharedBillClient.swift",
-                "Data/Remote/SharedExpenseClient.swift",
+                "Data/Remote/BillSessionClient.swift",
+                "Data/Remote/GroupExpenseDTO.swift",
+                "Data/Remote/GroupExpenseClient.swift",
+                "Data/Remote/ServerURLValidator.swift",
+                "Data/Local/AccountCredentialStore.swift",
                 "Data/Remote/ProductAnalytics.swift",
                 "Domain/Models/SavedExpense.swift",
                 "Application/ExpenseStore.swift",

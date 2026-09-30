@@ -23,9 +23,9 @@
 		A10000000000000000000014 /* ItemizedBill.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* ItemizedBill.swift */; };
 		A10000000000000000000016 /* ReceiptItemParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* ReceiptItemParser.swift */; };
 		A10000000000000000000018 /* ItemizedBillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* ItemizedBillView.swift */; };
-		A1000000000000000000001A /* SharedBillClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* SharedBillClient.swift */; };
-		A1000000000000000000001C /* SharedBillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* SharedBillView.swift */; };
-		A1000000000000000000001E /* SharedSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* SharedSessionStore.swift */; };
+		A1000000000000000000001A /* BillSessionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* BillSessionClient.swift */; };
+		A1000000000000000000001C /* BillSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* BillSessionView.swift */; };
+		A1000000000000000000001E /* BillSessionCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* BillSessionCredentialStore.swift */; };
 		A10000000000000000000020 /* ProductAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* ProductAnalytics.swift */; };
 		A10000000000000000000022 /* SavedExpense.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* SavedExpense.swift */; };
 		A10000000000000000000024 /* ExpenseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000023 /* ExpenseStore.swift */; };
@@ -37,8 +37,17 @@
 		A10000000000000000000030 /* ExpenseValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002F /* ExpenseValidation.swift */; };
 		A30000000000000000000002 /* ExpenseHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* ExpenseHomeView.swift */; };
 		A30000000000000000000005 /* ExpenseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* ExpenseDetailView.swift */; };
-		A40000000000000000000002 /* SharedExpenseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* SharedExpenseClient.swift */; };
-		A40000000000000000000004 /* SharedExpensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000003 /* SharedExpensesView.swift */; };
+		A40000000000000000000002 /* GroupExpenseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* GroupExpenseClient.swift */; };
+		A40000000000000000000004 /* GroupExpensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000003 /* GroupExpensesView.swift */; };
+		A50000000000000000010001 /* GroupExpenseDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000001 /* GroupExpenseDTO.swift */; };
+		A50000000000000000010002 /* AccountCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* AccountCredentialStore.swift */; };
+		A50000000000000000010003 /* GroupExpenseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000003 /* GroupExpenseDetailView.swift */; };
+		A50000000000000000010004 /* GroupExpenseEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* GroupExpenseEditorView.swift */; };
+		A50000000000000000010005 /* ExpenseEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* ExpenseEditorView.swift */; };
+		A50000000000000000010006 /* CreateExpenseGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* CreateExpenseGroupView.swift */; };
+		A50000000000000000010007 /* ExpenseGroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000007 /* ExpenseGroupDetailView.swift */; };
+		A50000000000000000010008 /* RecordSettlementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000008 /* RecordSettlementView.swift */; };
+		A50000000000000000010009 /* ServerURLValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000009 /* ServerURLValidator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,9 +90,9 @@
 		A10000000000000000000013 /* ItemizedBill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemizedBill.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* ReceiptItemParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptItemParser.swift; sourceTree = "<group>"; };
 		A10000000000000000000017 /* ItemizedBillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemizedBillView.swift; sourceTree = "<group>"; };
-		A10000000000000000000019 /* SharedBillClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedBillClient.swift; sourceTree = "<group>"; };
-		A1000000000000000000001B /* SharedBillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedBillView.swift; sourceTree = "<group>"; };
-		A1000000000000000000001D /* SharedSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSessionStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000019 /* BillSessionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillSessionClient.swift; sourceTree = "<group>"; };
+		A1000000000000000000001B /* BillSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillSessionView.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* BillSessionCredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillSessionCredentialStore.swift; sourceTree = "<group>"; };
 		A1000000000000000000001F /* ProductAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductAnalytics.swift; sourceTree = "<group>"; };
 		A10000000000000000000021 /* SavedExpense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedExpense.swift; sourceTree = "<group>"; };
 		A10000000000000000000023 /* ExpenseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseStore.swift; sourceTree = "<group>"; };
@@ -95,8 +104,17 @@
 		A1000000000000000000002F /* ExpenseValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseValidation.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* ExpenseHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseHomeView.swift; sourceTree = "<group>"; };
 		A30000000000000000000004 /* ExpenseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseDetailView.swift; sourceTree = "<group>"; };
-		A40000000000000000000001 /* SharedExpenseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedExpenseClient.swift; sourceTree = "<group>"; };
-		A40000000000000000000003 /* SharedExpensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedExpensesView.swift; sourceTree = "<group>"; };
+		A40000000000000000000001 /* GroupExpenseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExpenseClient.swift; sourceTree = "<group>"; };
+		A40000000000000000000003 /* GroupExpensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExpensesView.swift; sourceTree = "<group>"; };
+		A50000000000000000000001 /* GroupExpenseDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExpenseDTO.swift; sourceTree = "<group>"; };
+		A50000000000000000000002 /* AccountCredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCredentialStore.swift; sourceTree = "<group>"; };
+		A50000000000000000000003 /* GroupExpenseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExpenseDetailView.swift; sourceTree = "<group>"; };
+		A50000000000000000000004 /* GroupExpenseEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupExpenseEditorView.swift; sourceTree = "<group>"; };
+		A50000000000000000000005 /* ExpenseEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseEditorView.swift; sourceTree = "<group>"; };
+		A50000000000000000000006 /* CreateExpenseGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateExpenseGroupView.swift; sourceTree = "<group>"; };
+		A50000000000000000000007 /* ExpenseGroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseGroupDetailView.swift; sourceTree = "<group>"; };
+		A50000000000000000000008 /* RecordSettlementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordSettlementView.swift; sourceTree = "<group>"; };
+		A50000000000000000000009 /* ServerURLValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLValidator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -222,8 +240,8 @@
 				A20000000000000000000011 /* ItemizedBill */,
 				A20000000000000000000012 /* Receipts */,
 				A20000000000000000000013 /* Settings */,
-				A20000000000000000000014 /* SharedBills */,
-				A40000000000000000000005 /* SharedExpenses */,
+				A20000000000000000000014 /* BillSessions */,
+				A40000000000000000000005 /* GroupExpenses */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -249,8 +267,9 @@
 		A20000000000000000000008 /* Local */ = {
 			isa = PBXGroup;
 			children = (
+				A50000000000000000000002 /* AccountCredentialStore.swift */,
 				A1000000000000000000002D /* ExpensePersistence.swift */,
-				A1000000000000000000001D /* SharedSessionStore.swift */,
+				A1000000000000000000001D /* BillSessionCredentialStore.swift */,
 			);
 			path = Local;
 			sourceTree = "<group>";
@@ -258,8 +277,10 @@
 		A20000000000000000000009 /* Remote */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000019 /* SharedBillClient.swift */,
-				A40000000000000000000001 /* SharedExpenseClient.swift */,
+				A50000000000000000000009 /* ServerURLValidator.swift */,
+				A50000000000000000000001 /* GroupExpenseDTO.swift */,
+				A10000000000000000000019 /* BillSessionClient.swift */,
+				A40000000000000000000001 /* GroupExpenseClient.swift */,
 				A10000000000000000000009 /* ExchangeRateService.swift */,
 				A1000000000000000000001F /* ProductAnalytics.swift */,
 			);
@@ -314,6 +335,7 @@
 		A2000000000000000000000F /* Expenses */ = {
 			isa = PBXGroup;
 			children = (
+				A50000000000000000000005 /* ExpenseEditorView.swift */,
 				A10000000000000000000025 /* ExpenseLibraryView.swift */,
 				A30000000000000000000004 /* ExpenseDetailView.swift */,
 			);
@@ -323,6 +345,9 @@
 		A20000000000000000000010 /* Groups */ = {
 			isa = PBXGroup;
 			children = (
+				A50000000000000000000008 /* RecordSettlementView.swift */,
+				A50000000000000000000007 /* ExpenseGroupDetailView.swift */,
+				A50000000000000000000006 /* CreateExpenseGroupView.swift */,
 				A10000000000000000000029 /* ExpenseGroupsView.swift */,
 			);
 			path = Groups;
@@ -352,12 +377,12 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
-		A20000000000000000000014 /* SharedBills */ = {
+		A20000000000000000000014 /* BillSessions */ = {
 			isa = PBXGroup;
 			children = (
-				A1000000000000000000001B /* SharedBillView.swift */,
+				A1000000000000000000001B /* BillSessionView.swift */,
 			);
-			path = SharedBills;
+			path = BillSessions;
 			sourceTree = "<group>";
 		};
 		A20000000000000000000015 /* Receipts */ = {
@@ -376,12 +401,14 @@
 			path = Home;
 			sourceTree = "<group>";
 		};
-		A40000000000000000000005 /* SharedExpenses */ = {
+		A40000000000000000000005 /* GroupExpenses */ = {
 			isa = PBXGroup;
 			children = (
-				A40000000000000000000003 /* SharedExpensesView.swift */,
+				A50000000000000000000004 /* GroupExpenseEditorView.swift */,
+				A50000000000000000000003 /* GroupExpenseDetailView.swift */,
+				A40000000000000000000003 /* GroupExpensesView.swift */,
 			);
-			path = SharedExpenses;
+			path = GroupExpenses;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -524,11 +551,20 @@
 				A10000000000000000000014 /* ItemizedBill.swift in Sources */,
 				A10000000000000000000016 /* ReceiptItemParser.swift in Sources */,
 				A10000000000000000000018 /* ItemizedBillView.swift in Sources */,
-				A1000000000000000000001A /* SharedBillClient.swift in Sources */,
-				A40000000000000000000002 /* SharedExpenseClient.swift in Sources */,
-				A40000000000000000000004 /* SharedExpensesView.swift in Sources */,
-				A1000000000000000000001C /* SharedBillView.swift in Sources */,
-				A1000000000000000000001E /* SharedSessionStore.swift in Sources */,
+				A1000000000000000000001A /* BillSessionClient.swift in Sources */,
+				A40000000000000000000002 /* GroupExpenseClient.swift in Sources */,
+				A40000000000000000000004 /* GroupExpensesView.swift in Sources */,
+				A50000000000000000010001 /* GroupExpenseDTO.swift in Sources */,
+				A50000000000000000010002 /* AccountCredentialStore.swift in Sources */,
+				A50000000000000000010003 /* GroupExpenseDetailView.swift in Sources */,
+				A50000000000000000010004 /* GroupExpenseEditorView.swift in Sources */,
+				A50000000000000000010005 /* ExpenseEditorView.swift in Sources */,
+				A50000000000000000010006 /* CreateExpenseGroupView.swift in Sources */,
+				A50000000000000000010007 /* ExpenseGroupDetailView.swift in Sources */,
+				A50000000000000000010008 /* RecordSettlementView.swift in Sources */,
+				A50000000000000000010009 /* ServerURLValidator.swift in Sources */,
+				A1000000000000000000001C /* BillSessionView.swift in Sources */,
+				A1000000000000000000001E /* BillSessionCredentialStore.swift in Sources */,
 				A10000000000000000000020 /* ProductAnalytics.swift in Sources */,
 				A10000000000000000000026 /* ExpenseLibraryView.swift in Sources */,
 				A30000000000000000000005 /* ExpenseDetailView.swift in Sources */,

@@ -6,7 +6,7 @@ struct SplitTipApp: App {
 
     init() {
         if ProcessInfo.processInfo.environment["SPLITTIP_UI_TEST_RESET_STATE"] == "1" {
-            SharedCredentials.clear()
+            AccountCredentialStore.clear()
         }
     }
 

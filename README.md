@@ -65,11 +65,11 @@ Shared group requests require an account bearer token. An invitation can be acce
 | Local storage, API clients, analytics | `SplitTip/Data` |
 | Camera and on-device OCR | `SplitTip/Platform` |
 | Icons, launch screen, configuration | `SplitTip/Resources` |
-| API and server storage | `backend/splittip_api` |
+| API composition and feature packages | `backend/splittip_api` (`accounts`, `groups`, `bill_sessions`, `analytics`) |
 
 ## Architecture
 
-The local expense service coordinates validation and separate archive and receipt repositories. Shared group state is authoritative on the server. The iOS client uses `/v1` endpoints and receive server-computed allocations and balances. The OpenAPI contract is at `/openapi.json`; see [architecture](docs/architecture.md) and [shared API contract](docs/shared-api.md).
+The local expense service coordinates validation and separate archive and receipt repositories. Shared group state is authoritative on the server. The iOS client uses `/v1` endpoints and receives server-computed allocations and balances. The OpenAPI contract is at `/openapi.json`; see [architecture](docs/architecture.md) and [shared API contract](docs/shared-api.md).
 
 ## Tests and release status
 

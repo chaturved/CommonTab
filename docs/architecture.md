@@ -1,15 +1,40 @@
 # Architecture
 
-SplitTip has two expense stores with different lifecycles. The iOS local archive keeps personal expenses, local groups, itemized details, and receipt photos on one device. The shared API keeps authenticated group members, shared expenses, balances, settlements, and receipt images in a server database. Importing a local expense into a shared group is an explicit user action; it creates a new shared record after the user reviews its payer and split.
+SplitTip has two expense stores with different lifecycles. The iOS local archive keeps personal expenses, local groups, itemized details, and receipt photos on one device. The API keeps authenticated group members, shared expenses, balances, settlements, and receipt images in a server database. Importing a local expense into a shared group is an explicit user action; it creates a new server record after the user reviews its payer and split.
+
+## Project layout
+
+```text
+SplitTip/
+  App/                    App entry point and composition
+  Application/            Local expense use cases and store
+  Domain/                 Money, expense models, calculations, and parsers
+  Data/
+    Local/                Archive, receipt files, and Keychain credentials
+    Remote/               Typed API clients, DTOs, and analytics
+  Features/               SwiftUI screens grouped by user workflow
+  Platform/               Camera and on-device OCR adapters
+  Resources/              Assets and app configuration
+backend/
+  splittip_api/
+    accounts/             Account models, authentication, routes, repository
+    groups/               Group expense rules, persistence, and routes
+    bill_sessions/        Temporary itemized bill session API
+    analytics/            Anonymous event counters and metrics API
+    database.py           Shared SQLite connection and schema
+    main.py               App composition and exception handling
+  tests/                  HTTP contract and behavior tests
+SplitTipTests/            Swift domain, persistence, and client tests
+SplitTipUITests/          End-to-end iOS flows
+```
 
 ## Dependency boundaries
 
-- `SplitTip/Domain`: Swift money math, itemized calculations, validation, and local models. These types have no SwiftUI dependency.
-- `SplitTip/Application/ExpenseStore.swift`: coordinates the local archive and receipt repository interfaces.
-- `SplitTip/Data/Local`: versioned JSON archive and receipt files in Application Support.
-- `SplitTip/Data/Remote/SharedExpenseClient.swift`: typed HTTP transport for the shared API and Keychain token storage. `SharedBillClient.swift` remains a separate temporary bill-session client.
-- `SplitTip/Features`: SwiftUI navigation, form state, and user initiated actions. Shared expense views pass drafts to the remote client; the API returns canonical allocations and balances.
-- `backend/splittip_api/shared_models.py`: request validation and the `/v1` contract. `shared_storage.py` owns account, membership, split, balance, settlement, and receipt rules. `shared_routes.py` connects HTTP routes to that service. The existing temporary shared-bill session API remains independent.
+- `SplitTip/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
+- `SplitTip/Application` coordinates local archive and receipt repository interfaces. `SplitTip/Data/Local` implements storage and keeps credentials in the Keychain.
+- `SplitTip/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
+- `SplitTip/Features` owns SwiftUI navigation and form state. Screens are grouped by workflow; editors and details have their own files.
+- The backend composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
 
 ## Cross-platform contract
 

@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-struct SharedBillView: View {
+struct BillSessionView: View {
     @Binding var bill: ItemizedBill
     @AppStorage("settings.serverURL") private var serverURL = "http://localhost:8000"
     @AppStorage("analytics.enabled") private var analyticsEnabled = false
@@ -48,7 +48,7 @@ struct SharedBillView: View {
                         .disabled(busy || !billIsValid)
                     if let version { Text("Version \(version)").foregroundStyle(.secondary) }
                     Button("Leave session", role: .destructive) {
-                        SharedSessionStore.clear()
+                        BillSessionCredentialStore.clear()
                         activeCredentials = nil
                         version = nil
                         inviteCode = ""
@@ -62,7 +62,7 @@ struct SharedBillView: View {
         }
         .navigationTitle("Shared bill")
         .onAppear {
-            guard let saved = SharedSessionStore.load(), saved.serverURL == serverURL,
+            guard let saved = BillSessionCredentialStore.load(), saved.serverURL == serverURL,
                   let credentials = BillSessionCredentials(inviteCode: saved.inviteCode) else { return }
             inviteCode = saved.inviteCode
             activeCredentials = credentials
@@ -74,11 +74,11 @@ struct SharedBillView: View {
         (try? ItemizedBillCalculator.calculate(bill)) != nil
     }
 
-    private func client() throws -> SharedBillClient {
+    private func client() throws -> BillSessionClient {
         guard let url = URL(string: serverURL.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw SharedBillClientError.invalidServerURL
+            throw BillSessionClientError.invalidServerURL
         }
-        return try SharedBillClient(baseURL: url)
+        return try BillSessionClient(baseURL: url)
     }
 
     private func create() async {
@@ -86,7 +86,7 @@ struct SharedBillView: View {
         defer { busy = false }
         do {
             let created = try await client().create(bill)
-            try SharedSessionStore.save(SavedBillSession(
+            try BillSessionCredentialStore.save(StoredBillSession(
                 serverURL: serverURL, inviteCode: created.inviteCode, version: created.version
             ))
             inviteCode = created.inviteCode
@@ -106,7 +106,7 @@ struct SharedBillView: View {
         defer { busy = false }
         do {
             let session = try await client().fetch(credentials)
-            try SharedSessionStore.save(SavedBillSession(
+            try BillSessionCredentialStore.save(StoredBillSession(
                 serverURL: serverURL, inviteCode: credentials.inviteCode, version: session.version
             ))
             bill = session.bill
@@ -123,7 +123,7 @@ struct SharedBillView: View {
         defer { busy = false }
         do {
             let session = try await client().fetch(credentials)
-            try SharedSessionStore.save(SavedBillSession(
+            try BillSessionCredentialStore.save(StoredBillSession(
                 serverURL: serverURL, inviteCode: credentials.inviteCode, version: session.version
             ))
             bill = session.bill
@@ -138,28 +138,28 @@ struct SharedBillView: View {
         defer { busy = false }
         do {
             let session = try await client().update(bill, version: version, credentials: credentials)
-            try SharedSessionStore.save(SavedBillSession(
+            try BillSessionCredentialStore.save(StoredBillSession(
                 serverURL: serverURL, inviteCode: credentials.inviteCode, version: session.version
             ))
             self.version = session.version
             message = "Changes saved."
-        } catch SharedBillClientError.conflict {
+        } catch BillSessionClientError.conflict {
             message = "Someone saved a newer version. Load latest changes, then make your edits again."
         } catch { message = description(for: error) }
     }
 
     private func description(for error: Error) -> String {
         switch error {
-        case SharedBillClientError.invalidServerURL:
+        case BillSessionClientError.invalidServerURL:
             return "Set a valid HTTPS server URL in Settings. Localhost HTTP is available for development."
-        case SharedBillClientError.missing, SharedBillClientError.unauthorized:
+        case BillSessionClientError.missing, BillSessionClientError.unauthorized:
             return "Session or invite code not found."
-        case SharedBillClientError.expired:
-            SharedSessionStore.clear()
+        case BillSessionClientError.expired:
+            BillSessionCredentialStore.clear()
             activeCredentials = nil
             version = nil
             return "This session expired. Create a new shared bill."
-        case SharedBillClientError.conflict:
+        case BillSessionClientError.conflict:
             return "Someone saved a newer version. Load latest changes first."
         default:
             return "Could not connect or save. Check the server URL and your connection."

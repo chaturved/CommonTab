@@ -142,7 +142,7 @@ struct ItemizedBillView: View {
 
                 Section("Collaborate") {
                     NavigationLink {
-                        SharedBillView(bill: $bill)
+                        BillSessionView(bill: $bill)
                     } label: {
                         Label("Share or join a bill", systemImage: "person.2")
                     }

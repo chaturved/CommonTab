@@ -194,7 +194,7 @@ final class SplitTipTests: XCTestCase {
         XCTAssertTrue(String(decoding: data, as: UTF8.self).contains("\"price\":\"2.35\""))
     }
 
-    func testSharedBillClientCreateFetchUpdateAndConflict() async throws {
+    func testBillSessionClientCreateFetchUpdateAndConflict() async throws {
         let person = BillPerson(name: "Alex")
         let bill = ItemizedBill(
             people: [person],
@@ -205,7 +205,7 @@ final class SplitTipTests: XCTestCase {
         let created = CreatedBillSession(
             id: id, accessToken: token, version: 1, expiresAt: "2026-10-01T00:00:00Z", bill: bill
         )
-        let client = try SharedBillClient(baseURL: URL(string: "https://example.com/api")!) { request in
+        let client = try BillSessionClient(baseURL: URL(string: "https://example.com/api")!) { request in
             XCTAssertEqual(request.url?.path, "/api/v1/sessions" + (request.httpMethod == "POST" ? "" : "/\(id.uuidString)"))
             let response: HTTPURLResponse
             let data: Data
@@ -235,12 +235,12 @@ final class SplitTipTests: XCTestCase {
             _ = try await client.update(bill, version: 1, credentials: credentials)
             XCTFail("Expected version conflict")
         } catch {
-            XCTAssertEqual(error as? SharedBillClientError, .conflict)
+            XCTAssertEqual(error as? BillSessionClientError, .conflict)
         }
     }
 
-    func testSharedBillClientRejectsUntrustedHTTPAndBadCodes() {
-        XCTAssertThrowsError(try SharedBillClient(baseURL: URL(string: "http://example.com")!))
+    func testBillSessionClientRejectsUntrustedHTTPAndBadCodes() {
+        XCTAssertThrowsError(try BillSessionClient(baseURL: URL(string: "http://example.com")!))
         XCTAssertNil(BillSessionCredentials(inviteCode: "invalid"))
         XCTAssertNil(BillSessionCredentials(inviteCode: "\(UUID().uuidString).bad token"))
     }
@@ -500,11 +500,11 @@ extension SplitTipTests {
     }
 }
 
-final class SharedExpenseClientTests: XCTestCase {
+final class GroupExpenseClientTests: XCTestCase {
     func testRegisterSendsAccountAndDecodesSession() async throws {
         let userID = UUID()
         let json = #"{"accessToken":"token-123","expiresAt":"2026-10-30T00:00:00Z","user":{"id":"\#(userID)","email":"ada@example.com","name":"Ada"}}"#
-        let client = try SharedExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+        let client = try GroupExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
             XCTAssertEqual(request.httpMethod, "POST")
             XCTAssertEqual(request.url?.path, "/v1/accounts")
             XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
@@ -524,8 +524,8 @@ final class SharedExpenseClientTests: XCTestCase {
         let id = UUID()
         let groupID = UUID()
         let json = #"{"id":"\#(id)","groupID":"\#(groupID)","merchant":"Lunch","occurredAt":"2026-09-30T00:00:00Z","category":"dining","notes":"","amountMinor":1250,"payerID":"\#(UUID())","method":"equal","allocations":[],"values":[],"version":4,"hasReceipt":false}"#
-        let expense = try JSONDecoder().decode(SharedExpense.self, from: Data(json.utf8))
-        let client = try SharedExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+        let expense = try JSONDecoder().decode(APIExpense.self, from: Data(json.utf8))
+        let client = try GroupExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
             XCTAssertEqual(request.httpMethod, "DELETE")
             XCTAssertEqual(request.url?.path, "/v1/groups/\(groupID)/expenses/\(id)")
             XCTAssertEqual(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?
@@ -538,6 +538,6 @@ final class SharedExpenseClientTests: XCTestCase {
     }
 
     func testRejectsInsecureRemoteURL() {
-        XCTAssertThrowsError(try SharedExpenseClient(baseURL: URL(string: "http://example.com")!))
+        XCTAssertThrowsError(try GroupExpenseClient(baseURL: URL(string: "http://example.com")!))
     }
 }

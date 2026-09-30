@@ -1,17 +1,17 @@
 import Foundation
 import Security
 
-struct SavedBillSession: Codable {
+struct StoredBillSession: Codable {
     let serverURL: String
     let inviteCode: String
     let version: Int
 }
 
-enum SharedSessionStore {
+enum BillSessionCredentialStore {
     private static let service = "com.chaturvedlakkaraju.SplitTip.sharedBill"
     private static let account = "currentSession"
 
-    static func load() -> SavedBillSession? {
+    static func load() -> StoredBillSession? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -22,10 +22,10 @@ enum SharedSessionStore {
         var result: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
               let data = result as? Data else { return nil }
-        return try? JSONDecoder().decode(SavedBillSession.self, from: data)
+        return try? JSONDecoder().decode(StoredBillSession.self, from: data)
     }
 
-    static func save(_ session: SavedBillSession) throws {
+    static func save(_ session: StoredBillSession) throws {
         let data = try JSONEncoder().encode(session)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
