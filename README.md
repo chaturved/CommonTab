@@ -11,7 +11,7 @@ SplitTip is an iOS app for calculating tips and splitting an itemized bill. You 
 1. Open `SplitTip.xcodeproj` and run the `SplitTip` scheme on an iPhone simulator or device.
 2. Open **Saved expenses and receipts** to add a grocery, travel, or other expense manually, or scan and save a receipt. Entries and images remain on this device. Open **Groups and balances** to create a group, add shared expenses, and record settlements.
 3. Enter a bill amount and choose a tip preset or Other for a custom percentage to see the total and exact per-person shares.
-4. Tap **Scan receipt** to take or choose a photo. Review the suggested amount before using it. If line items are detected, review them in the itemized editor and assign them to people. Tap **Save as expense** to keep the line items and scanned photo; choose a group and map each bill person to a group member when saving.
+4. Tap **Scan receipt** to take or choose a photo. Review the suggested amount before using it. If line items are detected, review them in the itemized editor and assign them to people. The scanned amount is the starting total; add a tip only if it is not already included. Tap **Save as expense** to keep the line items and scanned photo; choose a group and map each bill person to a group member when saving.
 5. To use shared bills, start the API below, then open **Assign items to people → Share or join a bill**. Create a session and copy its invite code, or join with a code from another device.
 
 The app defaults to `http://localhost:8000` for local development. A simulator on the same Mac can reach that address. For a physical device or collaboration across devices, set a reachable **HTTPS** API URL in Settings on every device.

@@ -69,6 +69,14 @@ struct ItemizedBill: Codable, Equatable {
         self.receiptTotal = receiptTotal
     }
 
+    mutating func useScannedItems(_ items: [BillItem], total: Decimal) {
+        self.items = items
+        receiptTotal = total
+        tipPercentage = 0
+        let subtotal = items.reduce(Decimal(0)) { $0 + $1.price }
+        tax = max(0, total - subtotal)
+    }
+
     private enum CodingKeys: String, CodingKey {
         case people, items, tax, tipPercentage, receiptTotal
     }

@@ -272,13 +272,7 @@ struct CalculatorView: View {
             return
         }
         scannedReceiptData = result.imageData
-        itemizedBill.items = items
-        itemizedBill.receiptTotal = result.amount
-        if let selectedPercentage {
-            itemizedBill.tipPercentage = selectedPercentage
-        }
-        let subtotal = items.reduce(Decimal(0)) { $0 + $1.price }
-        itemizedBill.tax = max(0, result.amount - subtotal)
+        itemizedBill.useScannedItems(items, total: result.amount)
         openEditorAfterScan = true
     }
 

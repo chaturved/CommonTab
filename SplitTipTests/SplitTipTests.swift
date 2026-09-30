@@ -389,6 +389,22 @@ extension SplitTipTests {
 }
 
 extension SplitTipTests {
+    func testScannedItemizedBillKeepsReceiptTotalUntilExtraTipIsChosen() throws {
+        let person = BillPerson(name: "Alex")
+        var bill = ItemizedBill(people: [person], tipPercentage: 18)
+        bill.useScannedItems([
+            BillItem(name: "Meal", price: 30, assignedPersonIDs: [person.id])
+        ], total: 36)
+
+        let scanned = try ItemizedBillCalculator.calculate(bill)
+        XCTAssertEqual(scanned.tax, 6)
+        XCTAssertEqual(scanned.tip, 0)
+        XCTAssertEqual(scanned.total, bill.receiptTotal)
+
+        bill.tipPercentage = 20
+        XCTAssertEqual(try ItemizedBillCalculator.calculate(bill).total, 42)
+    }
+
     func testItemizedBillBecomesSavedGroupExpenseWithExactShares() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

@@ -109,8 +109,8 @@ struct ItemizedBillView: View {
                             .fontWeight(.semibold)
 
                         if let receiptTotal = bill.receiptTotal,
-                           calculation.subtotal + calculation.tax != receiptTotal {
-                            Text("Items and tax differ from the scanned total \(formatted(receiptTotal)). Review the receipt before sharing.")
+                           calculation.total != receiptTotal {
+                            Text("Split total differs from the scanned amount \(formatted(receiptTotal)). Check whether tip is already included.")
                                 .font(.footnote)
                                 .foregroundStyle(.orange)
                         }
