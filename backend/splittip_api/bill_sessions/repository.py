@@ -26,7 +26,7 @@ class VersionConflict(Exception):
     pass
 
 
-class SessionStore:
+class BillSessionRepository:
     def __init__(self, path: Path, lifetime_seconds: int = 7 * 24 * 60 * 60):
         self.path = path
         self.lifetime_seconds = lifetime_seconds
@@ -39,14 +39,6 @@ class SessionStore:
                     version INTEGER NOT NULL,
                     bill_json TEXT NOT NULL,
                     expires_at INTEGER NOT NULL
-                )"""
-            )
-            db.execute(
-                """CREATE TABLE IF NOT EXISTS event_counts (
-                    name TEXT NOT NULL,
-                    variant TEXT NOT NULL,
-                    count INTEGER NOT NULL,
-                    PRIMARY KEY (name, variant)
                 )"""
             )
 
@@ -117,16 +109,3 @@ class SessionStore:
             raise SessionMissing
         if row["expires_at"] <= int(time.time()):
             raise SessionExpired
-
-    def record_event(self, name: str, variant: str) -> None:
-        with self._connect() as db:
-            db.execute(
-                "INSERT INTO event_counts (name, variant, count) VALUES (?, ?, 1) "
-                "ON CONFLICT(name, variant) DO UPDATE SET count = count + 1",
-                (name, variant),
-            )
-
-    def event_counts(self) -> list[dict]:
-        with self._connect() as db:
-            rows = db.execute("SELECT name, variant, count FROM event_counts ORDER BY name, variant").fetchall()
-        return [dict(row) for row in rows]

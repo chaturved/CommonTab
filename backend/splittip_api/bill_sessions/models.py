@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -59,8 +58,3 @@ class Session(BaseModel):
 
 class CreatedSession(Session):
     access_token: str = Field(alias="accessToken")
-
-
-class ProductEvent(BaseModel):
-    name: Literal["calculator_opened", "scan_opened", "scan_completed", "itemized_opened", "share_created"]
-    variant: Literal["A", "B"]

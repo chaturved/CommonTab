@@ -6,17 +6,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator, constr
 
 
-class AccountInput(BaseModel):
-    email: str = Field(min_length=3, max_length=254)
-    name: str = Field(min_length=1, max_length=80)
-    password: str = Field(min_length=15, max_length=128)
-
-
-class LoginInput(BaseModel):
-    email: str
-    password: str
-
-
 class GroupInput(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     currency_code: Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR"] = Field(alias="currencyCode")
@@ -62,5 +51,7 @@ class RenameGroupInput(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
 
-class UpdateProfileInput(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
+
+
+class AcceptInvitation(BaseModel):
+    inviteToken: str
