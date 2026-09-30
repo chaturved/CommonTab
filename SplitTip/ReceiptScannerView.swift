@@ -111,7 +111,7 @@ struct ReceiptScannerView: View {
                     Task { await recognize(data) }
                 }
             }
-            .onChange(of: selectedPhoto) { item in
+            .onChange(of: selectedPhoto) { _, item in
                 Task {
                     do {
                         guard let data = try await item?.loadTransferable(type: Data.self) else { return }

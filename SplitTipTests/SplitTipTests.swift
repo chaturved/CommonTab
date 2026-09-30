@@ -387,3 +387,63 @@ extension SplitTipTests {
         XCTAssertEqual(try store.loadGroups().count, 1)
     }
 }
+
+extension SplitTipTests {
+    func testItemizedBillBecomesSavedGroupExpenseWithExactShares() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ExpenseStore(directory: directory)
+        let group = try store.createGroup(name: "Dinner", currencyCode: "USD", memberNames: ["Blair", "Alex"])
+        let alice = BillPerson(name: "Alice")
+        let bob = BillPerson(name: "Bob")
+        let bill = ItemizedBill(
+            people: [alice, bob],
+            items: [
+                BillItem(name: "Pasta", price: 20, assignedPersonIDs: [alice.id]),
+                BillItem(name: "Salad", price: 10, assignedPersonIDs: [bob.id])
+            ], tax: 3, tipPercentage: 20
+        )
+        let mapping = [
+            ItemizedMemberMapping(billPersonID: alice.id, groupMemberID: group.members[1].id),
+            ItemizedMemberMapping(billPersonID: bob.id, groupMemberID: group.members[0].id)
+        ]
+        let split = try ItemizedExpenseMapper.split(
+            bill: bill, group: group, payerID: group.members[1].id, mapping: mapping
+        )
+        XCTAssertEqual(split.allocations.map(\.minorUnits), [1300, 2600])
+        let expense = SavedExpense(
+            merchant: "Dinner", category: .dining, currencyCode: "USD", amount: 39,
+            split: split, itemizedBill: bill, itemizedMemberMapping: mapping
+        )
+        let receipt = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let saved = try store.save(expense, receiptData: receipt)
+        XCTAssertEqual(try store.load(), [saved])
+        XCTAssertEqual(try store.receiptData(for: saved), receipt)
+        XCTAssertEqual(try GroupLedger.balances(group: group, expenses: store.load()).map(\.minorUnits), [-1300, 1300])
+
+        var wrongTotal = saved
+        wrongTotal.amount = 40
+        XCTAssertThrowsError(try store.save(wrongTotal)) {
+            XCTAssertEqual($0 as? ItemizedExpenseError, .amountMismatch)
+        }
+        var wrongMapping = saved
+        wrongMapping.itemizedMemberMapping[1].groupMemberID = group.members[1].id
+        XCTAssertThrowsError(try store.save(wrongMapping)) {
+            XCTAssertEqual($0 as? ItemizedExpenseError, .invalidMapping)
+        }
+        XCTAssertEqual(try store.load(), [saved])
+
+        var edited = saved
+        edited.itemizedBill!.items[0].price = 30
+        edited.amount = 51
+        edited.split = try ItemizedExpenseMapper.split(
+            bill: edited.itemizedBill!, group: group,
+            payerID: group.members[1].id, mapping: mapping
+        )
+        let updated = try store.save(edited)
+        XCTAssertEqual(try store.load(), [updated])
+        XCTAssertEqual(try store.receiptData(for: updated), receipt)
+        XCTAssertEqual(updated.split?.allocations.map(\.minorUnits), [1275, 3825])
+        XCTAssertEqual(try GroupLedger.balances(group: group, expenses: store.load()).map(\.minorUnits), [-1275, 1275])
+    }
+}

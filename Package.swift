@@ -17,7 +17,7 @@ let package = Package(
             sources: ["TipCalculation.swift", "ExchangeRateService.swift", "ReceiptAmountParser.swift",
                       "MoneyInputParser.swift", "ItemizedBill.swift", "ReceiptItemParser.swift",
                       "SharedBillClient.swift", "ProductAnalytics.swift",
-                      "SavedExpense.swift", "ExpenseStore.swift", "ExpenseGroup.swift"]
+                      "SavedExpense.swift", "ExpenseStore.swift", "ExpenseGroup.swift", "ItemizedExpenseMapper.swift"]
         ),
         .testTarget(
             name: "SplitTipCoreTests",

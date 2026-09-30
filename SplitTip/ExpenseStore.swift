@@ -122,6 +122,24 @@ struct ExpenseStore {
         }
 
         var archive = try readArchive()
+        if let bill = saved.itemizedBill {
+            let calculation = try ItemizedExpenseMapper.calculation(for: bill, currencyCode: saved.currencyCode)
+            guard calculation.total == saved.amount else { throw ItemizedExpenseError.amountMismatch }
+            if let split = saved.split {
+                guard let group = archive.groups.first(where: { $0.id == split.groupID }) else {
+                    throw ExpenseStoreError.groupMissing
+                }
+                let expected = try ItemizedExpenseMapper.split(
+                    bill: bill, group: group, payerID: split.payerID,
+                    mapping: saved.itemizedMemberMapping
+                )
+                guard expected == split else { throw ItemizedExpenseError.splitMismatch }
+            } else if !saved.itemizedMemberMapping.isEmpty {
+                throw ItemizedExpenseError.invalidMapping
+            }
+        } else if !saved.itemizedMemberMapping.isEmpty {
+            throw ItemizedExpenseError.invalidMapping
+        }
         if let split = saved.split {
             guard let group = archive.groups.first(where: { $0.id == split.groupID }) else {
                 throw ExpenseStoreError.groupMissing

@@ -112,3 +112,36 @@ extension SplitTipUITests {
         XCTAssertTrue(app.staticTexts["$12.34"].exists)
     }
 }
+
+extension SplitTipUITests {
+    @MainActor
+    func testSaveItemizedBillAsExpense() {
+        let app = XCUIApplication()
+        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        app.buttons["openItemizedBill"].tap()
+
+        let itemName = app.textFields["New item name"]
+        XCTAssertTrue(itemName.waitForExistence(timeout: 5))
+        itemName.tap()
+        itemName.typeText("Coffee")
+        let price = app.textFields["newItemPrice"]
+        price.tap()
+        price.typeText("10")
+        app.buttons["Add item"].tap()
+
+        let saveBill = app.buttons["saveItemizedExpense"]
+        if !saveBill.isHittable { app.swipeUp() }
+        XCTAssertTrue(saveBill.waitForExistence(timeout: 5))
+        saveBill.tap()
+        let merchant = app.textFields["expenseMerchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5))
+        merchant.tap()
+        let current = merchant.value as? String ?? ""
+        let name = "Itemized UI Test \(UUID().uuidString.prefix(8))"
+        merchant.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count) + name)
+        app.buttons["saveExpense"].tap()
+        XCTAssertTrue(app.staticTexts["Saved to Expenses"].waitForExistence(timeout: 5))
+    }
+}

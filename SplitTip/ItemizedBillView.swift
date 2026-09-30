@@ -2,9 +2,13 @@ import SwiftUI
 
 struct ItemizedBillView: View {
     @Binding var bill: ItemizedBill
+    var receiptImageData: Data? = nil
+    var allowSaveExpense = true
     @Environment(\.dismiss) private var dismiss
     @State private var newItemName = ""
     @State private var newItemPrice = ""
+    @State private var showingSaveExpense = false
+    @State private var didSaveExpense = false
 
     private var calculation: ItemizedCalculation? {
         try? ItemizedBillCalculator.calculate(bill, fractionDigits: fractionDigits)
@@ -121,6 +125,22 @@ struct ItemizedBillView: View {
                     }
                 }
 
+                if allowSaveExpense, calculation != nil {
+                    Section("Save") {
+                        Button {
+                            showingSaveExpense = true
+                        } label: {
+                            Label("Save as expense", systemImage: "square.and.arrow.down")
+                        }
+                        .accessibilityIdentifier("saveItemizedExpense")
+                        .disabled(didSaveExpense)
+                        if didSaveExpense {
+                            Text("Saved to Expenses")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 Section("Collaborate") {
                     NavigationLink {
                         SharedBillView(bill: $bill)
@@ -131,6 +151,14 @@ struct ItemizedBillView: View {
                 }
             }
             .navigationTitle("Itemized split")
+            .onChange(of: bill) { _, _ in didSaveExpense = false }
+            .sheet(isPresented: $showingSaveExpense) {
+                ExpenseEditorView(
+                    store: ExpenseStore(), expense: nil,
+                    prefilledBill: bill, prefilledReceiptData: receiptImageData,
+                    onSaved: { didSaveExpense = true }
+                )
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

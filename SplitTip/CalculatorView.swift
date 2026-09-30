@@ -23,6 +23,7 @@ struct CalculatorView: View {
     @State private var showingItemizedEditor = false
     @State private var openEditorAfterScan = false
     @State private var itemizedBill = ItemizedBill()
+    @State private var scannedReceiptData: Data?
     @FocusState private var billIsFocused: Bool
 
     @State private var rateService = ExchangeRateService()
@@ -183,6 +184,7 @@ struct CalculatorView: View {
                 lastEditedAt = 0
                 itemizedDraftData = Data()
                 itemizedBill = ItemizedBill()
+                scannedReceiptData = nil
             } else if let stored = try? JSONDecoder().decode(ItemizedBill.self, from: itemizedDraftData) {
                 itemizedBill = stored
             }
@@ -197,7 +199,7 @@ struct CalculatorView: View {
             ReceiptScannerView { result in handleScan(result) }
         }
         .sheet(isPresented: $showingItemizedEditor) {
-            ItemizedBillView(bill: $itemizedBill)
+            ItemizedBillView(bill: $itemizedBill, receiptImageData: scannedReceiptData)
         }
         .onChange(of: billText) { _, value in
             lastBill = value
@@ -265,7 +267,11 @@ struct CalculatorView: View {
             in: result.lines,
             assignedPersonIDs: itemizedBill.people.map(\.id)
         )
-        guard !items.isEmpty else { return }
+        guard !items.isEmpty else {
+            scannedReceiptData = nil
+            return
+        }
+        scannedReceiptData = result.imageData
         itemizedBill.items = items
         itemizedBill.receiptTotal = result.amount
         if let selectedPercentage {

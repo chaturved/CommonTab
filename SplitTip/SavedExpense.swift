@@ -28,12 +28,15 @@ struct SavedExpense: Codable, Equatable, Identifiable {
     var notes: String
     var receiptFilename: String?
     var split: ExpenseSplit?
+    var itemizedBill: ItemizedBill?
+    var itemizedMemberMapping: [ItemizedMemberMapping]
 
     init(
         id: UUID = UUID(), merchant: String, date: Date = .now,
         category: ExpenseCategory = .other, currencyCode: String,
         amount: Decimal, notes: String = "", receiptFilename: String? = nil,
-        split: ExpenseSplit? = nil
+        split: ExpenseSplit? = nil, itemizedBill: ItemizedBill? = nil,
+        itemizedMemberMapping: [ItemizedMemberMapping] = []
     ) {
         self.id = id
         self.merchant = merchant
@@ -44,10 +47,12 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         self.notes = notes
         self.receiptFilename = receiptFilename
         self.split = split
+        self.itemizedBill = itemizedBill
+        self.itemizedMemberMapping = itemizedMemberMapping
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, merchant, date, category, currencyCode, amount, notes, receiptFilename, split
+        case id, merchant, date, category, currencyCode, amount, notes, receiptFilename, split, itemizedBill, itemizedMemberMapping
     }
 
     init(from decoder: Decoder) throws {
@@ -65,6 +70,8 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         notes = try values.decode(String.self, forKey: .notes)
         receiptFilename = try values.decodeIfPresent(String.self, forKey: .receiptFilename)
         split = try values.decodeIfPresent(ExpenseSplit.self, forKey: .split)
+        itemizedBill = try values.decodeIfPresent(ItemizedBill.self, forKey: .itemizedBill)
+        itemizedMemberMapping = try values.decodeIfPresent([ItemizedMemberMapping].self, forKey: .itemizedMemberMapping) ?? []
     }
 
     func encode(to encoder: Encoder) throws {
@@ -78,5 +85,9 @@ struct SavedExpense: Codable, Equatable, Identifiable {
         try values.encode(notes, forKey: .notes)
         try values.encodeIfPresent(receiptFilename, forKey: .receiptFilename)
         try values.encodeIfPresent(split, forKey: .split)
+        try values.encodeIfPresent(itemizedBill, forKey: .itemizedBill)
+        if !itemizedMemberMapping.isEmpty {
+            try values.encode(itemizedMemberMapping, forKey: .itemizedMemberMapping)
+        }
     }
 }

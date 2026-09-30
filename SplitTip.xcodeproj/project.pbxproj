@@ -32,6 +32,7 @@
 		A10000000000000000000026 /* ExpenseLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000025 /* ExpenseLibraryView.swift */; };
 		A10000000000000000000028 /* ExpenseGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* ExpenseGroup.swift */; };
 		A1000000000000000000002A /* ExpenseGroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* ExpenseGroupsView.swift */; };
+		A1000000000000000000002C /* ItemizedExpenseMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002B /* ItemizedExpenseMapper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,6 +84,7 @@
 		A10000000000000000000025 /* ExpenseLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseLibraryView.swift; sourceTree = "<group>"; };
 		A10000000000000000000027 /* ExpenseGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseGroup.swift; sourceTree = "<group>"; };
 		A10000000000000000000029 /* ExpenseGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseGroupsView.swift; sourceTree = "<group>"; };
+		A1000000000000000000002B /* ItemizedExpenseMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemizedExpenseMapper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +152,7 @@
 				A1000000000000000000001F /* ProductAnalytics.swift */,
 				A10000000000000000000025 /* ExpenseLibraryView.swift */,
 				A10000000000000000000029 /* ExpenseGroupsView.swift */,
+				A1000000000000000000002B /* ItemizedExpenseMapper.swift */,
 				A10000000000000000000027 /* ExpenseGroup.swift */,
 				A10000000000000000000023 /* ExpenseStore.swift */,
 				A10000000000000000000021 /* SavedExpense.swift */,
@@ -325,6 +328,7 @@
 				A10000000000000000000020 /* ProductAnalytics.swift in Sources */,
 				A10000000000000000000026 /* ExpenseLibraryView.swift in Sources */,
 				A1000000000000000000002A /* ExpenseGroupsView.swift in Sources */,
+				A1000000000000000000002C /* ItemizedExpenseMapper.swift in Sources */,
 				A10000000000000000000028 /* ExpenseGroup.swift in Sources */,
 				A10000000000000000000024 /* ExpenseStore.swift in Sources */,
 				A10000000000000000000022 /* SavedExpense.swift in Sources */,

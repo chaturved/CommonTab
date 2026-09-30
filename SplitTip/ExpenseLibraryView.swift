@@ -113,6 +113,7 @@ struct ExpenseEditorView: View {
     let store: ExpenseStore
     let expense: SavedExpense?
     let preferredGroupID: UUID?
+    let prefilledReceiptData: Data?
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -134,24 +135,42 @@ struct ExpenseEditorView: View {
     @State private var participants: Set<UUID> = []
     @State private var splitMethod: ExpenseSplitMethod = .equal
     @State private var inputTexts: [UUID: String] = [:]
+    @State private var itemizedBillDraft: ItemizedBill?
+    @State private var itemizedMapping: [UUID: UUID] = [:]
+    @State private var showingItemizedEditor = false
 
-    init(store: ExpenseStore, expense: SavedExpense?, preferredGroupID: UUID? = nil, onSaved: @escaping () -> Void) {
+    init(
+        store: ExpenseStore, expense: SavedExpense?, preferredGroupID: UUID? = nil,
+        prefilledBill: ItemizedBill? = nil, prefilledReceiptData: Data? = nil,
+        onSaved: @escaping () -> Void
+    ) {
         self.store = store
         self.expense = expense
         self.preferredGroupID = preferredGroupID
+        self.prefilledReceiptData = prefilledReceiptData
         self.onSaved = onSaved
+        let bill = expense?.itemizedBill ?? prefilledBill
+        let initialCurrency = expense?.currencyCode ?? (Locale.current.currency?.identifier ?? "USD")
+        let initialAmount = bill.flatMap { try? ItemizedExpenseMapper.calculation(for: $0, currencyCode: initialCurrency).total }
+        _itemizedBillDraft = State(initialValue: bill)
         _selectedGroupID = State(initialValue: expense?.split?.groupID ?? preferredGroupID)
-        _merchant = State(initialValue: expense?.merchant ?? "")
+        _merchant = State(initialValue: expense?.merchant ?? (bill == nil ? "" : "Itemized bill"))
         _date = State(initialValue: expense?.date ?? .now)
-        _category = State(initialValue: expense?.category ?? .other)
-        _currencyCode = State(initialValue: expense?.currencyCode ?? (Locale.current.currency?.identifier ?? "USD"))
-        _amountText = State(initialValue: expense.map { NSDecimalNumber(decimal: $0.amount).stringValue } ?? "")
+        _category = State(initialValue: expense?.category ?? (bill == nil ? .other : .dining))
+        _currencyCode = State(initialValue: initialCurrency)
+        _amountText = State(initialValue: initialAmount.map { NSDecimalNumber(decimal: $0).stringValue } ??
+                            expense.map { NSDecimalNumber(decimal: $0.amount).stringValue } ?? "")
         _notes = State(initialValue: expense?.notes ?? "")
     }
 
     private var amount: Decimal? {
-        guard let value = MoneyInputParser.parse(amountText), value > 0,
-              value <= 1_000_000_000 else { return nil }
+        let value: Decimal?
+        if let bill = itemizedBillDraft {
+            value = try? ItemizedExpenseMapper.calculation(for: bill, currencyCode: currencyCode).total
+        } else {
+            value = MoneyInputParser.parse(amountText)
+        }
+        guard let value, value > 0, value <= 1_000_000_000 else { return nil }
         return value
     }
 
@@ -164,6 +183,7 @@ struct ExpenseEditorView: View {
         NavigationStack {
             Form {
                 expenseFields
+                itemizedFields
                 groupFields
                 receiptFields
             }
@@ -180,6 +200,13 @@ struct ExpenseEditorView: View {
             }
             .onAppear {
                 loadGroups()
+                if let prefilledReceiptData, expense == nil {
+                    if let jpeg = normalizedJPEG(prefilledReceiptData) {
+                        newImageData = jpeg
+                    } else {
+                        errorMessage = "Could not prepare the scanned receipt photo."
+                    }
+                }
                 if let expense {
                     do { existingImageData = try store.receiptData(for: expense) }
                     catch { errorMessage = "Could not open the saved receipt." }
@@ -188,6 +215,8 @@ struct ExpenseEditorView: View {
             .onChange(of: selectedGroupID) { _, id in
                 configureGroup(id)
             }
+            .onChange(of: itemizedBillDraft) { _, _ in syncItemizedAmount() }
+            .onChange(of: currencyCode) { _, _ in syncItemizedAmount() }
             .onChange(of: selectedPhoto) { _, item in
                 Task {
                     do {
@@ -203,11 +232,20 @@ struct ExpenseEditorView: View {
             }
             .sheet(isPresented: $showingScanner) {
                 ReceiptScannerView { result in
-                    amountText = NSDecimalNumber(decimal: result.amount).stringValue
+                    if itemizedBillDraft == nil {
+                        amountText = NSDecimalNumber(decimal: result.amount).stringValue
+                    }
                     if let jpeg = normalizedJPEG(result.imageData) {
                         newImageData = jpeg
                         removeReceipt = false
+                    } else {
+                        errorMessage = "Could not prepare the scanned receipt photo."
                     }
+                }
+            }
+            .sheet(isPresented: $showingItemizedEditor) {
+                if itemizedBillDraft != nil {
+                    ItemizedBillView(bill: itemizedBinding, allowSaveExpense: false)
                 }
             }
             .alert("Could not save expense", isPresented: Binding(
@@ -239,7 +277,12 @@ struct ExpenseEditorView: View {
                     .accessibilityIdentifier("expenseCurrency")
                 TextField("Amount", text: $amountText)
                     .keyboardType(.decimalPad)
+                    .disabled(itemizedBillDraft != nil)
                     .accessibilityIdentifier("expenseAmount")
+            }
+            if itemizedBillDraft != nil {
+                Text("Edit itemized details to change the total.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
             TextField("Notes (optional)", text: $notes, axis: .vertical)
                 .lineLimit(2...5)
@@ -248,6 +291,30 @@ struct ExpenseEditorView: View {
 
     private var selectedGroup: ExpenseGroup? {
         groups.first { $0.id == selectedGroupID }
+    }
+
+    @ViewBuilder
+    private var itemizedFields: some View {
+        if let bill = itemizedBillDraft {
+            Section("Itemized details") {
+                ForEach(bill.items) { item in
+                    HStack {
+                        Text(item.name)
+                        Spacer()
+                        Text(item.price.formatted(.currency(code: currencyCode)))
+                    }
+                }
+                Button("Edit itemized bill") { showingItemizedEditor = true }
+                    .accessibilityIdentifier("editSavedItemizedBill")
+            }
+        }
+    }
+
+    private var itemizedBinding: Binding<ItemizedBill> {
+        Binding(
+            get: { itemizedBillDraft ?? ItemizedBill() },
+            set: { itemizedBillDraft = $0 }
+        )
     }
 
     private var groupFields: some View {
@@ -260,37 +327,62 @@ struct ExpenseEditorView: View {
                 Picker("Paid by", selection: $payerID) {
                     ForEach(group.members) { member in Text(member.name).tag(Optional(member.id)) }
                 }
-                Picker("Split", selection: $splitMethod) {
-                    ForEach(ExpenseSplitMethod.allCases) { method in
-                        Text(method.title).tag(method)
-                    }
+                if let bill = itemizedBillDraft {
+                    itemizedGroupFields(bill, group: group)
+                } else {
+                    ordinaryGroupFields(group)
                 }
-                ForEach(group.members) { member in
-                    Toggle(member.name, isOn: Binding(
-                        get: { participants.contains(member.id) },
-                        set: { enabled in
-                            if enabled { participants.insert(member.id) }
-                            else { participants.remove(member.id) }
-                        }
-                    ))
-                    if participants.contains(member.id) && splitMethod != .equal {
-                        HStack {
-                            Text(member.name).foregroundStyle(.secondary)
-                            Spacer()
-                            TextField(splitMethod == .exact ? "Amount" : "Percent", text: Binding(
-                                get: { inputTexts[member.id] ?? "" },
-                                set: { inputTexts[member.id] = $0 }
-                            ))
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 100)
-                            if splitMethod == .percentage { Text("%") }
-                        }
-                    }
-                }
-                Text("Shares must add up to the expense total. The payer can also have a share.")
-                    .font(.footnote).foregroundStyle(.secondary)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func itemizedGroupFields(_ bill: ItemizedBill, group: ExpenseGroup) -> some View {
+        ForEach(bill.people) { person in
+            Picker(person.name, selection: Binding<UUID?>(
+                get: { itemizedMapping[person.id] },
+                set: { itemizedMapping[person.id] = $0 }
+            )) {
+                Text("Choose member").tag(Optional<UUID>.none)
+                ForEach(group.members) { member in Text(member.name).tag(Optional(member.id)) }
+            }
+        }
+        Text("Map each itemized person to a different group member.")
+            .font(.footnote).foregroundStyle(.secondary)
+    }
+
+    private func ordinaryGroupFields(_ group: ExpenseGroup) -> some View {
+        Group {
+            Picker("Split", selection: $splitMethod) {
+                ForEach(ExpenseSplitMethod.allCases) { method in
+                    Text(method.title).tag(method)
+                }
+            }
+            ForEach(group.members) { member in
+                Toggle(member.name, isOn: Binding(
+                    get: { participants.contains(member.id) },
+                    set: { enabled in
+                        if enabled { participants.insert(member.id) }
+                        else { participants.remove(member.id) }
+                    }
+                ))
+                if participants.contains(member.id) && splitMethod != .equal {
+                    HStack {
+                        Text(member.name).foregroundStyle(.secondary)
+                        Spacer()
+                        TextField(splitMethod == .exact ? "Amount" : "Percent", text: Binding(
+                            get: { inputTexts[member.id] ?? "" },
+                            set: { inputTexts[member.id] = $0 }
+                        ))
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 100)
+                        if splitMethod == .percentage { Text("%") }
+                    }
+                }
+            }
+            Text("Shares must add up to the expense total. The payer can also have a share.")
+                .font(.footnote).foregroundStyle(.secondary)
         }
     }
 
@@ -329,11 +421,17 @@ struct ExpenseEditorView: View {
             groups = try store.loadGroups()
             if let split = expense?.split {
                 payerID = split.payerID
-                participants = Set(split.allocations.map(\.memberID))
-                splitMethod = split.method
-                inputTexts = Dictionary(uniqueKeysWithValues: split.allocations.compactMap { allocation in
-                    allocation.inputValue.map { (allocation.memberID, $0) }
-                })
+                if itemizedBillDraft != nil {
+                    itemizedMapping = Dictionary(uniqueKeysWithValues: expense?.itemizedMemberMapping.map {
+                        ($0.billPersonID, $0.groupMemberID)
+                    } ?? [])
+                } else {
+                    participants = Set(split.allocations.map(\.memberID))
+                    splitMethod = split.method
+                    inputTexts = Dictionary(uniqueKeysWithValues: split.allocations.compactMap { allocation in
+                        allocation.inputValue.map { (allocation.memberID, $0) }
+                    })
+                }
             } else {
                 configureGroup(selectedGroupID)
             }
@@ -345,6 +443,7 @@ struct ExpenseEditorView: View {
             payerID = nil
             participants = []
             inputTexts = [:]
+            itemizedMapping = [:]
             return
         }
         payerID = group.members.first?.id
@@ -352,6 +451,18 @@ struct ExpenseEditorView: View {
         participants = Set(group.members.map(\.id))
         splitMethod = .equal
         inputTexts = [:]
+        itemizedMapping = [:]
+        if let bill = itemizedBillDraft {
+            for (person, member) in zip(bill.people, group.members) {
+                itemizedMapping[person.id] = member.id
+            }
+        }
+        syncItemizedAmount()
+    }
+
+    private func syncItemizedAmount() {
+        guard itemizedBillDraft != nil, let amount else { return }
+        amountText = NSDecimalNumber(decimal: amount).stringValue
     }
 
     private func save() {
@@ -359,34 +470,47 @@ struct ExpenseEditorView: View {
         var record = SavedExpense(
             id: expense?.id ?? UUID(), merchant: merchant, date: date,
             category: category, currencyCode: currencyCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased(),
-            amount: amount, notes: notes, receiptFilename: expense?.receiptFilename
+            amount: amount, notes: notes, receiptFilename: expense?.receiptFilename,
+            itemizedBill: itemizedBillDraft
         )
         do {
             if let groupID = selectedGroupID {
                 guard let group = selectedGroup, let payerID else { throw GroupLedgerError.invalidGroup }
-                let memberIDs = group.members.map(\.id).filter { participants.contains($0) }
-                var values: [UUID: Decimal] = [:]
-                if splitMethod != .equal {
-                    for id in memberIDs {
-                        guard let value = MoneyInputParser.parse(inputTexts[id] ?? "") else {
-                            throw GroupLedgerError.invalidAllocation
+                if let bill = itemizedBillDraft {
+                    record.itemizedMemberMapping = bill.people.compactMap { person in
+                        itemizedMapping[person.id].map {
+                            ItemizedMemberMapping(billPersonID: person.id, groupMemberID: $0)
                         }
-                        values[id] = value
                     }
+                    record.split = try ItemizedExpenseMapper.split(
+                        bill: bill, group: group, payerID: payerID,
+                        mapping: record.itemizedMemberMapping
+                    )
+                } else {
+                    let memberIDs = group.members.map(\.id).filter { participants.contains($0) }
+                    var values: [UUID: Decimal] = [:]
+                    if splitMethod != .equal {
+                        for id in memberIDs {
+                            guard let value = MoneyInputParser.parse(inputTexts[id] ?? "") else {
+                                throw GroupLedgerError.invalidAllocation
+                            }
+                            values[id] = value
+                        }
+                    }
+                    let allocations = try ExpenseSplitter.allocate(
+                        amount: amount, currencyCode: record.currencyCode,
+                        participants: memberIDs, method: splitMethod, values: values
+                    )
+                    record.split = ExpenseSplit(
+                        groupID: groupID, payerID: payerID, method: splitMethod, allocations: allocations
+                    )
                 }
-                let allocations = try ExpenseSplitter.allocate(
-                    amount: amount, currencyCode: record.currencyCode,
-                    participants: memberIDs, method: splitMethod, values: values
-                )
-                record.split = ExpenseSplit(
-                    groupID: groupID, payerID: payerID, method: splitMethod, allocations: allocations
-                )
             }
             try store.save(record, receiptData: newImageData, removeReceipt: removeReceipt)
             onSaved()
             dismiss()
         } catch {
-            errorMessage = "Review the amount, currency, payer, and split. Shares must add up to the total."
+            errorMessage = "Review the amount, currency, payer, and split. Map every itemized person to a distinct group member."
         }
     }
 
