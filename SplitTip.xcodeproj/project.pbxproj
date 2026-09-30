@@ -33,6 +33,8 @@
 		A10000000000000000000028 /* ExpenseGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* ExpenseGroup.swift */; };
 		A1000000000000000000002A /* ExpenseGroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* ExpenseGroupsView.swift */; };
 		A1000000000000000000002C /* ItemizedExpenseMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002B /* ItemizedExpenseMapper.swift */; };
+		A1000000000000000000002E /* ExpensePersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002D /* ExpensePersistence.swift */; };
+		A10000000000000000000030 /* ExpenseValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002F /* ExpenseValidation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +87,8 @@
 		A10000000000000000000027 /* ExpenseGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseGroup.swift; sourceTree = "<group>"; };
 		A10000000000000000000029 /* ExpenseGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseGroupsView.swift; sourceTree = "<group>"; };
 		A1000000000000000000002B /* ItemizedExpenseMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemizedExpenseMapper.swift; sourceTree = "<group>"; };
+		A1000000000000000000002D /* ExpensePersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpensePersistence.swift; sourceTree = "<group>"; };
+		A1000000000000000000002F /* ExpenseValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseValidation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,31 +139,13 @@
 		9C3F0F4A2772756100C0DD55 /* SplitTip */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000003 /* SplitTipApp.swift */,
-				A10000000000000000000005 /* CalculatorView.swift */,
-				A10000000000000000000007 /* SettingsView.swift */,
-				A10000000000000000000009 /* ExchangeRateService.swift */,
-				A1000000000000000000000B /* ReceiptAmountParser.swift */,
-				A1000000000000000000000D /* ReceiptOCR.swift */,
-				A1000000000000000000000F /* ReceiptScannerView.swift */,
-				A10000000000000000000011 /* MoneyInputParser.swift */,
-				A10000000000000000000013 /* ItemizedBill.swift */,
-				A10000000000000000000015 /* ReceiptItemParser.swift */,
-				A10000000000000000000017 /* ItemizedBillView.swift */,
-				A10000000000000000000019 /* SharedBillClient.swift */,
-				A1000000000000000000001B /* SharedBillView.swift */,
-				A1000000000000000000001D /* SharedSessionStore.swift */,
-				A1000000000000000000001F /* ProductAnalytics.swift */,
-				A10000000000000000000025 /* ExpenseLibraryView.swift */,
-				A10000000000000000000029 /* ExpenseGroupsView.swift */,
-				A1000000000000000000002B /* ItemizedExpenseMapper.swift */,
-				A10000000000000000000027 /* ExpenseGroup.swift */,
-				A10000000000000000000023 /* ExpenseStore.swift */,
-				A10000000000000000000021 /* SavedExpense.swift */,
-				A10000000000000000000001 /* TipCalculation.swift */,
-				9C3F0F542772756400C0DD55 /* Assets.xcassets */,
-				9C3F0F562772756400C0DD55 /* LaunchScreen.storyboard */,
-				9C3F0F592772756400C0DD55 /* Info.plist */,
+				A20000000000000000000001 /* App */,
+				A20000000000000000000002 /* Application */,
+				A20000000000000000000003 /* Data */,
+				A20000000000000000000004 /* Domain */,
+				A20000000000000000000005 /* Features */,
+				A20000000000000000000006 /* Platform */,
+				A20000000000000000000007 /* Resources */,
 			);
 			path = SplitTip;
 			sourceTree = "<group>";
@@ -180,6 +166,194 @@
 				9C3F0F6F2772756400C0DD55 /* Info.plist */,
 			);
 			path = SplitTipUITests;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000003 /* SplitTipApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000002 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000023 /* ExpenseStore.swift */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000003 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000008 /* Local */,
+				A20000000000000000000009 /* Remote */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000004 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000A /* Calculations */,
+				A2000000000000000000000B /* Models */,
+				A2000000000000000000000C /* Parsing */,
+				A2000000000000000000000D /* Validation */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000005 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000E /* Calculator */,
+				A2000000000000000000000F /* Expenses */,
+				A20000000000000000000010 /* Groups */,
+				A20000000000000000000011 /* ItemizedBill */,
+				A20000000000000000000012 /* Receipts */,
+				A20000000000000000000013 /* Settings */,
+				A20000000000000000000014 /* SharedBills */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000006 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000015 /* Receipts */,
+			);
+			path = Platform;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9C3F0F592772756400C0DD55 /* Info.plist */,
+				9C3F0F542772756400C0DD55 /* Assets.xcassets */,
+				9C3F0F562772756400C0DD55 /* LaunchScreen.storyboard */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000008 /* Local */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000002D /* ExpensePersistence.swift */,
+				A1000000000000000000001D /* SharedSessionStore.swift */,
+			);
+			path = Local;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000009 /* Remote */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000019 /* SharedBillClient.swift */,
+				A10000000000000000000009 /* ExchangeRateService.swift */,
+				A1000000000000000000001F /* ProductAnalytics.swift */,
+			);
+			path = Remote;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000A /* Calculations */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000001 /* TipCalculation.swift */,
+				A1000000000000000000002B /* ItemizedExpenseMapper.swift */,
+			);
+			path = Calculations;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000013 /* ItemizedBill.swift */,
+				A10000000000000000000021 /* SavedExpense.swift */,
+				A10000000000000000000027 /* ExpenseGroup.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000C /* Parsing */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000000B /* ReceiptAmountParser.swift */,
+				A10000000000000000000015 /* ReceiptItemParser.swift */,
+				A10000000000000000000011 /* MoneyInputParser.swift */,
+			);
+			path = Parsing;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000D /* Validation */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000002F /* ExpenseValidation.swift */,
+			);
+			path = Validation;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000E /* Calculator */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000005 /* CalculatorView.swift */,
+			);
+			path = Calculator;
+			sourceTree = "<group>";
+		};
+		A2000000000000000000000F /* Expenses */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000025 /* ExpenseLibraryView.swift */,
+			);
+			path = Expenses;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000010 /* Groups */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000029 /* ExpenseGroupsView.swift */,
+			);
+			path = Groups;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000011 /* ItemizedBill */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000017 /* ItemizedBillView.swift */,
+			);
+			path = ItemizedBill;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000012 /* Receipts */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000000F /* ReceiptScannerView.swift */,
+			);
+			path = Receipts;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000013 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000007 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000014 /* SharedBills */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000001B /* SharedBillView.swift */,
+			);
+			path = SharedBills;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000015 /* Receipts */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000000D /* ReceiptOCR.swift */,
+			);
+			path = Receipts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -331,6 +505,8 @@
 				A1000000000000000000002C /* ItemizedExpenseMapper.swift in Sources */,
 				A10000000000000000000028 /* ExpenseGroup.swift in Sources */,
 				A10000000000000000000024 /* ExpenseStore.swift in Sources */,
+				A10000000000000000000030 /* ExpenseValidation.swift in Sources */,
+				A1000000000000000000002E /* ExpensePersistence.swift in Sources */,
 				A10000000000000000000022 /* SavedExpense.swift in Sources */,
 				A10000000000000000000002 /* TipCalculation.swift in Sources */,
 			);
@@ -502,7 +678,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTip/Info.plist;
+				INFOPLIST_FILE = SplitTip/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -521,7 +697,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTip/Info.plist;
+				INFOPLIST_FILE = SplitTip/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

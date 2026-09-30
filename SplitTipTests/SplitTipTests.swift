@@ -463,3 +463,39 @@ extension SplitTipTests {
         XCTAssertEqual(try GroupLedger.balances(group: group, expenses: store.load()).map(\.minorUnits), [-1275, 1275])
     }
 }
+
+private final class FailingExpenseArchiveRepository: ExpenseArchiveRepository {
+    var archive = ExpenseArchive()
+    var failWrites = false
+
+    func read() throws -> ExpenseArchive { archive }
+
+    func write(_ archive: ExpenseArchive) throws {
+        if failWrites { throw CocoaError(.fileWriteUnknown) }
+        self.archive = archive
+    }
+}
+
+extension SplitTipTests {
+    func testArchiveWriteFailureRollsBackNewReceiptAndKeepsExistingData() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let archive = FailingExpenseArchiveRepository()
+        let store = ExpenseStore(
+            archiveRepository: archive,
+            receiptRepository: FileReceiptImageRepository(directory: directory)
+        )
+        let original = try store.save(
+            SavedExpense(merchant: "Market", currencyCode: "USD", amount: 10),
+            receiptData: Data([1, 2, 3])
+        )
+        archive.failWrites = true
+        var edited = original
+        edited.notes = "New note"
+        XCTAssertThrowsError(try store.save(edited, receiptData: Data([4, 5, 6])))
+        XCTAssertEqual(try store.load(), [original])
+        XCTAssertEqual(try store.receiptData(for: original), Data([1, 2, 3]))
+        let imageFiles = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        XCTAssertEqual(imageFiles, [try XCTUnwrap(original.receiptFilename)])
+    }
+}

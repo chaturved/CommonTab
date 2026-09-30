@@ -10,14 +10,23 @@ let package = Package(
         .target(
             name: "SplitTipCore",
             path: "SplitTip",
-            exclude: ["SplitTipApp.swift", "CalculatorView.swift", "SettingsView.swift",
-                      "ItemizedBillView.swift", "SharedBillView.swift", "SharedSessionStore.swift",
-                      "ReceiptOCR.swift", "ReceiptScannerView.swift", "ExpenseLibraryView.swift", "ExpenseGroupsView.swift",
-                      "Info.plist", "Base.lproj", "Assets.xcassets"],
-            sources: ["TipCalculation.swift", "ExchangeRateService.swift", "ReceiptAmountParser.swift",
-                      "MoneyInputParser.swift", "ItemizedBill.swift", "ReceiptItemParser.swift",
-                      "SharedBillClient.swift", "ProductAnalytics.swift",
-                      "SavedExpense.swift", "ExpenseStore.swift", "ExpenseGroup.swift", "ItemizedExpenseMapper.swift"]
+            exclude: ["App", "Features", "Platform", "Resources", "Data/Local/SharedSessionStore.swift"],
+            sources: [
+                "Domain/Calculations/TipCalculation.swift",
+                "Data/Remote/ExchangeRateService.swift",
+                "Domain/Parsing/ReceiptAmountParser.swift",
+                "Domain/Parsing/MoneyInputParser.swift",
+                "Domain/Models/ItemizedBill.swift",
+                "Domain/Parsing/ReceiptItemParser.swift",
+                "Data/Remote/SharedBillClient.swift",
+                "Data/Remote/ProductAnalytics.swift",
+                "Domain/Models/SavedExpense.swift",
+                "Application/ExpenseStore.swift",
+                "Data/Local/ExpensePersistence.swift",
+                "Domain/Validation/ExpenseValidation.swift",
+                "Domain/Models/ExpenseGroup.swift",
+                "Domain/Calculations/ItemizedExpenseMapper.swift"
+            ]
         ),
         .testTarget(
             name: "SplitTipCoreTests",
