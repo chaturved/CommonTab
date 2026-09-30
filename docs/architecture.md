@@ -1,28 +1,25 @@
-# Architecture and client expansion
+# Architecture
 
-## Current boundaries
+SplitTip has two expense stores with different lifecycles. The iOS local archive keeps personal expenses, local groups, itemized details, and receipt photos on one device. The shared API keeps authenticated group members, shared expenses, balances, settlements, and receipt images in a server database. Importing a local expense into a shared group is an explicit user action; it creates a new shared record after the user reviews its payer and split.
 
-- **SwiftUI presentation:** `SplitTip/Features` views own navigation, form state, and platform interactions. Views call use cases rather than opening files or constructing JSON.
-- **Domain rules:** `SplitTip/Domain` types own money math and invariants. They have no SwiftUI dependency.
-- **Application service:** `SplitTip/Application/ExpenseStore.swift` coordinates group and expense operations. It depends on `ExpenseArchiveRepository` and `ReceiptImageRepository` interfaces, allowing storage implementations to change without changing validation or UI.
-- **Local infrastructure:** `SplitTip/Data/Local/ExpensePersistence.swift` reads the versioned local archive; `FileReceiptImageRepository` stores receipt photos. The existing archive format and location are preserved.
-- **Remote infrastructure:** `SplitTip/Data/Remote/SharedBillClient.swift` talks to the FastAPI `/v1/sessions` endpoints. The API owns shared-session validation, version checks, and persistence. FastAPI serves its current OpenAPI schema at `/openapi.json`.
+## Dependency boundaries
 
-## Web or React Native direction
+- `SplitTip/Domain`: Swift money math, itemized calculations, validation, and local models. These types have no SwiftUI dependency.
+- `SplitTip/Application/ExpenseStore.swift`: coordinates the local archive and receipt repository interfaces.
+- `SplitTip/Data/Local`: versioned JSON archive and receipt files in Application Support.
+- `SplitTip/Data/Remote/SharedExpenseClient.swift`: typed HTTP transport for the shared API and Keychain token storage. `SharedBillClient.swift` remains a separate temporary bill-session client.
+- `SplitTip/Features`: SwiftUI navigation, form state, and user initiated actions. Shared expense views pass drafts to the remote client; the API returns canonical allocations and balances.
+- `backend/splittip_api/shared_models.py`: request validation and the `/v1` contract. `shared_storage.py` owns account, membership, split, balance, settlement, and receipt rules. `shared_routes.py` connects HTTP routes to that service. The existing temporary shared-bill session API remains independent.
+- `backend/splittip_api/web`: a browser client served from the same origin as the API, so it uses the same account and group rules without a second backend.
 
-The Swift models are not a cross-platform source of truth. For features used by multiple clients, define the behavior in the versioned API contract and enforce it on the server. A web or React Native client can use the OpenAPI schema to generate types and can implement its own view state. Keep monetary values as decimal strings at the current shared-bill boundary; for future expense and group endpoints, prefer documented integer minor units plus a currency code to avoid floating-point differences. Add shared contract fixtures for rounding, split allocation, validation errors, and concurrent updates before exposing those endpoints.
+## Cross-platform contract
 
-The current expense archive and receipt images are local to one device. Do not treat the shared-bill session API as an expense-sync API. A future account and sync implementation needs authenticated users, group membership and authorization, receipt upload/download, durable storage, pagination, idempotent writes, and conflict handling. Add a remote expense repository behind an application interface only when that API exists; preserve local data with an explicit migration and offline policy.
+The server owns shared group money rules. Clients send integer minor units, a split method, participants in an explicit order, and optional exact-minor-unit or percentage inputs. The server allocates any remainder deterministically and returns each member's share and balance. Group currencies are restricted to USD, EUR, GBP, CAD, AUD, JPY, and INR so the iOS and browser clients agree on fraction digits. See [shared API](shared-api.md) and the generated `/openapi.json` schema.
 
-## Dependency direction
+Shared expense edits carry the current expense version. A stale edit returns `409` and must be reloaded. Settlement writes carry the current group version. Receipts are available only to group members, are limited to JPEG or PNG under 5 MB, and are never part of anonymous analytics. The iOS app keeps the account bearer token in the Keychain; the browser keeps it in tab session storage.
 
-```text
-SwiftUI views -> application operations -> domain rules
-                               |-> archive and image repository interfaces
-                                    |-> local file implementations
+Local groups use named members without accounts. They remain separate from shared groups because names cannot safely identify server users. Import transfers an expense amount, description, category, notes, and optional receipt after the user chooses real group members. It does not silently merge local membership or itemized mappings.
 
-Web / React Native -> versioned HTTP API -> server domain rules -> server storage
-Swift shared-bill client -------^
-```
+## Operational limits
 
-The domain rules are intentionally small and testable. Use interfaces at side-effect boundaries (storage and network), not for every model or helper. The local archive is a persistence format, not a public API contract.
+SQLite supports a single API instance for development or a small self-hosted deployment. The current code does not include email delivery, password reset, offline shared writes, push notifications, a production database migration system, or hosted monitoring. A public service needs HTTPS termination, rate limiting, backups, and operational monitoring. These limits are documented so the app does not imply that local data is automatically synced.
