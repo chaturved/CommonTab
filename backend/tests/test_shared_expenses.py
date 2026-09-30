@@ -126,12 +126,3 @@ def test_exact_percentage_and_receipt_access(tmp_path):
     assert api.put(receipt_url, headers={**headers(ada), 'Content-Type': 'image/jpeg'}, content=b'fake').status_code == 422
     assert api.delete(receipt_url, headers=headers(ada)).status_code == 204
     assert api.get(receipt_url, headers=headers(ada)).status_code == 404
-
-
-def test_browser_client_is_served_with_api(tmp_path):
-    api = client(tmp_path)
-    assert api.get('/', follow_redirects=False).status_code in (301, 302, 307, 308)
-    page = api.get('/app/')
-    assert page.status_code == 200
-    assert 'Shared expenses' in page.text
-    assert api.get('/app/app.js').status_code == 200

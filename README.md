@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml)
 
-SplitTip tracks expenses and balances on iOS and in a browser. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
+SplitTip tracks expenses and balances on iOS. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
 
 ## Try it locally
 
@@ -12,7 +12,7 @@ SplitTip tracks expenses and balances on iOS and in a browser. Its SwiftUI app c
 2. The Home screen shows groups, outstanding balances, and recent activity. Open an expense to review its details before editing. Tap **Create group** or **Add expense** to start. Entries and receipt images remain on this device.
 3. Tap **View all expenses** to search or edit saved expenses. Open a group to see member balances, expenses, and recorded settlements.
 4. Open **Tip and itemized calculator** in Tools for restaurant bills. Enter a bill amount and choose a tip preset or Other for a custom percentage. Tap **Scan receipt** to take or choose a photo, then review the suggested amount and line items before saving them as an expense.
-5. For multi-device expenses, start the API below and open **Shared expenses** on Home. Create an account, create a group, and invite another account by email. The invitation code is shown for you to share privately. Add or import an expense, choose its payer and split, and attach a receipt. Group members can open the same group in the iOS app or the browser at `http://localhost:8000/app/`.
+5. For multi-device expenses, start the API below and open **Shared expenses** on Home. Create an account, create a group, and invite another account by email. The invitation code is shown for you to share privately. Add or import an expense, choose its payer and split, and attach a receipt. Group members can open the same group in the iOS app on their own devices.
 6. To use temporary shared itemized bills, open **Tip and itemized calculator → Assign items to people → Share or join a bill**. Create a session and copy its invite code, or join with a code from another device.
 
 The app defaults to `http://localhost:8000` for local development. A simulator on the same Mac can reach that address. For a physical device or collaboration across devices, set a reachable **HTTPS** API URL in Settings on every device.
@@ -28,7 +28,7 @@ SPLITTIP_METRICS_TOKEN=replace-with-a-long-secret \
   backend/.venv/bin/python -m uvicorn splittip_api.main:app --app-dir backend --reload
 ```
 
-Open `http://localhost:8000/` for the browser client or check `http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
+Check that the API is running at `http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -44,7 +44,7 @@ Open `http://localhost:8000/` for the browser client or check `http://localhost:
 | `POST /v1/events` | Increment an allowlisted event and A/B variant count |
 | `GET /v1/metrics` | Read aggregate counts using `SPLITTIP_METRICS_TOKEN` |
 
-Shared group requests require an account bearer token. An invitation can be accepted only by the matching email account and expires after seven days. The iOS app keeps its account token in the Keychain; the browser keeps it in tab session storage. An itemized-bill invite code grants read and edit access to that temporary bill, so share it only with intended participants.
+Shared group requests require an account bearer token. An invitation can be accepted only by the matching email account and expires after seven days. The iOS app keeps its account token in the Keychain. An itemized-bill invite code grants read and edit access to that temporary bill, so share it only with intended participants.
 
 ## Features and design
 
@@ -54,7 +54,7 @@ Shared group requests require an account bearer token. An invitation can be acce
 - **Measured changes:** Analytics is off by default. If enabled in Settings, the app sends only an allowlisted event name and a locally assigned A/B variant. The experiment compares two placements of the scan action; the event body has no receipt, bill amount, name, or install identifier.
 - **Saved itemized bills:** An itemized calculation can be saved with its line items, exact shares, and scanned receipt image. Its bill people can be mapped to group members so balances reflect item assignments.
 - **Expense library and local groups:** Save, search, edit, and delete expenses across categories. Create local groups with named members, assign a payer, split expenses equally, by exact amount, or by percentage, and record settlements. Local data stays in Application Support.
-- **Shared groups:** Signed-in members can create and join groups, add and edit expenses, use equal, exact-minor-unit, or percentage splits, record settlements, and upload receipts. The server authorizes membership, computes shares and balances, and rejects stale expense edits. The browser client uses the same API. You can choose a local expense to import into a shared group; review its payer and split before uploading it. Shared groups require a network connection.
+- **Shared groups:** Signed-in members can create and join groups, add and edit expenses, use equal, exact-minor-unit, or percentage splits, record settlements, and upload receipts. The server authorizes membership, computes shares and balances, and rejects stale expense edits. You can choose a local expense to import into a shared group; review its payer and split before uploading it. Shared groups require a network connection.
 - **Local continuity:** Tip presets, appearance, converter settings, and the itemized draft are stored on the device. The quick calculator restores a recent bill for up to ten minutes.
 
 | Area | Source |
@@ -69,7 +69,7 @@ Shared group requests require an account bearer token. An invitation can be acce
 
 ## Architecture
 
-The local expense service coordinates validation and separate archive and receipt repositories. Shared group state is authoritative on the server. The iOS and browser clients use `/v1` endpoints and receive server-computed allocations and balances. The OpenAPI contract is at `/openapi.json`; see [architecture](docs/architecture.md) and [shared API contract](docs/shared-api.md).
+The local expense service coordinates validation and separate archive and receipt repositories. Shared group state is authoritative on the server. The iOS client uses `/v1` endpoints and receive server-computed allocations and balances. The OpenAPI contract is at `/openapi.json`; see [architecture](docs/architecture.md) and [shared API contract](docs/shared-api.md).
 
 ## Tests and release status
 

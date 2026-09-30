@@ -6,8 +6,6 @@ from pathlib import Path
 from uuid import UUID
 
 from fastapi import FastAPI, Header, HTTPException, status
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
 
 from .models import CreateSession, CreatedSession, ProductEvent, Session, UpdateSession
 from .storage import SessionExpired, SessionMissing, SessionStore, VersionConflict
@@ -29,12 +27,6 @@ def create_app(database_path: Path | None = None, lifetime_seconds: int = 7 * 24
         return JSONResponse(status_code=error.status, content={"detail": error.message})
 
     app.include_router(router_for(shared_store))
-    app.mount("/app", StaticFiles(directory=Path(__file__).parent / "web", html=True), name="web")
-
-    @app.get("/", include_in_schema=False)
-    def web_home():
-        return RedirectResponse("/app/")
-
     def token_from_header(authorization: str | None) -> str:
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bearer token required")

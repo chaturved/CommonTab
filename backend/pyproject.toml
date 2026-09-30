@@ -26,6 +26,3 @@ include = ["splittip_api*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.setuptools.package-data]
-"splittip_api" = ["web/*"]
