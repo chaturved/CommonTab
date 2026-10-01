@@ -20,7 +20,27 @@ jobs:
           python -m pytest -q backend/tests
       - name: Build iOS app
         run: >-
-          xcodebuild -project SplitTip.xcodeproj -scheme SplitTip
+          xcodebuild -project CommonTab.xcodeproj -scheme CommonTab
           -destination 'generic/platform=iOS Simulator'
-          -derivedDataPath "$RUNNER_TEMP/SplitTipDerivedData"
+          -derivedDataPath "$RUNNER_TEMP/CommonTabDerivedData"
           CODE_SIGNING_ALLOWED=NO build
+
+  ui-tests:
+    runs-on: macos-26
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run iOS UI tests
+        run: >-
+          xcodebuild -project CommonTab.xcodeproj -scheme CommonTab
+          -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest'
+          -parallel-testing-enabled NO
+          -derivedDataPath "$RUNNER_TEMP/CommonTabUITestDerivedData"
+          -resultBundlePath "$RUNNER_TEMP/CommonTabUITests.xcresult"
+          CODE_SIGNING_ALLOWED=NO test
+      - name: Upload UI test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CommonTabUITests
+          path: ${{ runner.temp }}/CommonTabUITests.xcresult

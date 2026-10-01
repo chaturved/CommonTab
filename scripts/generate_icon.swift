@@ -79,4 +79,4 @@ guard let png = bitmap.representation(using: .png, properties: [:]) else {
     fatalError("Could not render app icon")
 }
 
-try png.write(to: URL(fileURLWithPath: "SplitTip/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))
+try png.write(to: URL(fileURLWithPath: "CommonTab/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))
