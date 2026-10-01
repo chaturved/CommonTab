@@ -3,8 +3,7 @@ import XCTest
 final class SplitTipUITests: XCTestCase {
     @MainActor
     func testSharedExpensesEntryShowsAccountForm() {
-        let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        let app = isolatedApp()
         app.launch()
         app.buttons["openSharedExpenses"].tap()
         XCTAssertTrue(app.navigationBars["Shared expenses"].waitForExistence(timeout: 5))
@@ -16,9 +15,16 @@ final class SplitTipUITests: XCTestCase {
     }
 
     @MainActor
-    func testCalculateAndOpenSettings() {
+    private func isolatedApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        app.launchEnvironment["SPLITTIP_UI_TEST_STORE_ID"] = UUID().uuidString
+        return app
+    }
+
+    @MainActor
+    func testCalculateAndOpenSettings() {
+        let app = isolatedApp()
         app.launchArguments = [
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
             "-settings.tipOne", "15", "-settings.tipTwo", "18",
@@ -41,8 +47,7 @@ final class SplitTipUITests: XCTestCase {
 
     @MainActor
     func testCustomTipPercentage() {
-        let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        let app = isolatedApp()
         app.launchArguments = [
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
             "-settings.tipOne", "15", "-settings.tipTwo", "18",
@@ -72,8 +77,7 @@ final class SplitTipUITests: XCTestCase {
 
     @MainActor
     func testItemizedSplitAndSharedBillNavigation() {
-        let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        let app = isolatedApp()
         app.launch()
         app.buttons["openCalculator"].tap()
 
@@ -103,8 +107,7 @@ final class SplitTipUITests: XCTestCase {
 extension SplitTipUITests {
     @MainActor
     func testSaveManualExpense() {
-        let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        let app = isolatedApp()
         app.launch()
         let merchantName = "UI Test Market \(UUID().uuidString.prefix(8))"
 
@@ -134,8 +137,7 @@ extension SplitTipUITests {
 extension SplitTipUITests {
     @MainActor
     func testSaveItemizedBillAsExpense() {
-        let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
+        let app = isolatedApp()
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         app.buttons["openCalculator"].tap()
@@ -169,7 +171,7 @@ extension SplitTipUITests {
 extension SplitTipUITests {
     @MainActor
     func testExpenseHomeCreatesGroup() {
-        let app = XCUIApplication()
+        let app = isolatedApp()
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.buttons["addExpenseFromHome"].waitForExistence(timeout: 5))
@@ -184,5 +186,96 @@ extension SplitTipUITests {
 
         XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["2 members · Settled"].exists)
+    }
+}
+
+extension SplitTipUITests {
+    @MainActor
+    func testEditAndDeleteSavedExpense() {
+        let app = isolatedApp()
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        app.buttons["addExpenseFromHome"].tap()
+        let merchant = app.textFields["expenseMerchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5))
+        merchant.tap()
+        merchant.typeText("Market purchase")
+        let amount = app.textFields["expenseAmount"]
+        amount.tap()
+        amount.typeText("12.34")
+        app.buttons["saveExpense"].tap()
+        XCTAssertTrue(app.staticTexts["Market purchase"].waitForExistence(timeout: 5))
+        app.staticTexts["Market purchase"].tap()
+        XCTAssertTrue(app.buttons["editExpense"].waitForExistence(timeout: 5))
+        app.buttons["editExpense"].tap()
+        let editedMerchant = app.textFields["expenseMerchant"]
+        XCTAssertTrue(editedMerchant.waitForExistence(timeout: 5))
+        editedMerchant.tap()
+        let oldValue = editedMerchant.value as? String ?? ""
+        editedMerchant.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: oldValue.count) + "Updated market")
+        app.buttons["saveExpense"].tap()
+        XCTAssertTrue(app.navigationBars["Updated market"].waitForExistence(timeout: 5))
+
+        app.navigationBars["Updated market"].buttons.element(boundBy: 0).tap()
+        app.buttons["openExpenseLibrary"].tap()
+        XCTAssertTrue(app.navigationBars["Expenses"].waitForExistence(timeout: 5))
+        let row = app.cells.containing(.staticText, identifier: "Updated market").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.swipeLeft()
+        app.buttons["Delete"].tap()
+        XCTAssertFalse(row.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["No saved expenses"].exists)
+    }
+
+    @MainActor
+    func testLocalGroupExpenseAndSettlement() {
+        let app = isolatedApp()
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        app.buttons["createGroupFromHome"].tap()
+        let name = app.textFields["groupName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        name.tap()
+        name.typeText("Weekend trip")
+        app.buttons["saveGroup"].tap()
+        XCTAssertTrue(app.staticTexts["Weekend trip"].waitForExistence(timeout: 5))
+        app.staticTexts["Weekend trip"].tap()
+        XCTAssertTrue(app.buttons["addGroupExpense"].waitForExistence(timeout: 5))
+        app.buttons["addGroupExpense"].tap()
+        let merchant = app.textFields["expenseMerchant"]
+        XCTAssertTrue(merchant.waitForExistence(timeout: 5))
+        merchant.tap()
+        merchant.typeText("Cab fare")
+        let amount = app.textFields["expenseAmount"]
+        amount.tap()
+        amount.typeText("10")
+        app.buttons["saveExpense"].tap()
+        XCTAssertTrue(app.staticTexts["Cab fare"].waitForExistence(timeout: 5))
+        let settle = app.buttons["Record settlement"]
+        XCTAssertTrue(settle.waitForExistence(timeout: 5))
+        settle.tap()
+        let settlementAmount = app.textFields["settlementAmount"]
+        XCTAssertTrue(settlementAmount.waitForExistence(timeout: 5))
+        settlementAmount.tap()
+        settlementAmount.typeText("5")
+        app.buttons["saveSettlement"].tap()
+        XCTAssertTrue(app.staticTexts["Friend paid You"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Record settlement"].isEnabled)
+    }
+
+    @MainActor
+    func testReceiptScannerNeedsAnImageBeforeUse() {
+        let app = isolatedApp()
+        app.launch()
+        app.buttons["addExpenseFromHome"].tap()
+        let scan = app.buttons["Scan receipt"]
+        for _ in 0..<3 where !scan.isHittable { app.swipeUp() }
+        XCTAssertTrue(scan.waitForExistence(timeout: 5))
+        scan.tap()
+        XCTAssertTrue(app.navigationBars["Scan receipt"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Choose photo"].exists)
+        XCTAssertFalse(app.buttons["useScannedAmount"].isEnabled)
+        app.navigationBars["Scan receipt"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Add expense"].waitForExistence(timeout: 5))
     }
 }

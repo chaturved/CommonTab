@@ -126,3 +126,82 @@ def test_exact_percentage_and_receipt_access(tmp_path):
     assert api.put(receipt_url, headers={**headers(ada), 'Content-Type': 'image/jpeg'}, content=b'fake').status_code == 422
     assert api.delete(receipt_url, headers=headers(ada)).status_code == 204
     assert api.get(receipt_url, headers=headers(ada)).status_code == 404
+
+
+def test_profile_group_and_invitation_permissions(tmp_path):
+    api = client(tmp_path)
+    ada = register(api, 'ada@example.com', 'Ada')
+    bob = register(api, 'bob@example.com', 'Bob')
+    eve = register(api, 'eve@example.com', 'Eve')
+    group = create_group(api, ada)
+    url = f"/v1/groups/{group['id']}"
+    assert api.post('/v1/accounts', json={
+        'email': 'ADA@example.com', 'name': 'Another Ada', 'password': 'correct horse battery staple'
+    }).status_code == 409
+    assert api.patch('/v1/me', headers=headers(ada), json={'name': '  Ada Lovelace  '}).json()['name'] == 'Ada Lovelace'
+    assert api.patch('/v1/me', headers=headers(ada), json={'name': '   '}).status_code == 422
+    assert api.patch(url, headers=headers(bob), json={'name': 'Hijacked'}).status_code == 404
+    renamed = api.patch(url, headers=headers(ada), json={'name': 'Summer trip'})
+    assert renamed.json()['name'] == 'Summer trip'
+    assert renamed.json()['version'] == group['version'] + 1
+
+    invitation = api.post(url + '/invitations', headers=headers(ada), json={'email': 'BOB@example.com'})
+    assert invitation.status_code == 201
+    token = invitation.json()['inviteToken']
+    assert api.post('/v1/invitations/accept', headers=headers(eve), json={'inviteToken': token}).status_code == 403
+    assert api.get(url, headers=headers(eve)).status_code == 404
+    assert api.post('/v1/invitations/accept', headers=headers(bob), json={'inviteToken': token}).status_code == 200
+    assert api.post(url + '/invitations', headers=headers(ada), json={'email': 'bob@example.com'}).status_code == 409
+
+
+def test_shared_expense_validation_and_persistence_after_restart(tmp_path):
+    database = tmp_path / 'persistent.sqlite3'
+    api = TestClient(create_app(database_path=database))
+    ada = register(api, 'ada@example.com', 'Ada')
+    outsider = register(api, 'eve@example.com', 'Eve')
+    group = create_group(api, ada)
+    aid = ada['user']['id']
+    record = expense(group, aid, [aid], amount=4250)
+    url = f"/v1/groups/{group['id']}/expenses/{record['id']}"
+    assert api.put(url, headers=headers(ada), json={**record, 'payerID': outsider['user']['id']}).status_code == 422
+    assert api.put(url, headers=headers(ada), json={**record, 'participants': [aid, aid]}).status_code == 422
+    assert api.put(url, headers=headers(ada), json={**record, 'occurredAt': '2026-09-30T12:00:00'}).status_code == 422
+    assert api.put(url, headers=headers(outsider), json=record).status_code == 404
+    assert api.put(url, headers=headers(ada), json=record).status_code == 200
+
+    restarted = TestClient(create_app(database_path=database))
+    loaded = restarted.get(f"/v1/groups/{group['id']}", headers=headers(ada))
+    assert loaded.status_code == 200
+    assert loaded.json()['expenses'][0]['amountMinor'] == 4250
+    assert loaded.json()['balances'] == [{'memberID': aid, 'minorUnits': 0}]
+    receipt_url = url + '/receipt'
+    assert restarted.put(receipt_url, headers={**headers(ada), 'Content-Type': 'text/plain'},
+                         content=b'not an image').status_code == 422
+    assert restarted.put(receipt_url, headers={**headers(ada), 'Content-Type': 'image/png'},
+                         content=b'\x89PNG\r\n\x1a\n' + b'0' * (5 * 1024 * 1024)).status_code == 413
+    assert restarted.get(receipt_url, headers=headers(ada)).status_code == 404
+
+
+def test_settlement_rejects_stale_group_and_overpayment(tmp_path):
+    api = client(tmp_path)
+    ada = register(api, 'ada@example.com', 'Ada')
+    bob = register(api, 'bob@example.com', 'Bob')
+    eve = register(api, 'eve@example.com', 'Eve')
+    group = create_group(api, ada)
+    join(api, group, ada, bob)
+    join(api, group, ada, eve)
+    aid, bid = ada['user']['id'], bob['user']['id']
+    record = expense(group, aid, [aid, bid], amount=1000)
+    assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}",
+                   headers=headers(ada), json=record).status_code == 200
+    state = api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()
+    settlement = {'id': str(uuid4()), 'groupVersion': state['version'],
+                  'fromID': bid, 'toID': aid, 'amountMinor': 500}
+    endpoint = f"/v1/groups/{group['id']}/settlements"
+    assert api.post(endpoint, headers=headers(eve), json=settlement).status_code == 403
+    assert api.post(endpoint, headers=headers(bob), json={**settlement, 'amountMinor': 501}).status_code == 422
+    assert api.patch(f"/v1/groups/{group['id']}", headers=headers(ada), json={'name': 'Renamed'}).status_code == 200
+    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 409
+    settlement['groupVersion'] += 1
+    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 201
+    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 422

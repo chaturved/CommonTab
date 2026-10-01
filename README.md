@@ -76,11 +76,14 @@ The local expense service coordinates validation and separate archive and receip
 ```sh
 swift test
 backend/.venv/bin/python -m pytest -q backend/tests
+xcodebuild -project SplitTip.xcodeproj -scheme SplitTip \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
 
-The Swift package tests cover archive-write rollback, expense persistence, group splits, balances, settlements, archive migration, itemized-to-group mapping, money rounding, receipt parsing, session conflicts, and analytics payloads. API tests cover account authentication, group authorization, invitations, allocations, balances, settlements, receipt access and metadata stripping, temporary sessions, expiry, and metrics. `SplitTipUITests` contains calculator, itemized-flow, and manual-expense and itemized-save tests; run them through **Product → Test** in Xcode when a simulator is available. CI runs the Swift and API tests and builds the iOS app for a generic simulator destination.
+The 34 Swift package tests cover money and itemized calculations, receipt parsing, local archive migration and rollback, groups and settlements, and API client requests. The 11 API tests cover authentication, group and invitation permissions, split and settlement validation, receipt access and size limits, persistence across app restarts, temporary bill sessions, and metrics. The 10 iOS UI tests cover the calculator, settings, itemized bills, local expense creation, editing and deletion, group settlement, receipt scanner gating, and the shared-expense entry screen. UI tests use isolated local storage so one run cannot change another.
 
-The previous calculator, itemized, and local expense UI cases passed on an iPhone 17 Pro simulator. The current shared-expense UI case is written but the full UI suite could not complete locally: Xcode stalled before launching the test runner on both iOS 26.3 and iOS 18.6 simulators. Backend and Swift unit tests and a generic iOS simulator build pass. Manual simulator, physical-device, camera, accessibility, and distribution validation remain. The API has no hosted deployment or real user metrics. The SQLite setup targets one service instance. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, and backups. Accounts are email and password based; there is no email delivery or password reset yet. Shared expenses require an online connection.
+CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, and uploads the Xcode result bundle if UI tests fail. The full Xcode suite passed on an iPhone 17 Pro simulator with iOS 26.3. Physical-device camera, accessibility, and distribution validation remain. The API has no hosted deployment or real user metrics. The SQLite setup targets one service instance. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, and backups. Accounts are email and password based; there is no email delivery or password reset yet. Shared expenses require an online connection.
 
 ## License
 

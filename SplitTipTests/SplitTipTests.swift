@@ -541,3 +541,113 @@ final class GroupExpenseClientTests: XCTestCase {
         XCTAssertThrowsError(try GroupExpenseClient(baseURL: URL(string: "http://example.com")!))
     }
 }
+
+extension SplitTipTests {
+    func testDeletingExpenseRemovesReceiptAndKeepsOtherRecords() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ExpenseStore(directory: directory)
+        let image = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let first = try store.save(SavedExpense(merchant: "First", currencyCode: "USD", amount: 10), receiptData: image)
+        let second = try store.save(SavedExpense(merchant: "Second", currencyCode: "USD", amount: 20))
+        let receiptPath = directory.appendingPathComponent(try XCTUnwrap(first.receiptFilename))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: receiptPath.path))
+        try store.delete(first.id)
+        XCTAssertEqual(try store.load(), [second])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: receiptPath.path))
+        XCTAssertEqual(try ExpenseStore(directory: directory).load(), [second])
+    }
+}
+
+extension GroupExpenseClientTests {
+    func testLoginAndGroupFetchUseBearerTokenAndDecodeBalance() async throws {
+        let userID = UUID()
+        let groupID = UUID()
+        let session = #"{"accessToken":"secret","expiresAt":"2026-10-30T00:00:00Z","user":{"id":"\#(userID)","email":"ada@example.com","name":"Ada"}}"#
+        let group = #"{"id":"\#(groupID)","name":"Trip","currencyCode":"USD","ownerID":"\#(userID)","version":2,"members":[],"expenses":[],"settlements":[],"balances":[{"memberID":"\#(userID)","minorUnits":125}]}"#
+        let client = try GroupExpenseClient(baseURL: URL(string: "https://example.com/api")!) { request in
+            switch request.url?.path {
+            case "/api/v1/auth/sessions":
+                XCTAssertEqual(request.httpMethod, "POST")
+                let body = try XCTUnwrap(request.httpBody)
+                let fields = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+                XCTAssertEqual(fields["email"], "ada@example.com")
+                return (Data(session.utf8), HTTPURLResponse(url: request.url!, statusCode: 200,
+                                                              httpVersion: nil, headerFields: nil)!)
+            case "/api/v1/groups/\(groupID)":
+                XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
+                return (Data(group.utf8), HTTPURLResponse(url: request.url!, statusCode: 200,
+                                                            httpVersion: nil, headerFields: nil)!)
+            default:
+                XCTFail("Unexpected request: \(request.url?.absoluteString ?? "nil")")
+                throw URLError(.badURL)
+            }
+        }
+        let authenticated = try await client.login(email: "ada@example.com", password: "long password")
+        XCTAssertEqual(authenticated.accessToken, "secret")
+        let loaded = try await client.group(groupID, token: authenticated.accessToken)
+        XCTAssertEqual(loaded.balances.first?.minorUnits, 125)
+    }
+
+    func testSaveExpensePreservesSplitOrderAndVersion() async throws {
+        let groupID = UUID()
+        let payerID = UUID()
+        let otherID = UUID()
+        let expenseID = UUID()
+        let draft = APIExpenseDraft(id: expenseID, merchant: "Groceries", occurredAt: "2026-09-30T12:00:00Z",
+                                    category: "groceries", notes: "Weekend", amountMinor: 1001,
+                                    payerID: payerID, method: "percentage", participants: [payerID, otherID],
+                                    values: ["33.33", "66.67"], version: 3)
+        let response = #"{"id":"\#(expenseID)","groupID":"\#(groupID)","merchant":"Groceries","occurredAt":"2026-09-30T12:00:00Z","category":"groceries","notes":"Weekend","amountMinor":1001,"payerID":"\#(payerID)","method":"percentage","allocations":[{"memberID":"\#(payerID)","minorUnits":334},{"memberID":"\#(otherID)","minorUnits":667}],"values":["33.33","66.67"],"version":4,"hasReceipt":false}"#
+        let client = try GroupExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+            XCTAssertEqual(request.httpMethod, "PUT")
+            XCTAssertEqual(request.url?.path, "/v1/groups/\(groupID)/expenses/\(expenseID)")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
+            let body = try XCTUnwrap(request.httpBody)
+            let object = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+            XCTAssertEqual(object["version"] as? Int, 3)
+            XCTAssertEqual(object["participants"] as? [String], [payerID.uuidString, otherID.uuidString])
+            XCTAssertEqual(object["values"] as? [String], ["33.33", "66.67"])
+            return (Data(response.utf8), HTTPURLResponse(url: request.url!, statusCode: 200,
+                                                          httpVersion: nil, headerFields: nil)!)
+        }
+        let saved = try await client.saveExpense(draft, groupID: groupID, token: "secret")
+        XCTAssertEqual(saved.version, 4)
+        XCTAssertEqual(saved.allocations.map(\.minorUnits), [334, 667])
+    }
+
+    func testServerErrorAndReceiptTransport() async throws {
+        let expenseID = UUID()
+        let groupID = UUID()
+        let payerID = UUID()
+        let json = #"{"id":"\#(expenseID)","groupID":"\#(groupID)","merchant":"Lunch","occurredAt":"2026-09-30T00:00:00Z","category":"dining","notes":"","amountMinor":1250,"payerID":"\#(payerID)","method":"equal","allocations":[],"values":[],"version":1,"hasReceipt":true}"#
+        let expense = try JSONDecoder().decode(APIExpense.self, from: Data(json.utf8))
+        let image = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let client = try GroupExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+            XCTAssertEqual(request.url?.path, "/v1/groups/\(groupID)/expenses/\(expenseID)/receipt")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
+            if request.httpMethod == "PUT" {
+                XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "image/jpeg")
+                XCTAssertEqual(request.httpBody, image)
+                return (Data(#"{"hasReceipt":true}"#.utf8),
+                        HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            }
+            return (image, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        try await client.uploadReceipt(image, mime: "image/jpeg", expense: expense, token: "secret")
+        let downloaded = try await client.receipt(expense: expense, token: "secret")
+        XCTAssertEqual(downloaded, image)
+
+        let failing = try GroupExpenseClient(baseURL: URL(string: "https://example.com")!) { request in
+            return (Data(#"{"detail":"Expense changed; reload before saving"}"#.utf8),
+                    HTTPURLResponse(url: request.url!, statusCode: 409, httpVersion: nil, headerFields: nil)!)
+        }
+        do {
+            try await failing.deleteExpense(expense, token: "secret")
+            XCTFail("Expected stale write error")
+        } catch GroupExpenseClientError.server(let code, let detail) {
+            XCTAssertEqual(code, 409)
+            XCTAssertEqual(detail, "Expense changed; reload before saving")
+        }
+    }
+}
