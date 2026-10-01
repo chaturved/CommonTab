@@ -4,6 +4,10 @@
 
 CommonTab tracks expenses and balances on iOS. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
 
+## App preview
+
+<img src="docs/screenshots/overview.png" alt="CommonTab overview showing expense totals, a group, and navigation" width="320">
+
 ## Try it locally
 
 **Requirements:** Xcode with Swift 6 and an iOS 18 or newer SDK. The API requires Python 3.11 or newer.
