@@ -156,7 +156,7 @@ struct CalculatorView: View {
                 }
             }
         }
-        .navigationTitle("SplitTip")
+        .navigationTitle("CommonTab")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -179,7 +179,7 @@ struct CalculatorView: View {
         .onAppear {
             if scanVariant.isEmpty { scanVariant = Bool.random() ? "A" : "B" }
             track(.calculatorOpened)
-            if ProcessInfo.processInfo.environment["SPLITTIP_UI_TEST_RESET_STATE"] == "1" {
+            if ProcessInfo.processInfo.environment["COMMONTAB_UI_TEST_RESET_STATE"] == "1" {
                 lastBill = ""
                 lastEditedAt = 0
                 itemizedDraftData = Data()

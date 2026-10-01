@@ -1,6 +1,6 @@
 import XCTest
 
-final class SplitTipUITests: XCTestCase {
+final class CommonTabUITests: XCTestCase {
     @MainActor
     func testSharedExpensesEntryShowsAccountForm() {
         let app = isolatedApp()
@@ -17,8 +17,8 @@ final class SplitTipUITests: XCTestCase {
     @MainActor
     private func isolatedApp() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchEnvironment["SPLITTIP_UI_TEST_RESET_STATE"] = "1"
-        app.launchEnvironment["SPLITTIP_UI_TEST_STORE_ID"] = UUID().uuidString
+        app.launchEnvironment["COMMONTAB_UI_TEST_RESET_STATE"] = "1"
+        app.launchEnvironment["COMMONTAB_UI_TEST_STORE_ID"] = UUID().uuidString
         return app
     }
 
@@ -104,7 +104,7 @@ final class SplitTipUITests: XCTestCase {
     }
 }
 
-extension SplitTipUITests {
+extension CommonTabUITests {
     @MainActor
     func testSaveManualExpense() {
         let app = isolatedApp()
@@ -134,7 +134,7 @@ extension SplitTipUITests {
     }
 }
 
-extension SplitTipUITests {
+extension CommonTabUITests {
     @MainActor
     func testSaveItemizedBillAsExpense() {
         let app = isolatedApp()
@@ -168,7 +168,7 @@ extension SplitTipUITests {
 }
 
 
-extension SplitTipUITests {
+extension CommonTabUITests {
     @MainActor
     func testExpenseHomeCreatesGroup() {
         let app = isolatedApp()
@@ -189,7 +189,7 @@ extension SplitTipUITests {
     }
 }
 
-extension SplitTipUITests {
+extension CommonTabUITests {
     @MainActor
     func testEditAndDeleteSavedExpense() {
         let app = isolatedApp()

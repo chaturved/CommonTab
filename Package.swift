@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "SplitTipCore",
+    name: "CommonTabCore",
     defaultLocalization: "en",
     platforms: [.iOS(.v18), .macOS(.v12)],
-    products: [.library(name: "SplitTipCore", targets: ["SplitTipCore"])],
+    products: [.library(name: "CommonTabCore", targets: ["CommonTabCore"])],
     targets: [
         .target(
-            name: "SplitTipCore",
-            path: "SplitTip",
+            name: "CommonTabCore",
+            path: "CommonTab",
             exclude: ["App", "Features", "Platform", "Resources", "Data/Local/BillSessionCredentialStore.swift"],
             sources: [
                 "Domain/Calculations/TipCalculation.swift",
@@ -33,11 +33,11 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "SplitTipCoreTests",
-            dependencies: ["SplitTipCore"],
-            path: "SplitTipTests",
+            name: "CommonTabCoreTests",
+            dependencies: ["CommonTabCore"],
+            path: "CommonTabTests",
             exclude: ["Info.plist"],
-            sources: ["SplitTipTests.swift"]
+            sources: ["CommonTabTests.swift"]
         )
     ]
 )

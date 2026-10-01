@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		9C3F0F552772756400C0DD55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C3F0F542772756400C0DD55 /* Assets.xcassets */; };
 		9C3F0F582772756400C0DD55 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9C3F0F562772756400C0DD55 /* LaunchScreen.storyboard */; };
-		9C3F0F632772756400C0DD55 /* SplitTipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0F622772756400C0DD55 /* SplitTipTests.swift */; };
-		9C3F0F6E2772756400C0DD55 /* SplitTipUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0F6D2772756400C0DD55 /* SplitTipUITests.swift */; };
+		9C3F0F632772756400C0DD55 /* CommonTabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0F622772756400C0DD55 /* CommonTabTests.swift */; };
+		9C3F0F6E2772756400C0DD55 /* CommonTabUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0F6D2772756400C0DD55 /* CommonTabUITests.swift */; };
 		A10000000000000000000002 /* TipCalculation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* TipCalculation.swift */; };
-		A10000000000000000000004 /* SplitTipApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* SplitTipApp.swift */; };
+		A10000000000000000000004 /* CommonTabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* CommonTabApp.swift */; };
 		A10000000000000000000006 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* CalculatorView.swift */; };
 		A10000000000000000000008 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* SettingsView.swift */; };
 		A1000000000000000000000A /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* ExchangeRateService.swift */; };
@@ -56,30 +56,30 @@
 			containerPortal = 9C3F0F402772756100C0DD55 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9C3F0F472772756100C0DD55;
-			remoteInfo = SplitTip;
+			remoteInfo = CommonTab;
 		};
 		9C3F0F6A2772756400C0DD55 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9C3F0F402772756100C0DD55 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9C3F0F472772756100C0DD55;
-			remoteInfo = SplitTip;
+			remoteInfo = CommonTab;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9C3F0F482772756100C0DD55 /* SplitTip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplitTip.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C3F0F482772756100C0DD55 /* CommonTab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommonTab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C3F0F542772756400C0DD55 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9C3F0F572772756400C0DD55 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9C3F0F592772756400C0DD55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9C3F0F5E2772756400C0DD55 /* SplitTipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SplitTipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9C3F0F622772756400C0DD55 /* SplitTipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitTipTests.swift; sourceTree = "<group>"; };
+		9C3F0F5E2772756400C0DD55 /* CommonTabTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CommonTabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C3F0F622772756400C0DD55 /* CommonTabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonTabTests.swift; sourceTree = "<group>"; };
 		9C3F0F642772756400C0DD55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9C3F0F692772756400C0DD55 /* SplitTipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SplitTipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9C3F0F6D2772756400C0DD55 /* SplitTipUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitTipUITests.swift; sourceTree = "<group>"; };
+		9C3F0F692772756400C0DD55 /* CommonTabUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CommonTabUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C3F0F6D2772756400C0DD55 /* CommonTabUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonTabUITests.swift; sourceTree = "<group>"; };
 		9C3F0F6F2772756400C0DD55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000001 /* TipCalculation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipCalculation.swift; sourceTree = "<group>"; };
-		A10000000000000000000003 /* SplitTipApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitTipApp.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* CommonTabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonTabApp.swift; sourceTree = "<group>"; };
 		A10000000000000000000005 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
 		A10000000000000000000007 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A10000000000000000000009 /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateService.swift; sourceTree = "<group>"; };
@@ -145,9 +145,9 @@
 		9C3F0F3F2772756100C0DD55 = {
 			isa = PBXGroup;
 			children = (
-				9C3F0F4A2772756100C0DD55 /* SplitTip */,
-				9C3F0F612772756400C0DD55 /* SplitTipTests */,
-				9C3F0F6C2772756400C0DD55 /* SplitTipUITests */,
+				9C3F0F4A2772756100C0DD55 /* CommonTab */,
+				9C3F0F612772756400C0DD55 /* CommonTabTests */,
+				9C3F0F6C2772756400C0DD55 /* CommonTabUITests */,
 				9C3F0F492772756100C0DD55 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -155,14 +155,14 @@
 		9C3F0F492772756100C0DD55 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9C3F0F482772756100C0DD55 /* SplitTip.app */,
-				9C3F0F5E2772756400C0DD55 /* SplitTipTests.xctest */,
-				9C3F0F692772756400C0DD55 /* SplitTipUITests.xctest */,
+				9C3F0F482772756100C0DD55 /* CommonTab.app */,
+				9C3F0F5E2772756400C0DD55 /* CommonTabTests.xctest */,
+				9C3F0F692772756400C0DD55 /* CommonTabUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9C3F0F4A2772756100C0DD55 /* SplitTip */ = {
+		9C3F0F4A2772756100C0DD55 /* CommonTab */ = {
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* App */,
@@ -173,31 +173,31 @@
 				A20000000000000000000006 /* Platform */,
 				A20000000000000000000007 /* Resources */,
 			);
-			path = SplitTip;
+			path = CommonTab;
 			sourceTree = "<group>";
 		};
-		9C3F0F612772756400C0DD55 /* SplitTipTests */ = {
+		9C3F0F612772756400C0DD55 /* CommonTabTests */ = {
 			isa = PBXGroup;
 			children = (
-				9C3F0F622772756400C0DD55 /* SplitTipTests.swift */,
+				9C3F0F622772756400C0DD55 /* CommonTabTests.swift */,
 				9C3F0F642772756400C0DD55 /* Info.plist */,
 			);
-			path = SplitTipTests;
+			path = CommonTabTests;
 			sourceTree = "<group>";
 		};
-		9C3F0F6C2772756400C0DD55 /* SplitTipUITests */ = {
+		9C3F0F6C2772756400C0DD55 /* CommonTabUITests */ = {
 			isa = PBXGroup;
 			children = (
-				9C3F0F6D2772756400C0DD55 /* SplitTipUITests.swift */,
+				9C3F0F6D2772756400C0DD55 /* CommonTabUITests.swift */,
 				9C3F0F6F2772756400C0DD55 /* Info.plist */,
 			);
-			path = SplitTipUITests;
+			path = CommonTabUITests;
 			sourceTree = "<group>";
 		};
 		A20000000000000000000001 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000003 /* SplitTipApp.swift */,
+				A10000000000000000000003 /* CommonTabApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -414,9 +414,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9C3F0F472772756100C0DD55 /* SplitTip */ = {
+		9C3F0F472772756100C0DD55 /* CommonTab */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9C3F0F722772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTip" */;
+			buildConfigurationList = 9C3F0F722772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTab" */;
 			buildPhases = (
 				9C3F0F442772756100C0DD55 /* Sources */,
 				9C3F0F452772756100C0DD55 /* Frameworks */,
@@ -426,14 +426,14 @@
 			);
 			dependencies = (
 			);
-			name = SplitTip;
-			productName = SplitTip;
-			productReference = 9C3F0F482772756100C0DD55 /* SplitTip.app */;
+			name = CommonTab;
+			productName = CommonTab;
+			productReference = 9C3F0F482772756100C0DD55 /* CommonTab.app */;
 			productType = "com.apple.product-type.application";
 		};
-		9C3F0F5D2772756400C0DD55 /* SplitTipTests */ = {
+		9C3F0F5D2772756400C0DD55 /* CommonTabTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9C3F0F752772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTipTests" */;
+			buildConfigurationList = 9C3F0F752772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTabTests" */;
 			buildPhases = (
 				9C3F0F5A2772756400C0DD55 /* Sources */,
 				9C3F0F5B2772756400C0DD55 /* Frameworks */,
@@ -444,14 +444,14 @@
 			dependencies = (
 				9C3F0F602772756400C0DD55 /* PBXTargetDependency */,
 			);
-			name = SplitTipTests;
-			productName = SplitTipTests;
-			productReference = 9C3F0F5E2772756400C0DD55 /* SplitTipTests.xctest */;
+			name = CommonTabTests;
+			productName = CommonTabTests;
+			productReference = 9C3F0F5E2772756400C0DD55 /* CommonTabTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		9C3F0F682772756400C0DD55 /* SplitTipUITests */ = {
+		9C3F0F682772756400C0DD55 /* CommonTabUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9C3F0F782772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTipUITests" */;
+			buildConfigurationList = 9C3F0F782772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTabUITests" */;
 			buildPhases = (
 				9C3F0F652772756400C0DD55 /* Sources */,
 				9C3F0F662772756400C0DD55 /* Frameworks */,
@@ -462,9 +462,9 @@
 			dependencies = (
 				9C3F0F6B2772756400C0DD55 /* PBXTargetDependency */,
 			);
-			name = SplitTipUITests;
-			productName = SplitTipUITests;
-			productReference = 9C3F0F692772756400C0DD55 /* SplitTipUITests.xctest */;
+			name = CommonTabUITests;
+			productName = CommonTabUITests;
+			productReference = 9C3F0F692772756400C0DD55 /* CommonTabUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -489,7 +489,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9C3F0F432772756100C0DD55 /* Build configuration list for PBXProject "SplitTip" */;
+			buildConfigurationList = 9C3F0F432772756100C0DD55 /* Build configuration list for PBXProject "CommonTab" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -502,9 +502,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9C3F0F472772756100C0DD55 /* SplitTip */,
-				9C3F0F5D2772756400C0DD55 /* SplitTipTests */,
-				9C3F0F682772756400C0DD55 /* SplitTipUITests */,
+				9C3F0F472772756100C0DD55 /* CommonTab */,
+				9C3F0F5D2772756400C0DD55 /* CommonTabTests */,
+				9C3F0F682772756400C0DD55 /* CommonTabUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -540,7 +540,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000004 /* SplitTipApp.swift in Sources */,
+				A10000000000000000000004 /* CommonTabApp.swift in Sources */,
 				A10000000000000000000006 /* CalculatorView.swift in Sources */,
 				A10000000000000000000008 /* SettingsView.swift in Sources */,
 				A1000000000000000000000A /* ExchangeRateService.swift in Sources */,
@@ -584,7 +584,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C3F0F632772756400C0DD55 /* SplitTipTests.swift in Sources */,
+				9C3F0F632772756400C0DD55 /* CommonTabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -592,7 +592,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C3F0F6E2772756400C0DD55 /* SplitTipUITests.swift in Sources */,
+				9C3F0F6E2772756400C0DD55 /* CommonTabUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -601,12 +601,12 @@
 /* Begin PBXTargetDependency section */
 		9C3F0F602772756400C0DD55 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9C3F0F472772756100C0DD55 /* SplitTip */;
+			target = 9C3F0F472772756100C0DD55 /* CommonTab */;
 			targetProxy = 9C3F0F5F2772756400C0DD55 /* PBXContainerItemProxy */;
 		};
 		9C3F0F6B2772756400C0DD55 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9C3F0F472772756100C0DD55 /* SplitTip */;
+			target = 9C3F0F472772756100C0DD55 /* CommonTab */;
 			targetProxy = 9C3F0F6A2772756400C0DD55 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -746,7 +746,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTip/Resources/Info.plist;
+				INFOPLIST_FILE = CommonTab/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -765,7 +765,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTip/Resources/Info.plist;
+				INFOPLIST_FILE = CommonTab/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -784,18 +784,18 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTipTests/Info.plist;
+				INFOPLIST_FILE = CommonTabTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.SplitTipTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.CommonTabTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SplitTip.app/SplitTip";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CommonTab.app/CommonTab";
 			};
 			name = Debug;
 		};
@@ -806,18 +806,18 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTipTests/Info.plist;
+				INFOPLIST_FILE = CommonTabTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.SplitTipTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.CommonTabTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SplitTip.app/SplitTip";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CommonTab.app/CommonTab";
 			};
 			name = Release;
 		};
@@ -827,17 +827,17 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTipUITests/Info.plist;
+				INFOPLIST_FILE = CommonTabUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.SplitTipUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.CommonTabUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SplitTip;
+				TEST_TARGET_NAME = CommonTab;
 			};
 			name = Debug;
 		};
@@ -847,24 +847,24 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = V8R9X46Q3B;
-				INFOPLIST_FILE = SplitTipUITests/Info.plist;
+				INFOPLIST_FILE = CommonTabUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.SplitTipUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.chaturvedlakkaraju.CommonTabUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = SplitTip;
+				TEST_TARGET_NAME = CommonTab;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9C3F0F432772756100C0DD55 /* Build configuration list for PBXProject "SplitTip" */ = {
+		9C3F0F432772756100C0DD55 /* Build configuration list for PBXProject "CommonTab" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C3F0F702772756400C0DD55 /* Debug */,
@@ -873,7 +873,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9C3F0F722772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTip" */ = {
+		9C3F0F722772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTab" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C3F0F732772756400C0DD55 /* Debug */,
@@ -882,7 +882,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9C3F0F752772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTipTests" */ = {
+		9C3F0F752772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTabTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C3F0F762772756400C0DD55 /* Debug */,
@@ -891,7 +891,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9C3F0F782772756400C0DD55 /* Build configuration list for PBXNativeTarget "SplitTipUITests" */ = {
+		9C3F0F782772756400C0DD55 /* Build configuration list for PBXNativeTarget "CommonTabUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C3F0F792772756400C0DD55 /* Debug */,

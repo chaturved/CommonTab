@@ -77,7 +77,7 @@ struct SettingsView: View {
             }
             Section("Product analytics") {
                 Toggle("Share anonymous usage counts", isOn: $analyticsEnabled)
-                Text("When enabled, SplitTip sends only an event name and A/B variant to your configured server. It never sends receipt photos, bill amounts, names, or an install ID for analytics.")
+                Text("When enabled, CommonTab sends only an event name and A/B variant to your configured server. It never sends receipt photos, bill amounts, names, or an install ID for analytics.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

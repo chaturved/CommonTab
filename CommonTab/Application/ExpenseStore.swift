@@ -19,10 +19,10 @@ struct ExpenseStore {
         let defaultDirectory = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         )[0].appendingPathComponent("SplitTip/Expenses", isDirectory: true)
-        let testDirectory = ProcessInfo.processInfo.environment["SPLITTIP_UI_TEST_STORE_ID"]
+        let testDirectory = ProcessInfo.processInfo.environment["COMMONTAB_UI_TEST_STORE_ID"]
             .flatMap(UUID.init(uuidString:))
             .map { FileManager.default.temporaryDirectory
-                .appendingPathComponent("SplitTipUITests", isDirectory: true)
+                .appendingPathComponent("CommonTabUITests", isDirectory: true)
                 .appendingPathComponent($0.uuidString, isDirectory: true) }
         let directory = directory ?? testDirectory ?? defaultDirectory
         self.init(

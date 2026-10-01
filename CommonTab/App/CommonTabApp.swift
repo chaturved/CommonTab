@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct SplitTipApp: App {
+struct CommonTabApp: App {
     @AppStorage("settings.darkAppearance") private var darkAppearance = false
 
     init() {
-        if ProcessInfo.processInfo.environment["SPLITTIP_UI_TEST_RESET_STATE"] == "1" {
+        if ProcessInfo.processInfo.environment["COMMONTAB_UI_TEST_RESET_STATE"] == "1" {
             AccountCredentialStore.clear()
         }
     }

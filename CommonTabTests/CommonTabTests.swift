@@ -3,12 +3,12 @@ import XCTest
 import FoundationNetworking
 #endif
 #if SWIFT_PACKAGE
-@testable import SplitTipCore
+@testable import CommonTabCore
 #else
-@testable import SplitTip
+@testable import CommonTab
 #endif
 
-final class SplitTipTests: XCTestCase {
+final class CommonTabTests: XCTestCase {
     func testTipAndTotal() throws {
         let result = try TipCalculator.calculate(bill: 100, tipPercentage: 18, people: 2)
 
@@ -259,7 +259,7 @@ final class SplitTipTests: XCTestCase {
     }
 }
 
-extension SplitTipTests {
+extension CommonTabTests {
     func testExpenseStorePersistsReceiptAndEditsWithoutLosingIt() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -306,7 +306,7 @@ extension SplitTipTests {
     }
 }
 
-extension SplitTipTests {
+extension CommonTabTests {
     func testGroupSplitsPreserveEveryCentAcrossModes() throws {
         let ids = (0..<3).map { _ in UUID() }
         let equal = try ExpenseSplitter.allocate(
@@ -388,7 +388,7 @@ extension SplitTipTests {
     }
 }
 
-extension SplitTipTests {
+extension CommonTabTests {
     func testScannedItemizedBillKeepsReceiptTotalUntilExtraTipIsChosen() throws {
         let person = BillPerson(name: "Alex")
         var bill = ItemizedBill(people: [person], tipPercentage: 18)
@@ -476,7 +476,7 @@ private final class FailingExpenseArchiveRepository: ExpenseArchiveRepository {
     }
 }
 
-extension SplitTipTests {
+extension CommonTabTests {
     func testArchiveWriteFailureRollsBackNewReceiptAndKeepsExistingData() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -542,7 +542,7 @@ final class GroupExpenseClientTests: XCTestCase {
     }
 }
 
-extension SplitTipTests {
+extension CommonTabTests {
     func testDeletingExpenseRemovesReceiptAndKeepsOtherRecords() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

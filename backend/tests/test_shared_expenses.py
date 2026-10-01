@@ -4,7 +4,7 @@ from PIL import Image
 
 from fastapi.testclient import TestClient
 
-from splittip_api.main import create_app
+from commontab_api.main import create_app
 
 
 def client(tmp_path):

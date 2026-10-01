@@ -97,7 +97,7 @@ struct ExpenseHomeView: View {
                 .accessibilityIdentifier("openCalculator")
             }
         }
-        .navigationTitle("SplitTip")
+        .navigationTitle("CommonTab")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {

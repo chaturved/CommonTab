@@ -1,14 +1,14 @@
-# SplitTip
+# CommonTab
 
 [![CI](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml)
 
-SplitTip tracks expenses and balances on iOS. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
+CommonTab tracks expenses and balances on iOS. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
 
 ## Try it locally
 
 **Requirements:** Xcode with Swift 6 and an iOS 18 or newer SDK. The API requires Python 3.11 or newer.
 
-1. Open `SplitTip.xcodeproj` and run the `SplitTip` scheme on an iPhone simulator or device.
+1. Open `CommonTab.xcodeproj` and run the `CommonTab` scheme on an iPhone simulator or device.
 2. The Home screen shows groups, outstanding balances, and recent activity. Open an expense to review its details before editing. Tap **Create group** or **Add expense** to start. Entries and receipt images remain on this device.
 3. Tap **View all expenses** to search or edit saved expenses. Open a group to see member balances, expenses, and recorded settlements.
 4. Open **Tip and itemized calculator** in Tools for restaurant bills. Enter a bill amount and choose a tip preset or Other for a custom percentage. Tap **Scan receipt** to take or choose a photo, then review the suggested amount and line items before saving them as an expense.
@@ -25,7 +25,7 @@ From the repository root:
 python3 -m venv backend/.venv
 backend/.venv/bin/python -m pip install -e './backend[test]'
 SPLITTIP_METRICS_TOKEN=replace-with-a-long-secret \
-  backend/.venv/bin/python -m uvicorn splittip_api.main:app --app-dir backend --reload
+  backend/.venv/bin/python -m uvicorn commontab_api.main:app --app-dir backend --reload
 ```
 
 Check that the API is running at `http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
@@ -59,13 +59,13 @@ Shared group requests require an account bearer token. An invitation can be acce
 
 | Area | Source |
 | --- | --- |
-| App and SwiftUI features | `SplitTip/App`, `SplitTip/Features` (including the expense-first Home screen) |
-| Business models, calculations, parsing, validation | `SplitTip/Domain` |
-| Expense operations | `SplitTip/Application` |
-| Local storage, API clients, analytics | `SplitTip/Data` |
-| Camera and on-device OCR | `SplitTip/Platform` |
-| Icons, launch screen, configuration | `SplitTip/Resources` |
-| API composition and feature packages | `backend/splittip_api` (`accounts`, `groups`, `bill_sessions`, `analytics`) |
+| App and SwiftUI features | `CommonTab/App`, `CommonTab/Features` (including the expense-first Home screen) |
+| Business models, calculations, parsing, validation | `CommonTab/Domain` |
+| Expense operations | `CommonTab/Application` |
+| Local storage, API clients, analytics | `CommonTab/Data` |
+| Camera and on-device OCR | `CommonTab/Platform` |
+| Icons, launch screen, configuration | `CommonTab/Resources` |
+| API composition and feature packages | `backend/commontab_api` (`accounts`, `groups`, `bill_sessions`, `analytics`) |
 
 ## Architecture
 
@@ -76,7 +76,7 @@ The local expense service coordinates validation and separate archive and receip
 ```sh
 swift test
 backend/.venv/bin/python -m pytest -q backend/tests
-xcodebuild -project SplitTip.xcodeproj -scheme SplitTip \
+xcodebuild -project CommonTab.xcodeproj -scheme CommonTab \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
   -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
@@ -88,3 +88,7 @@ CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, an
 ## License
 
 Copyright 2021–2026 Chaturved Lakkaraju. Licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+## Rename compatibility
+
+The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name. The GitHub remote still uses the existing SplitTip repository URL.

@@ -28,7 +28,7 @@ def create_app(database_path: Path | None = None, lifetime_seconds: int = 7 * 24
     sessions = BillSessionRepository(path, lifetime_seconds=lifetime_seconds)
     analytics = AnalyticsRepository(path)
 
-    app = FastAPI(title='SplitTip API', version='0.2.0')
+    app = FastAPI(title='CommonTab API', version='0.2.0')
 
     @app.exception_handler(APIError)
     def api_error_handler(_request: Request, error: APIError):
