@@ -12,9 +12,24 @@ struct CommonTabApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                ExpenseHomeView()
+            TabView {
+                Tab("Overview", systemImage: "square.grid.2x2.fill") {
+                    NavigationStack { ExpenseHomeView() }
+                }
+
+                Tab("Groups", systemImage: "person.2.fill") {
+                    NavigationStack { ExpenseGroupsView(store: ExpenseStore()) }
+                }
+
+                Tab("Expenses", systemImage: "receipt.fill") {
+                    NavigationStack { ExpenseLibraryView() }
+                }
+
+                Tab("Tools", systemImage: "wrench.and.screwdriver.fill") {
+                    NavigationStack { ToolsView() }
+                }
             }
+            .tint(.accentColor)
             .preferredColorScheme(darkAppearance ? .dark : nil)
         }
     }

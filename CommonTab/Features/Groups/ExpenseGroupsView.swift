@@ -7,24 +7,81 @@ struct ExpenseGroupsView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        List {
-            if groups.isEmpty {
-                ContentUnavailableView("No groups", systemImage: "person.3",
-                                       description: Text("Create a group to track shared expenses and balances."))
-            } else {
-                ForEach(groups) { group in
-                    NavigationLink {
-                        ExpenseGroupDetailView(store: store, groupID: group.id)
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(group.name)
-                            Text("\(group.members.count) members · \(group.currencyCode)")
-                                .font(.caption).foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                SectionHeading("Share together", subtitle: "Keep each trip, household or plan in its own group.")
+                    .padding(.top, 10)
+
+                NavigationLink {
+                    GroupExpensesView()
+                } label: {
+                    SurfaceCard {
+                        HStack(spacing: 14) {
+                            SymbolTile(symbol: "globe", size: 52)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Shared online")
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text("Groups that everyone can access")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 4)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    SectionHeading("On this device", subtitle: "These groups stay on your iPhone.")
+
+                    if groups.isEmpty {
+                        SurfaceCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                SymbolTile(symbol: "person.3.fill", size: 52)
+                                Text("No groups yet")
+                                    .font(.headline)
+                                Text("Create a group to track balances with friends.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Button("Create group", systemImage: "plus") { showingCreate = true }
+                                    .buttonStyle(.borderedProminent)
+                            }
+                        }
+                    } else {
+                        ForEach(groups) { group in
+                            NavigationLink {
+                                ExpenseGroupDetailView(store: store, groupID: group.id)
+                            } label: {
+                                SurfaceCard {
+                                    HStack(spacing: 14) {
+                                        SymbolTile(symbol: "person.2.fill", size: 52)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(group.name)
+                                                .font(.headline)
+                                                .foregroundStyle(.primary)
+                                            Text("\(group.members.count) members · \(group.currencyCode)")
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Spacer(minLength: 4)
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
             }
+            .padding(20)
         }
+        .background(CommonTabStyle.background)
         .navigationTitle("Groups")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -33,6 +90,7 @@ struct ExpenseGroupsView: View {
             }
         }
         .onAppear(perform: reload)
+        .refreshable { reload() }
         .sheet(isPresented: $showingCreate) {
             CreateExpenseGroupView(store: store, onSaved: reload)
         }

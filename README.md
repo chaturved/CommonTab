@@ -9,11 +9,11 @@ CommonTab tracks expenses and balances on iOS. Its SwiftUI app can save personal
 **Requirements:** Xcode with Swift 6 and an iOS 18 or newer SDK. The API requires Python 3.11 or newer.
 
 1. Open `CommonTab.xcodeproj` and run the `CommonTab` scheme on an iPhone simulator or device.
-2. The Home screen shows groups, outstanding balances, and recent activity. Open an expense to review its details before editing. Tap **Create group** or **Add expense** to start. Entries and receipt images remain on this device.
-3. Tap **View all expenses** to search or edit saved expenses. Open a group to see member balances, expenses, and recorded settlements.
-4. Open **Tip and itemized calculator** in Tools for restaurant bills. Enter a bill amount and choose a tip preset or Other for a custom percentage. Tap **Scan receipt** to take or choose a photo, then review the suggested amount and line items before saving them as an expense.
-5. For multi-device expenses, start the API below and open **Shared expenses** on Home. Create an account, create a group, and invite another account by email. The invitation code is shown for you to share privately. Add or import an expense, choose its payer and split, and attach a receipt. Group members can open the same group in the iOS app on their own devices.
-6. To use temporary shared itemized bills, open **Tip and itemized calculator → Assign items to people → Share or join a bill**. Create a session and copy its invite code, or join with a code from another device.
+2. Overview highlights groups with open balances, recent expenses, and quick actions. The Groups, Expenses, and Tools tabs keep each area one tap away. Open an expense to review its details before editing. Tap **Create group** or **Add expense** to start. Entries and receipt images remain on this device.
+3. Tap **See all** or open the **Expenses** tab to search or edit saved expenses. Open a group to see member balances, expenses, and recorded settlements.
+4. Open **Tip & split calculator** in Tools for restaurant bills. Enter a bill amount and choose a tip preset or Other for a custom percentage. Tap **Scan receipt** to take or choose a photo, then review the suggested amount and line items before saving them as an expense.
+5. For multi-device expenses, start the API below and open **Shared online** from Overview or Groups. Create an account, create a group, and invite another account by email. The invitation code is shown for you to share privately. Add or import an expense, choose its payer and split, and attach a receipt. Group members can open the same group in the iOS app on their own devices.
+6. To use temporary shared itemized bills, open **Tools → Tip & split calculator → Assign items to people → Share or join a bill**. Create a session and copy its invite code, or join with a code from another device.
 
 The app defaults to `http://localhost:8000` for local development. A simulator on the same Mac can reach that address. For a physical device or collaboration across devices, set a reachable **HTTPS** API URL in Settings on every device.
 
@@ -81,7 +81,7 @@ xcodebuild -project CommonTab.xcodeproj -scheme CommonTab \
   -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
 
-The 34 Swift package tests cover money and itemized calculations, receipt parsing, local archive migration and rollback, groups and settlements, and API client requests. The 11 API tests cover authentication, group and invitation permissions, split and settlement validation, receipt access and size limits, persistence across app restarts, temporary bill sessions, and metrics. The 10 iOS UI tests cover the calculator, settings, itemized bills, local expense creation, editing and deletion, group settlement, receipt scanner gating, and the shared-expense entry screen. UI tests use isolated local storage so one run cannot change another.
+The 34 Swift package tests cover money and itemized calculations, receipt parsing, local archive migration and rollback, groups and settlements, and API client requests. The 11 API tests cover authentication, group and invitation permissions, split and settlement validation, receipt access and size limits, persistence across app restarts, temporary bill sessions, and metrics. The 11 iOS UI tests cover the top-level navigation, calculator, settings, itemized bills, local expense creation, editing and deletion, group settlement, receipt scanner gating, and the shared-expense entry screen. UI tests use isolated local storage so one run cannot change another.
 
 CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, and uploads the Xcode result bundle if UI tests fail. The full Xcode suite passed on an iPhone 17 Pro simulator with iOS 26.3. Physical-device camera, accessibility, and distribution validation remain. The API has no hosted deployment or real user metrics. The SQLite setup targets one service instance. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, and backups. Accounts are email and password based; there is no email delivery or password reset yet. Shared expenses require an online connection.
 

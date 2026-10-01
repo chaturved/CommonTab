@@ -10,6 +10,24 @@ final class CommonTabUITests: XCTestCase {
         XCTAssertTrue(app.buttons["sharedAuthenticate"].exists)
     }
 
+    @MainActor
+    func testTopLevelNavigation() {
+        let app = isolatedApp()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["All caught up"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Groups"].tap()
+        XCTAssertTrue(app.navigationBars["Groups"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Shared online"].exists)
+
+        app.tabBars.buttons["Expenses"].tap()
+        XCTAssertTrue(app.navigationBars["Expenses"].waitForExistence(timeout: 5))
+
+        app.tabBars.buttons["Tools"].tap()
+        XCTAssertTrue(app.navigationBars["Tools"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Tip & split calculator"].exists)
+    }
+
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
@@ -195,8 +213,11 @@ extension CommonTabUITests {
         let app = isolatedApp()
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        app.buttons["addExpenseFromHome"].tap()
+        let addExpense = app.buttons["addExpenseFromHome"]
+        XCTAssertTrue(addExpense.waitForExistence(timeout: 5))
+        addExpense.tap()
         let merchant = app.textFields["expenseMerchant"]
+        if !merchant.waitForExistence(timeout: 2) { addExpense.tap() }
         XCTAssertTrue(merchant.waitForExistence(timeout: 5))
         merchant.tap()
         merchant.typeText("Market purchase")

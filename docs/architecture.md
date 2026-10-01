@@ -13,6 +13,8 @@ CommonTab/
     Local/                Archive, receipt files, and Keychain credentials
     Remote/               Typed API clients, DTOs, and analytics
   Features/               SwiftUI screens grouped by user workflow
+    Shared/               Reusable visual components and semantic styling
+    Tools/                Utility entry points
   Platform/               Camera and on-device OCR adapters
   Resources/              Assets and app configuration
 backend/
@@ -33,7 +35,7 @@ CommonTabUITests/          End-to-end iOS flows
 - `CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
 - `CommonTab/Application` coordinates local archive and receipt repository interfaces. `CommonTab/Data/Local` implements storage and keeps credentials in the Keychain.
 - `CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
-- `CommonTab/Features` owns SwiftUI navigation and form state. Screens are grouped by workflow; editors and details have their own files.
+- `CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
 - The backend composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
 
 ## Cross-platform contract
