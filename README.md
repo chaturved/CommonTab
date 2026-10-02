@@ -91,7 +91,7 @@ CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, an
 
 ## License
 
-Copyright 2021–2026 Chaturved Lakkaraju. Licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+Copyright 2026 Chaturved Lakkaraju. All rights reserved. This project is proprietary; see [LICENSE](LICENSE) for terms.
 
 ## Rename compatibility
 
