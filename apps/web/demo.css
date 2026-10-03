@@ -3,37 +3,38 @@
 .project-link{display:inline-block;color:#a8ead5;font-size:13px;font-weight:700;text-underline-offset:4px;margin-bottom:14px}.project-link:hover{text-decoration:underline}.embed-mode .site-shell{display:block;min-height:0}.embed-mode .intro{display:none}.embed-mode .app-wrap{display:block;padding:0;background:#f4f5f8}.embed-mode .app-window{height:100vh;min-height:0;max-height:none;width:100%;border:0;border-radius:0;box-shadow:none}.embed-mode .app-topbar{display:flex}
 
 /* The demo opens directly into a workspace, with the product beside it. */
-.site-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(480px,1fr);min-height:100svh;background:#e8efed}
-.intro{position:relative;display:flex;flex-direction:column;justify-content:initial;min-height:100svh;overflow:hidden;padding:28px clamp(32px,5vw,88px) 48px;background:radial-gradient(circle at 8% 100%,#19545a 0,transparent 45%),#0b3038;color:#f9fbf9;text-align:left}
+.site-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(480px,1fr);min-height:100svh;background:#0b3038}
+.intro{position:relative;display:flex;flex-direction:column;justify-content:initial;min-height:100svh;overflow:hidden;padding:28px clamp(32px,5vw,88px) 48px;background:#0b3038;color:#f9fbf9;text-align:left}
 .intro::after{content:"";position:absolute;width:440px;height:440px;right:-240px;bottom:-260px;border:1px solid #ffffff1c;border-radius:50%;pointer-events:none}
 .demo-header{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .brand{color:#fff;text-decoration:none;white-space:nowrap}
-.demo-home{color:#c6e4db;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
-.demo-home:hover{text-decoration:underline}
+.demo-home{display:inline-flex;align-items:center;gap:8px;margin-top:26px;color:#a8ead5;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:5px;white-space:nowrap}
+.demo-home:hover{color:#fff}
 .intro-body{position:relative;z-index:1;max-width:580px;padding:0;margin:auto 0}
 .intro h1{font-size:clamp(58px,5.7vw,86px);line-height:1.02;margin:20px 0 25px}
 .intro-body>p{max-width:440px;margin:0;color:#c0d9d7;font-size:19px;line-height:1.6}
-.app-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:0;margin:0;padding:72px 36px 32px;background:radial-gradient(circle at 50% 28%,#f8fbf8 0,#e8efed 65%)}
+.app-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:0;margin:0;padding:72px 36px 32px;background:#0b3038}
 .app-window{width:min(490px,100%);height:min(820px,calc(100svh - 132px));min-height:620px;max-height:none;border-radius:28px;box-shadow:0 30px 90px #12383c29}
 .app-content{overflow-y:auto;flex:1}
-.demo-reassurance{margin:20px 0 0;color:#607b79;font-size:12px;text-align:center}
+.demo-reassurance{margin:20px 0 0;color:#a9c9c6;font-size:12px;text-align:center}
 @media(max-width:1000px){
   .site-shell{display:block}
   .intro{min-height:0;padding:24px clamp(24px,6vw,60px) 48px}
   .intro-body{max-width:680px;margin:44px auto 0;text-align:center}
   .intro h1{font-size:clamp(46px,7vw,64px);margin:14px 0 18px}
   .intro-body>p{max-width:540px;margin:auto;font-size:17px}
+  .demo-home{margin-top:22px}
   .app-wrap{padding:36px 24px 50px}
   .app-window{height:auto;min-height:0;max-height:none}
   .app-content{overflow:visible;flex:none}
 }
 @media(max-width:600px){
   .intro{padding:20px 20px 30px}
-  .demo-home{font-size:12px}
+  .demo-home{margin-top:18px;font-size:13px}
   .intro-body{margin:34px 0 0;text-align:left}
   .intro h1{font-size:clamp(40px,10vw,54px);margin:12px 0 16px}
   .intro-body>p{font-size:15px;line-height:1.5}
-  .app-wrap{padding:0 0 26px;background:#f4f5f8}
+  .app-wrap{padding:0 0 26px;background:#0b3038}
   .app-window{width:100%;height:auto;min-height:0;border:0;border-radius:0;box-shadow:none}
   .app-topbar{display:flex}
   .demo-reassurance{margin:18px 0 0}
