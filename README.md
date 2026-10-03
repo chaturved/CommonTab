@@ -1,6 +1,6 @@
 # CommonTab
 
-[![CI](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml)
+[![CI](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml)
 
 CommonTab includes a native iOS app, a product website, a browser app, and an optional FastAPI service. The SwiftUI app saves personal expenses and scanned receipts locally. The service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
 
@@ -116,4 +116,4 @@ Copyright 2026 Chaturved Lakkaraju. All rights reserved. This project is proprie
 
 ## Rename compatibility
 
-The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name. The GitHub remote still uses the existing SplitTip repository URL.
+The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name.
