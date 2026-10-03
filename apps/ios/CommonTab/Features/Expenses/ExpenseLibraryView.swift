@@ -19,8 +19,41 @@ struct ExpenseLibraryView: View {
     var body: some View {
         List {
             Section {
+                VStack(alignment: .leading, spacing: 13) {
+                    Text("YOUR EXPENSES")
+                        .font(.caption.weight(.bold))
+                        .tracking(1.2)
+                        .foregroundStyle(CommonTabStyle.mint)
+                    Text("\(expenses.count) saved")
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .contentTransition(.numericText())
+                    Text("Keep purchases and receipts easy to find.")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.82))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(22)
+                .background(
+                    LinearGradient(colors: [CommonTabStyle.ink, CommonTabStyle.deepInk],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: RoundedRectangle(cornerRadius: 22)
+                )
+                .listRowInsets(EdgeInsets(top: 12, leading: 20, bottom: 8, trailing: 20))
+                .listRowBackground(Color.clear)
+
                 NavigationLink { ExpenseGroupsView(store: store) } label: {
-                    Label("Groups and balances", systemImage: "person.3")
+                    HStack(spacing: 12) {
+                        SymbolTile(symbol: "person.3.fill", size: 42)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Groups and balances")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Shared expenses on this device")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 5)
                 }
                 .accessibilityIdentifier("openExpenseGroups")
             }
@@ -31,7 +64,7 @@ struct ExpenseLibraryView: View {
                     description: Text("Add an expense or scan a receipt to keep it here.")
                 )
             } else {
-                Section {
+                Section("Find an expense") {
                     Picker("Category", selection: $categoryFilter) {
                         Text("All categories").tag("all")
                         ForEach(ExpenseCategory.allCases) { category in
@@ -39,24 +72,30 @@ struct ExpenseLibraryView: View {
                         }
                     }
                 }
-                Section {
+                Section("\(visibleExpenses.count) results") {
+                    if visibleExpenses.isEmpty {
+                        ContentUnavailableView(
+                            "No matching expenses",
+                            systemImage: "magnifyingglass",
+                            description: Text("Try another search or category.")
+                        )
+                    }
                     ForEach(visibleExpenses) { expense in
                         NavigationLink {
                             ExpenseDetailView(store: store, expense: expense, onUpdated: reload)
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(expense.merchant).foregroundStyle(.primary)
-                                    Text("\(expense.category.title) · \(expense.date.formatted(date: .abbreviated, time: .omitted))")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
+                            HStack(spacing: 8) {
+                                ExpenseSummaryRow(
+                                    expense: expense,
+                                    context: "\(expense.category.title) · \(expense.date.formatted(date: .abbreviated, time: .omitted))"
+                                )
                                 if expense.receiptFilename != nil {
-                                    Image(systemName: "paperclip").foregroundStyle(.secondary)
+                                    Image(systemName: "paperclip")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                                Text(expense.amount.formatted(.currency(code: expense.currencyCode)))
-                                    .foregroundStyle(.primary)
                             }
+                            .padding(.vertical, 5)
                         }
                         .accessibilityIdentifier("savedExpense_\(expense.id.uuidString)")
                     }
@@ -64,6 +103,9 @@ struct ExpenseLibraryView: View {
                 }
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(CommonTabStyle.background)
         .navigationTitle("Expenses")
         .searchable(text: $searchText, prompt: "Search expenses")
         .toolbar {

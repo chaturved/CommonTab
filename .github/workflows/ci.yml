@@ -10,17 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Test calculation and service code
+        working-directory: apps/ios
         run: swift test
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Test API
         run: |
-          python -m pip install -e './backend[test]'
-          python -m pytest -q backend/tests
+          python -m pip install -e './services/api[test]'
+          python -m pytest -q services/api/tests
       - name: Build iOS app
         run: >-
-          xcodebuild -project CommonTab.xcodeproj -scheme CommonTab
+          xcodebuild -project apps/ios/CommonTab.xcodeproj -scheme CommonTab
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath "$RUNNER_TEMP/CommonTabDerivedData"
           CODE_SIGNING_ALLOWED=NO build
@@ -32,7 +33,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Run iOS UI tests
         run: >-
-          xcodebuild -project CommonTab.xcodeproj -scheme CommonTab
+          xcodebuild -project apps/ios/CommonTab.xcodeproj -scheme CommonTab
           -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest'
           -parallel-testing-enabled NO
           -derivedDataPath "$RUNNER_TEMP/CommonTabUITestDerivedData"
