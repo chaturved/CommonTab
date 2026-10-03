@@ -1,18 +1,39 @@
 # CommonTab
 
-[![CI](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/SplitTip/actions/workflows/ci.yml)
+[![CI](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml)
 
-CommonTab tracks expenses and balances on iOS. Its SwiftUI app can save personal expenses and scanned receipts locally. An optional FastAPI service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
+CommonTab includes a native iOS app, a product website, a browser app, and an optional FastAPI service. The SwiftUI app saves personal expenses and scanned receipts locally. The service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
+
+## Repository layout
+
+```text
+apps/
+  ios/             SwiftUI app, Xcode project, and Swift tests
+  web/             Product pages and browser app, deployed together
+    app/           Browser app and its calculator tests
+    assets/        Website images and icon
+  react-native/    Reserved home for a future React Native client
+services/
+  api/             FastAPI service and HTTP tests
+docs/              Architecture, API contract, and screenshots
+scripts/           Repository utilities
+```
+
+Each app owns its UI and build configuration. The iOS and future React Native clients share the API contract in [docs/shared-api.md](docs/shared-api.md), not source files. The product site and browser app share one static deployment under `apps/web`.
 
 ## App preview
 
 <img src="docs/screenshots/overview.png" alt="CommonTab overview showing expense totals, a group, and navigation" width="320">
 
+A [product website and web app](apps/web/README.md) introduce CommonTab and let visitors use the tip calculator and personal expenses online. The web app starts with example expenses, stores changes on the device, and does not connect to the shared API.
+
+To view the product site and browser app locally, run `python3 -m http.server 3000 --directory apps/web`, then open `http://localhost:3000/` or `http://localhost:3000/app/`.
+
 ## Try it locally
 
 **Requirements:** Xcode with Swift 6 and an iOS 18 or newer SDK. The API requires Python 3.11 or newer.
 
-1. Open `CommonTab.xcodeproj` and run the `CommonTab` scheme on an iPhone simulator or device.
+1. Open `apps/ios/CommonTab.xcodeproj` and run the `CommonTab` scheme on an iPhone simulator or device.
 2. Overview highlights groups with open balances, recent expenses, and quick actions. The Groups, Expenses, and Tools tabs keep each area one tap away. Open an expense to review its details before editing. Tap **Create group** or **Add expense** to start. Entries and receipt images remain on this device.
 3. Tap **See all** or open the **Expenses** tab to search or edit saved expenses. Open a group to see member balances, expenses, and recorded settlements.
 4. Open **Tip & split calculator** in Tools for restaurant bills. Enter a bill amount and choose a tip preset or Other for a custom percentage. Tap **Scan receipt** to take or choose a photo, then review the suggested amount and line items before saving them as an expense.
@@ -26,13 +47,13 @@ The app defaults to `http://localhost:8000` for local development. A simulator o
 From the repository root:
 
 ```sh
-python3 -m venv backend/.venv
-backend/.venv/bin/python -m pip install -e './backend[test]'
+python3 -m venv services/api/.venv
+services/api/.venv/bin/python -m pip install -e './services/api[test]'
 SPLITTIP_METRICS_TOKEN=replace-with-a-long-secret \
-  backend/.venv/bin/python -m uvicorn commontab_api.main:app --app-dir backend --reload
+  services/api/.venv/bin/python -m uvicorn commontab_api.main:app --app-dir services/api --reload
 ```
 
-Check that the API is running at `http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
+Check that the API is running at `http://localhost:8000/health`. The default SQLite file is `services/api/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -63,13 +84,13 @@ Shared group requests require an account bearer token. An invitation can be acce
 
 | Area | Source |
 | --- | --- |
-| App and SwiftUI features | `CommonTab/App`, `CommonTab/Features` (including the expense-first Home screen) |
-| Business models, calculations, parsing, validation | `CommonTab/Domain` |
-| Expense operations | `CommonTab/Application` |
-| Local storage, API clients, analytics | `CommonTab/Data` |
-| Camera and on-device OCR | `CommonTab/Platform` |
-| Icons, launch screen, configuration | `CommonTab/Resources` |
-| API composition and feature packages | `backend/commontab_api` (`accounts`, `groups`, `bill_sessions`, `analytics`) |
+| App and SwiftUI features | `apps/ios/CommonTab/App`, `apps/ios/CommonTab/Features` (including the expense-first Home screen) |
+| Business models, calculations, parsing, validation | `apps/ios/CommonTab/Domain` |
+| Expense operations | `apps/ios/CommonTab/Application` |
+| Local storage, API clients, analytics | `apps/ios/CommonTab/Data` |
+| Camera and on-device OCR | `apps/ios/CommonTab/Platform` |
+| Icons, launch screen, configuration | `apps/ios/CommonTab/Resources` |
+| API composition and feature packages | `services/api/commontab_api` (`accounts`, `groups`, `bill_sessions`, `analytics`) |
 
 ## Architecture
 
@@ -78,9 +99,9 @@ The local expense service coordinates validation and separate archive and receip
 ## Tests and release status
 
 ```sh
-swift test
-backend/.venv/bin/python -m pytest -q backend/tests
-xcodebuild -project CommonTab.xcodeproj -scheme CommonTab \
+swift test --package-path apps/ios
+services/api/.venv/bin/python -m pytest -q services/api/tests
+xcodebuild -project apps/ios/CommonTab.xcodeproj -scheme CommonTab \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
   -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
@@ -95,4 +116,4 @@ Copyright 2026 Chaturved Lakkaraju. All rights reserved. This project is proprie
 
 ## Rename compatibility
 
-The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name. The GitHub remote still uses the existing SplitTip repository URL.
+The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name.

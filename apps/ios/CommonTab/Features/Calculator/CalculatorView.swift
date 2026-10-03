@@ -60,103 +60,130 @@ struct CalculatorView: View {
     }
 
     var body: some View {
-        Form {
-            Section("Bill") {
-                HStack {
-                    Text(currencyCode)
-                        .foregroundStyle(.secondary)
-                    TextField("Amount", text: $billText)
-                        .keyboardType(.decimalPad)
-                        .focused($billIsFocused)
-                        .accessibilityIdentifier("billAmount")
-                }
-                if !billText.isEmpty && enteredBill == nil {
-                    Text("Enter a valid amount from 0 to 1,000,000,000.")
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                }
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                SectionHeading("Tip & split", subtitle: "Split every cent fairly")
 
-            Section("Tip") {
-                Picker("Tip percentage", selection: $selectedTip) {
-                    ForEach(tipOptions.indices, id: \.self) { index in
-                        Text("\(tipOptions[index])%").tag(index)
+                SurfaceCard {
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Bill amount")
+                                .font(.subheadline.weight(.semibold))
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                Text(currencyCode)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                TextField("Amount", text: $billText)
+                                    .font(.system(.title2, design: .rounded, weight: .bold))
+                                    .keyboardType(.decimalPad)
+                                    .focused($billIsFocused)
+                                    .accessibilityIdentifier("billAmount")
+                            }
+                            .padding(14)
+                            .background(CommonTabStyle.background, in: RoundedRectangle(cornerRadius: 14))
+                            if !billText.isEmpty && enteredBill == nil {
+                                Text("Enter a valid amount from 0 to 1,000,000,000.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.red)
+                            }
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 9) {
+                            Text("Tip percentage")
+                                .font(.subheadline.weight(.semibold))
+                            Picker("Tip percentage", selection: $selectedTip) {
+                                ForEach(tipOptions.indices, id: \.self) { index in
+                                    Text("\(tipOptions[index])%").tag(index)
+                                }
+                                Text("Other").tag(3)
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("tipPercentage")
+
+                            if selectedTip == 3 {
+                                HStack {
+                                    TextField("Custom tip", text: $customTip)
+                                        .keyboardType(.decimalPad)
+                                        .accessibilityIdentifier("customTipPercentage")
+                                    Text("%")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(12)
+                                .background(CommonTabStyle.background, in: RoundedRectangle(cornerRadius: 12))
+                                if selectedPercentage == nil {
+                                    Text("Enter a tip percentage from 0 to 100.")
+                                        .font(.footnote)
+                                        .foregroundStyle(.red)
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        Stepper(value: $people, in: 1...20) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("People: \(people)")
+                                    .font(.subheadline.weight(.semibold))
+                                Text("Up to 20 people")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("peopleCount")
                     }
-                    Text("Other").tag(3)
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("tipPercentage")
-                if selectedTip == 3 {
-                    HStack {
-                        TextField("Custom tip", text: $customTip)
-                            .keyboardType(.decimalPad)
-                            .accessibilityIdentifier("customTipPercentage")
-                        Text("%")
-                            .foregroundStyle(.secondary)
-                    }
-                    if selectedPercentage == nil {
-                        Text("Enter a tip percentage from 0 to 100.")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
-                    }
-                }
-            }
-
-            Section("Split") {
-                Stepper("People: \(people)", value: $people, in: 1...20)
-                    .accessibilityIdentifier("peopleCount")
-            }
-
-            Section("Itemized bill") {
-                Button {
-                    showingItemizedEditor = true
-                    track(.itemizedOpened)
-                } label: {
-                    Label("Assign items to people", systemImage: "list.bullet.rectangle")
-                }
-                .accessibilityIdentifier("openItemizedBill")
-                if scanVariant == "B" {
-                    Button {
-                        showingScanner = true
-                        track(.scanOpened)
-                    } label: {
-                        Label("Scan and split a receipt", systemImage: "doc.text.viewfinder")
-                    }
-                }
-            }
-
-            Section("Expenses") {
-                NavigationLink {
-                    ExpenseLibraryView()
-                } label: {
-                    Label("Saved expenses and receipts", systemImage: "receipt")
-                }
-                .accessibilityIdentifier("openExpenseLibrary")
-            }
-
-            if let calculation {
-                Section("Total") {
-                    amountRow("Tip", amount: calculation.tip)
-                    amountRow("Bill and tip", amount: calculation.total, emphasized: true)
-                        .accessibilityIdentifier("totalAmount")
                 }
 
-                if people > 1 {
-                    Section("Per person") {
-                        ForEach(calculation.shares.indices, id: \.self) { index in
-                            amountRow("Person \(index + 1)", amount: calculation.shares[index].total)
+                if let calculation {
+                    resultCard(calculation)
+                    if converterEnabled {
+                        SurfaceCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Currency estimate")
+                                    .font(.headline)
+                                conversionContent(total: calculation.total)
+                            }
                         }
                     }
                 }
 
-                if converterEnabled {
-                    Section("Currency estimate") {
-                        conversionContent(total: calculation.total)
+                SectionHeading("Keep going", subtitle: "More ways to handle a shared bill")
+                SurfaceCard {
+                    VStack(spacing: 0) {
+                        Button {
+                            showingItemizedEditor = true
+                            track(.itemizedOpened)
+                        } label: {
+                            actionRow("Assign items to people", symbol: "list.bullet.rectangle")
+                        }
+                        .accessibilityIdentifier("openItemizedBill")
+
+                        if scanVariant == "B" {
+                            Divider().padding(.vertical, 12)
+                            Button {
+                                showingScanner = true
+                                track(.scanOpened)
+                            } label: {
+                                actionRow("Scan and split a receipt", symbol: "doc.text.viewfinder")
+                            }
+                        }
+
+                        Divider().padding(.vertical, 12)
+                        NavigationLink {
+                            ExpenseLibraryView()
+                        } label: {
+                            actionRow("Saved expenses and receipts", symbol: "receipt")
+                        }
+                        .accessibilityIdentifier("openExpenseLibrary")
                     }
                 }
             }
+            .padding(20)
         }
-        .navigationTitle("CommonTab")
+        .background(CommonTabStyle.background)
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle("Calculator")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -223,6 +250,59 @@ struct CalculatorView: View {
                 .fontWeight(emphasized ? .semibold : .regular)
                 .monospacedDigit()
         }
+    }
+
+    private func resultCard(_ calculation: TipCalculation) -> some View {
+        VStack(alignment: .leading, spacing: 15) {
+            amountRow("Tip", amount: calculation.tip)
+                .foregroundStyle(.white.opacity(0.82))
+            Divider().overlay(.white.opacity(0.2))
+            HStack(alignment: .firstTextBaseline) {
+                Text("Bill and tip")
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text(currencyFormatter.string(from: NSDecimalNumber(decimal: calculation.total)) ?? "—")
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("totalAmount")
+            }
+            if people > 1 {
+                Text("PER PERSON")
+                    .font(.caption.weight(.bold))
+                    .tracking(1.2)
+                    .foregroundStyle(CommonTabStyle.mint)
+                    .padding(.top, 5)
+                ForEach(calculation.shares.indices, id: \.self) { index in
+                    Divider().overlay(.white.opacity(0.16))
+                    amountRow("Person \(index + 1)", amount: calculation.shares[index].total)
+                        .font(.subheadline)
+                }
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(colors: [CommonTabStyle.ink, CommonTabStyle.deepInk],
+                           startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 22)
+        )
+    }
+
+    private func actionRow(_ title: String, symbol: String) -> some View {
+        HStack(spacing: 12) {
+            SymbolTile(symbol: symbol, size: 40)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Spacer(minLength: 4)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder

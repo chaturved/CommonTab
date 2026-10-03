@@ -5,38 +5,36 @@ CommonTab has two expense stores with different lifecycles. The iOS local archiv
 ## Project layout
 
 ```text
-CommonTab/
-  App/                    App entry point and composition
-  Application/            Local expense use cases and store
-  Domain/                 Money, expense models, calculations, and parsers
-  Data/
-    Local/                Archive, receipt files, and Keychain credentials
-    Remote/               Typed API clients, DTOs, and analytics
-  Features/               SwiftUI screens grouped by user workflow
-    Shared/               Reusable visual components and semantic styling
-    Tools/                Utility entry points
-  Platform/               Camera and on-device OCR adapters
-  Resources/              Assets and app configuration
-backend/
-  commontab_api/
-    accounts/             Account models, authentication, routes, repository
-    groups/               Group expense rules, persistence, and routes
-    bill_sessions/        Temporary itemized bill session API
-    analytics/            Anonymous event counters and metrics API
-    database.py           Shared SQLite connection and schema
-    main.py               App composition and exception handling
-  tests/                  HTTP contract and behavior tests
-CommonTabTests/            Swift domain, persistence, and client tests
-CommonTabUITests/          End-to-end iOS flows
+apps/
+  ios/
+    CommonTab/            SwiftUI app, domain, data, and resources
+    CommonTabTests/       Swift domain, persistence, and client tests
+    CommonTabUITests/     End-to-end iOS flows
+    CommonTab.xcodeproj/  Native app project
+    Package.swift         Testable core package
+  web/
+    index.html            Product landing page
+    site.css              Product page styling
+    app/                  Browser app, styles, and calculator tests
+    assets/               Images used by the deployed site
+  react-native/           Reserved for a future independent client
+services/
+  api/
+    commontab_api/        Accounts, groups, bill sessions, analytics
+    tests/                HTTP contract and behavior tests
+    pyproject.toml        Python service package
+docs/                     Architecture, API contract, screenshots
+scripts/                  Repository utilities
 ```
 
 ## Dependency boundaries
 
-- `CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
-- `CommonTab/Application` coordinates local archive and receipt repository interfaces. `CommonTab/Data/Local` implements storage and keeps credentials in the Keychain.
-- `CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
-- `CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
-- The backend composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
+- `apps/ios/CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
+- `apps/ios/CommonTab/Application` coordinates local archive and receipt repository interfaces. `Data/Local` implements storage and keeps credentials in the Keychain.
+- `apps/ios/CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
+- `apps/ios/CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
+- `services/api/commontab_api` composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
+- `apps/web` is a static deployment. Its product pages and browser app are separate directories and share only public assets. The browser app currently saves personal expenses on the device and does not call the shared API.
 
 ## Cross-platform contract
 
@@ -50,4 +48,4 @@ Local groups use named members without accounts. They remain separate from share
 
 SQLite supports a single API instance for development or a small self-hosted deployment. The current code does not include email delivery, password reset, offline shared writes, push notifications, a production database migration system, or hosted monitoring. A public service needs HTTPS termination, rate limiting, backups, and operational monitoring. These limits are documented so the app does not imply that local data is automatically synced.
 
-The HTTP contract can support a future web or React Native client without sharing Swift source code. No browser client is included yet.
+The HTTP contract can support a future React Native client or a shared-group browser client without sharing Swift source code. The current browser app does not use the API.

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b3038">
+  <meta name="description" content="Keep track of personal expenses and split bills fairly with CommonTab.">
+  <title>CommonTab — your expenses</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="../assets/icon.png">
+  <link rel="apple-touch-icon" href="../assets/icon.png">
+  <script>if (new URLSearchParams(location.search).has("embed")) document.documentElement.classList.add("embed-mode");</script>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="product-header">
+    <a class="product-brand" href="../index.html" aria-label="CommonTab home"><img src="../assets/icon.png" alt="" width="34" height="34"><span>CommonTab</span></a>
+    <span class="product-header-note">Everyday expenses, made clear</span>
+    <a class="product-home" href="../index.html">About CommonTab <span aria-hidden="true">↗</span></a>
+  </header>
+  <div class="site-shell">
+    <main id="app" class="app-wrap">
+      <div class="app-window">
+        <div class="app-content">
+          <header class="app-header"><div><span class="app-kicker">GOOD TO HAVE YOU HERE</span><h2 id="page-title">CommonTab</h2></div><span class="header-icon" aria-hidden="true">✦</span></header>
+          <section id="view-overview" class="view" aria-label="Overview">
+            <div class="overview-card">
+              <span class="card-kicker">◈ &nbsp; YOUR OVERVIEW</span>
+              <h3>Your money, in view</h3>
+              <p>Keep personal expenses and bill splits close at hand.</p>
+              <div class="overview-stats"><span>▤ &nbsp; <strong id="overview-count">0</strong> expenses</span><span>◷ &nbsp; Just for you</span></div>
+              <button class="button-white" id="overview-add" type="button">＋ &nbsp; Add expense</button>
+            </div>
+            <div class="quick-grid">
+              <button class="quick-card" data-nav="calculator" type="button"><span class="tile-icon">÷</span><strong>Calculator</strong><small>Tips &amp; splitting</small></button>
+              <button class="quick-card" data-nav="expenses" type="button"><span class="tile-icon">▤</span><strong>Expenses</strong><small>Find the details</small></button>
+            </div>
+            <div class="section-title"><div><h3>Recent expenses</h3><p>Personal spending at a glance</p></div><button class="link-button" data-nav="expenses" type="button">See all →</button></div>
+            <div id="recent-expenses" class="surface"></div>
+          </section>
+
+          <section id="view-calculator" class="view" aria-label="Tip calculator" hidden>
+            <div class="section-title"><div><h3>Tip &amp; split</h3><p>Split every cent fairly</p></div></div>
+            <div class="surface form-card">
+              <label for="bill-amount">Bill amount</label>
+              <div class="amount-input"><span>$</span><input id="bill-amount" type="text" inputmode="decimal" autocomplete="off" value="84.50" aria-describedby="bill-error"></div>
+              <p id="bill-error" class="field-error" hidden>Enter an amount from $0 to $1,000,000,000 with up to two decimal places.</p>
+              <span class="form-label">Tip percentage</span>
+              <div id="tip-options" class="tip-options" role="group" aria-label="Tip percentage">
+                <button class="selected" data-tip="15" type="button" aria-pressed="true">15%</button>
+                <button data-tip="18" type="button" aria-pressed="false">18%</button>
+                <button data-tip="20" type="button" aria-pressed="false">20%</button>
+                <button data-tip="other" type="button" aria-pressed="false">Other</button>
+              </div>
+              <div id="custom-tip-wrap" hidden><label for="custom-tip">Custom tip</label><div class="small-input"><input id="custom-tip" type="text" inputmode="decimal" value="18"><span>%</span></div><p id="tip-error" class="field-error" hidden>Enter a percentage from 0 to 100.</p></div>
+              <div class="people-row"><div><span class="form-label">Split between</span><small>Up to 20 people</small></div><div class="stepper"><button id="people-minus" type="button" aria-label="Remove one person">−</button><output id="people-count" aria-live="polite">2</output><button id="people-plus" type="button" aria-label="Add one person">＋</button></div></div>
+            </div>
+            <div id="calc-result" class="result-card" aria-live="polite"></div>
+            <p class="calc-note">Every cent is included, so the individual shares add up to the total.</p>
+          </section>
+
+          <section id="view-expenses" class="view" aria-label="Expenses" hidden>
+            <div class="section-title"><div><h3>Expenses</h3><p>Your personal spending</p></div><button id="expense-add" class="small-primary" type="button">＋ Add</button></div>
+            <div class="filter-row"><label class="sr-only" for="expense-search">Search expenses</label><input id="expense-search" type="search" placeholder="Search expenses"><label class="sr-only" for="category-filter">Filter category</label><select id="category-filter"><option value="all">All categories</option><option value="groceries">Groceries</option><option value="dining">Dining</option><option value="travel">Travel</option><option value="shopping">Shopping</option><option value="household">Household</option><option value="health">Health</option><option value="other">Other</option></select></div>
+            <div class="expense-summary"><span>Total shown</span><strong id="expense-total">$0.00</strong></div>
+            <div id="expense-list" class="surface"></div>
+          </section>
+        </div>
+        <nav class="bottom-nav" aria-label="CommonTab sections"><button data-nav="overview" class="active" type="button" aria-current="page"><span aria-hidden="true">▦</span>Overview</button><button data-nav="calculator" type="button"><span aria-hidden="true">÷</span>Calculator</button><button data-nav="expenses" type="button"><span aria-hidden="true">▤</span>Expenses</button></nav>
+      </div>
+    </main>
+  </div>
+
+  <footer class="product-footer"><span>© 2026 CommonTab</span><span class="product-footer-note">Your personal expenses stay on this device.</span><a href="../index.html">About CommonTab ↗</a></footer>
+
+  <dialog id="expense-dialog" aria-labelledby="dialog-title"><form id="expense-form" novalidate><div class="dialog-header"><div><span class="app-kicker">PERSONAL EXPENSE</span><h2 id="dialog-title">Add expense</h2></div><button id="dialog-close" class="icon-button" type="button" aria-label="Close">×</button></div><input id="expense-id" type="hidden"><label for="merchant">Merchant</label><input id="merchant" name="merchant" type="text" maxlength="80" required placeholder="Where was this?"><div class="form-columns"><div><label for="expense-amount">Amount</label><div class="small-input"><span>$</span><input id="expense-amount" name="amount" type="text" inputmode="decimal" required placeholder="0.00"></div></div><div><label for="expense-date">Date</label><input id="expense-date" name="date" type="date" required></div></div><label for="expense-category">Category</label><select id="expense-category" name="category"><option value="dining">Dining</option><option value="groceries">Groceries</option><option value="travel">Travel</option><option value="shopping">Shopping</option><option value="household">Household</option><option value="health">Health</option><option value="other">Other</option></select><label for="expense-notes">Notes <span class="optional">Optional</span></label><textarea id="expense-notes" name="notes" rows="3" maxlength="250" placeholder="Add a detail you want to remember"></textarea><p id="form-error" class="field-error" role="alert" hidden></p><div class="dialog-actions"><button id="expense-delete" class="delete-button" type="button" hidden>Delete</button><button class="save-button" type="submit">Save expense</button></div></form></dialog>
+</body>
+</html>
