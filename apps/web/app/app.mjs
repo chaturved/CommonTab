@@ -43,7 +43,11 @@ function navigate(view, scroll = true) {
   }
   $("page-title").textContent = view === "overview" ? "CommonTab" : view === "calculator" ? "Calculator" : "Expenses";
   history.replaceState(null, "", "#" + view);
-  if (scroll) document.querySelector(".app-content").scrollTop = 0;
+  if (scroll) {
+    const content = document.querySelector(".app-content");
+    if (getComputedStyle(content).overflowY === "visible") document.querySelector(".app-window").scrollIntoView();
+    else content.scrollTop = 0;
+  }
 }
 
 function dateLabel(value) { return new Date(value + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
