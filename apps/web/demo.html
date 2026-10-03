@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#0b3038">
   <meta name="description" content="Track expenses and split bills with CommonTab.">
   <title>Try CommonTab</title>
-  <link rel="manifest" href="./app/manifest.webmanifest">
-  <link rel="icon" type="image/png" href="./assets/icon.png">
-  <link rel="apple-touch-icon" href="./assets/icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="apple-touch-icon" href="./assets/favicon.svg">
   <script>if (new URLSearchParams(location.search).has("embed")) document.documentElement.classList.add("embed-mode");</script>
   <link rel="stylesheet" href="./demo.css">
   <script type="module" src="./app/app.mjs"></script>
@@ -17,13 +17,13 @@
   <div class="site-shell">
     <header class="intro">
       <div class="demo-header">
-        <a class="brand" href="./index.html"><span class="brand-mark" aria-hidden="true">▦</span> CommonTab</a>
-        <a class="demo-home" href="./index.html">About CommonTab <span aria-hidden="true">↗</span></a>
+        <a class="brand" href="./index.html"><img class="brand-mark" src="./assets/favicon.svg" alt="" width="31" height="31">CommonTab</a>
       </div>
       <div class="intro-body">
         <span class="eyebrow">TRY COMMON TAB</span>
         <h1>Your next split, <em>sorted.</em></h1>
         <p>Try the calculator, add an expense, and see how simple the details can feel.</p>
+        <a class="demo-home" href="./index.html"><span class="demo-home-label">About CommonTab</span><span aria-hidden="true">↗</span></a>
       </div>
     </header>
 
@@ -75,7 +75,7 @@
             <div id="expense-list" class="surface"></div>
           </section>
         </div>
-        <nav class="bottom-nav" aria-label="Demo sections"><button data-nav="overview" class="active" type="button" aria-current="page"><span aria-hidden="true">▦</span>Overview</button><button data-nav="calculator" type="button"><span aria-hidden="true">÷</span>Calculator</button><button data-nav="expenses" type="button"><span aria-hidden="true">▤</span>Expenses</button></nav>
+        <nav class="bottom-nav" aria-label="Demo sections"><button data-nav="overview" class="active" type="button" aria-current="page"><img class="nav-brand-mark" src="./assets/favicon.svg" alt="" width="22" height="22">Overview</button><button data-nav="calculator" type="button"><span aria-hidden="true">÷</span>Calculator</button><button data-nav="expenses" type="button"><span aria-hidden="true">▤</span>Expenses</button></nav>
       </div>
       <p class="demo-reassurance">Your expenses stay on this device.</p>
     </main>

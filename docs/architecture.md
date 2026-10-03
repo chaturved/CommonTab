@@ -15,7 +15,9 @@ apps/
   web/
     index.html            Product landing page
     site.css              Product page styling
-    app/                  Browser app, styles, and calculator tests
+    demo.html             Interactive browser app
+    demo.css              Interactive app styling
+    app/                  Browser app logic and calculator tests
     assets/               Images used by the deployed site
   react-native/           Reserved for a future independent client
 services/

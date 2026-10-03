@@ -10,7 +10,7 @@ CommonTab includes a native iOS app, a product website, a browser app, and an op
 apps/
   ios/             SwiftUI app, Xcode project, and Swift tests
   web/             Product pages and browser app, deployed together
-    app/           Browser app and its calculator tests
+    app/           Browser demo logic and calculator tests
     assets/        Website images and icon
   react-native/    Reserved home for a future React Native client
 services/
@@ -27,7 +27,7 @@ Each app owns its UI and build configuration. The iOS and future React Native cl
 
 A [product website and web app](apps/web/README.md) introduce CommonTab and let visitors use the tip calculator and personal expenses online. The web app starts with example expenses, stores changes on the device, and does not connect to the shared API.
 
-To view the product site and browser app locally, run `python3 -m http.server 3000 --directory apps/web`, then open `http://localhost:3000/` or `http://localhost:3000/app/`.
+To view the product site and browser demo locally, run `python3 -m http.server 3000 --directory apps/web`, then open `http://localhost:3000/` or `http://localhost:3000/demo.html`.
 
 ## Try it locally
 
