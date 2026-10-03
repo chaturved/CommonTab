@@ -2,10 +2,10 @@
   "name": "CommonTab",
   "short_name": "CommonTab",
   "description": "Track personal expenses and split bills fairly.",
-  "start_url": "./",
+  "start_url": "./demo.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f5f8",
   "theme_color": "#0b3038",
-  "icons": [{ "src": "../assets/icon.png", "sizes": "1024x1024", "type": "image/png" }]
+  "icons": [{ "src": "./assets/icon.png", "sizes": "1024x1024", "type": "image/png" }]
 }

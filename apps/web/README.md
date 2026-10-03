@@ -1,8 +1,8 @@
 # CommonTab website and web app
 
-The landing page at `index.html` introduces CommonTab and links to the interactive demo. The browser app lives in `app/`, and `demo.html` presents a focused interactive workspace using the same app logic. `app.html` redirects to `app/` for older links. The app includes the tip calculator and a personal expense list. Three example expenses appear on first visit. Edits are saved in the visitor's browser with `localStorage`.
+The landing page at `index.html` introduces CommonTab and links to the interactive app at `demo.html`. Older `app.html` and `app/` links redirect to the demo. The demo includes the tip calculator and a personal expense list. Three example expenses appear on first visit. Edits are saved in the visitor's browser with `localStorage`.
 
-`site.css` styles the product pages; `app/styles.css` belongs to the interactive app. Shared images live in `assets/`. Add future product pages as their own directories under `apps/web` (for example, `features/index.html`) and keep app behavior under `app/`. Relative links keep the same layout working on localhost and GitHub Pages project URLs.
+`site.css` styles the product pages, and `demo.css` styles the interactive app. The app logic and calculator tests live in `app/`; shared images live in `assets/`. Relative links keep the same layout working on localhost and GitHub Pages project URLs.
 
 The web app uses US dollars and does not include local groups, shared groups, receipt scanning, account sign-in, or the FastAPI backend. No expense information is uploaded by this page.
 
@@ -16,7 +16,7 @@ From the repository root:
 python3 -m http.server 3000 --directory apps/web
 ```
 
-Open `http://localhost:3000` for the product site, `http://localhost:3000/demo.html` for the interactive demo, or `http://localhost:3000/app/` for the web app. The JavaScript files are ES modules, so serve the directory over HTTP rather than opening the files directly.
+Open `http://localhost:3000` for the product site or `http://localhost:3000/demo.html` for the interactive app. The JavaScript files are ES modules, so serve the directory over HTTP rather than opening the files directly.
 
 Run the calculator tests with:
 
