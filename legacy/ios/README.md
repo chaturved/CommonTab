@@ -5,8 +5,8 @@ Open `CommonTab.xcodeproj` in Xcode and run the `CommonTab` scheme. The Swift pa
 From the repository root:
 
 ```sh
-swift test --package-path apps/ios
-xcodebuild -project apps/ios/CommonTab.xcodeproj -scheme CommonTab \
+swift test --package-path legacy/ios
+xcodebuild -project legacy/ios/CommonTab.xcodeproj -scheme CommonTab \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 

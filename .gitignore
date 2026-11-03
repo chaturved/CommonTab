@@ -89,10 +89,13 @@ fastlane/test_output
 
 iOSInjectionProject/
 # Local API state and Python environments
-services/api/data/
+backend/data/
 /data/
-services/api/.venv/
-services/api/.pytest_cache/
-services/api/*.egg-info/
+backend/.venv/
+backend/.pytest_cache/
+backend/*.egg-info/
 **/__pycache__/
 *.pyc
+
+# Node
+node_modules/

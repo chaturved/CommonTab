@@ -5,36 +5,35 @@ CommonTab has two expense stores with different lifecycles. The iOS local archiv
 ## Project layout
 
 ```text
-apps/
+legacy/
   ios/
     CommonTab/            SwiftUI app, domain, data, and resources
     CommonTabTests/       Swift domain, persistence, and client tests
     CommonTabUITests/     End-to-end iOS flows
     CommonTab.xcodeproj/  Native app project
     Package.swift         Testable core package
-  web/
-    index.html            Product landing page
-    site.css              Product page styling
-    app/                  Browser app, styles, and calculator tests
-    assets/               Images used by the deployed site
-  react-native/           Reserved for a future independent client
-services/
-  api/
-    commontab_api/        Accounts, groups, bill sessions, analytics
-    tests/                HTTP contract and behavior tests
-    pyproject.toml        Python service package
+website/
+  index.html              Product landing page
+  site.css                Product page styling
+  app/                    Browser app, styles, and calculator tests
+  assets/                 Images used by the deployed site
+backend/
+  app/                    Accounts, groups, bill sessions, analytics
+  tests/                  HTTP contract and behavior tests
+  pyproject.toml          Python service package
+frontend/                 TypeScript workspace (packages/core, packages/ui, apps/app)
 docs/                     Architecture, API contract, screenshots
 scripts/                  Repository utilities
 ```
 
 ## Dependency boundaries
 
-- `apps/ios/CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
-- `apps/ios/CommonTab/Application` coordinates local archive and receipt repository interfaces. `Data/Local` implements storage and keeps credentials in the Keychain.
-- `apps/ios/CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
-- `apps/ios/CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
-- `services/api/commontab_api` composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
-- `apps/web` is a static deployment. Its product pages and browser app are separate directories and share only public assets. The browser app currently saves personal expenses on the device and does not call the shared API.
+- `legacy/ios/CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
+- `legacy/ios/CommonTab/Application` coordinates local archive and receipt repository interfaces. `Data/Local` implements storage and keeps credentials in the Keychain.
+- `legacy/ios/CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
+- `legacy/ios/CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
+- `backend/app` composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
+- `website` is a static deployment. Its product pages and browser app are separate directories and share only public assets. The browser app currently saves personal expenses on the device and does not call the shared API.
 
 ## Cross-platform contract
 

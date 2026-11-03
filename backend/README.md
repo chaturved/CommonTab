@@ -5,15 +5,15 @@ The FastAPI service owns accounts, shared groups, bill sessions, balances, and r
 From the repository root:
 
 ```sh
-python3 -m venv services/api/.venv
-services/api/.venv/bin/python -m pip install -e './services/api[test]'
-services/api/.venv/bin/python -m uvicorn commontab_api.main:app --app-dir services/api --reload
+python3 -m venv backend/.venv
+backend/.venv/bin/python -m pip install -e './backend[test]'
+backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --reload
 ```
 
-The default database is `services/api/data/splittip.sqlite3`. Set `SPLITTIP_DB_PATH` to override it. Run the HTTP tests with:
+The default database is `backend/data/splittip.sqlite3`. Set `SPLITTIP_DB_PATH` to override it. Run the HTTP tests with:
 
 ```sh
-services/api/.venv/bin/python -m pytest -q services/api/tests
+backend/.venv/bin/python -m pytest -q backend/tests
 ```
 
-The HTTP contract is documented in [`docs/shared-api.md`](../../docs/shared-api.md).
+The HTTP contract is documented in [`docs/shared-api.md`](../docs/shared-api.md).

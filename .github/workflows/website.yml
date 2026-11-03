@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - apps/web/**
+      - website/**
       - .github/workflows/website.yml
   workflow_dispatch:
 
@@ -24,11 +24,11 @@ jobs:
         with:
           node-version: '24'
       - name: Test calculator math
-        run: node --test apps/web/app/money.test.mjs
+        run: node --test website/app/money.test.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: apps/web
+          path: website
 
   deploy:
     needs: build

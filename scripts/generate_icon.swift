@@ -82,5 +82,5 @@ guard let png = bitmap.representation(using: .png, properties: [:]) else {
 let repositoryRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
-let iconPath = repositoryRoot.appendingPathComponent("apps/ios/CommonTab/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png")
+let iconPath = repositoryRoot.appendingPathComponent("legacy/ios/CommonTab/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png")
 try png.write(to: iconPath)
