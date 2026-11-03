@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { Avatar, Button, Card, Sheet, Text } from '@commontab/ui';
 import { useApp } from '../../../src/app-context';
@@ -22,6 +23,7 @@ function SettingRow({ title, detail, action, divider }: { title: string; detail:
 }
 
 export default function Account() {
+  const router = useRouter();
   const desktop = useIsDesktop();
   const { user, signOut } = useApp();
   const status = useSyncStatus();
@@ -43,6 +45,14 @@ export default function Account() {
           <Text variant="body" className="font-semibold">{user?.name}</Text>
           <Text variant="caption" tone="muted" className="text-[13px]">{user?.email}</Text>
         </View>
+      </Card>
+      <Eyebrow>SETTINGS</Eyebrow>
+      <Card className="overflow-hidden">
+        <SettingRow title="Settings" detail="Appearance, currency and data" action={<Button label="Open" variant="secondary" size="small" accessibilityLabel="Open settings" onPress={() => router.push('/settings')} />} />
+      </Card>
+      <Eyebrow>TOOLS</Eyebrow>
+      <Card className="overflow-hidden">
+        <SettingRow title="Tip & split calculator" detail="Split a restaurant bill by person or item" action={<Button label="Open" variant="secondary" size="small" accessibilityLabel="Open the tip and split calculator" onPress={() => router.push('/calculator')} />} />
       </Card>
       <Eyebrow>SESSION AND DATA</Eyebrow>
       <Card className="overflow-hidden">

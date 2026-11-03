@@ -3,12 +3,13 @@ import { useRouter } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import {
-  addDifferenceTo, balanceChangeNote, balanceChanges, CATEGORIES, displayName, evaluateForm, evenPercents, formatCurrency,
+  addDifferenceTo, applyItemized, balanceChangeNote, balanceChanges, CATEGORIES, displayName, evaluateForm, evenPercents, formatCurrency,
   formFromExpense, longDate, newExpenseForm, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant, type ExpenseForm,
-  type FormMethod, type LocalExpense,
+  type FormMethod, type ItemizedResult, type LocalExpense,
 } from '@commontab/core';
 import { Banner, Button, CheckRow, FieldGroup, FieldRow, Icon, ListRow, SegmentedControl, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '../app-context';
+import { ItemizedEditor } from './ItemizedEditor';
 import type { GroupData } from '../data';
 import { useIsDesktop } from '../layout';
 import { useSyncStatus } from '../useSyncStatus';
@@ -27,12 +28,13 @@ const decimalOnly = (text: string) => {
   return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
 };
 
-export function ExpenseFormView({ mode, data, expense, groups, onPickGroup }: {
+export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, initial }: {
   mode: 'add' | 'edit';
   data: GroupData;
   expense?: LocalExpense;
   groups?: GroupData[];
   onPickGroup?: (id: string) => void;
+  initial?: Partial<ExpenseForm>;
 }) {
   const router = useRouter();
   const desktop = useIsDesktop();
@@ -41,8 +43,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup }: {
   const { services } = useApp();
   const { group } = data;
   const currency = group.currencyCode;
-  const [form, setForm] = useState<ExpenseForm>(() => (expense ? formFromExpense(expense, currency) : newExpenseForm(group, Date.now())));
-  const [sheet, setSheet] = useState<'payer' | 'date' | 'group' | null>(null);
+  const [form, setForm] = useState<ExpenseForm>(() => (expense ? formFromExpense(expense, currency) : { ...newExpenseForm(group, Date.now()), ...initial }));
+  const [sheet, setSheet] = useState<'payer' | 'date' | 'group' | 'item' | null>(null);
+  const [itemResult, setItemResult] = useState<ItemizedResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const evaluated = useMemo(() => evaluateForm(form, currency), [form, currency]);
@@ -136,9 +139,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup }: {
 
       <Text variant="section" accessibilityRole="header" className="px-1 pt-1">Split</Text>
       <SegmentedControl
-        options={[{ key: 'equal', label: 'Equally' }, { key: 'exact', label: 'Exact' }, { key: 'percent', label: 'Percent' }]}
+        options={[{ key: 'equal', label: 'Equally' }, { key: 'exact', label: 'Exact' }, { key: 'percent', label: 'Percent' }, { key: 'item', label: 'By item' }]}
         value={form.method}
-        onChange={(key) => setForm((f) => switchMethod(f, key as FormMethod, currency))}
+        onChange={(key) => (key === 'item' ? setSheet('item') : setForm((f) => switchMethod(f, key as FormMethod, currency)))}
       />
       <FieldGroup>
         {group.members.map((member, i) => {
@@ -220,6 +223,12 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup }: {
         </FieldGroup>
         {evaluated.errors.date ? <Text variant="caption" tone="owe">{evaluated.errors.date}</Text> : null}
         <Button label="Done" disabled={Boolean(evaluated.errors.date)} onPress={() => setSheet(null)} />
+      </Sheet>
+      <Sheet visible={sheet === 'item'} onClose={() => setSheet(null)} title="Split by item">
+        <ScrollView className="max-h-[460px]" keyboardShouldPersistTaps="handled">
+          <ItemizedEditor people={group.members.map((m) => ({ id: m.id, name: displayName(m, group.meMemberID) }))} currencyCode={currency} onResult={setItemResult} />
+        </ScrollView>
+        <Button label="Use this split" disabled={!itemResult} onPress={() => { if (itemResult) setForm((f) => applyItemized(f, itemResult, currency)); setSheet(null); }} />
       </Sheet>
       <Sheet visible={sheet === 'group'} onClose={() => setSheet(null)} title="Group">
         <View className="overflow-hidden rounded-2xl bg-background">

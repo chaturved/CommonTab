@@ -17,6 +17,8 @@ export interface Services {
   actions: Actions;
   clearLocalData(): Promise<void>;
   rememberUser(user: SignedInUser | null): Promise<void>;
+  getPref(key: string): Promise<string | undefined>;
+  setPref(key: string, value: string): Promise<void>;
   cachedUser(): Promise<SignedInUser | null>;
 }
 
@@ -38,6 +40,8 @@ export async function createServices(): Promise<Services> {
     actions: new Actions({ storage, clock, random, notify: engine.notify }),
     clearLocalData: () => driver.clear(),
     rememberUser: async (user) => storage.setMeta(USER_KEY, JSON.stringify(user)),
+    getPref: (key) => storage.getMeta(`pref.${key}`),
+    setPref: (key, value) => storage.setMeta(`pref.${key}`, value),
     cachedUser: async () => {
       const raw = await storage.getMeta(USER_KEY);
       return raw ? (JSON.parse(raw) as SignedInUser | null) : null;

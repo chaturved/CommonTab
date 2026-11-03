@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import type { SignedInUser } from '@commontab/core';
+import { setAppearance, type AppearanceMode } from '@commontab/ui';
 import { createServices, type Services } from './services';
 
 interface AppValue {
@@ -10,6 +11,7 @@ interface AppValue {
   register(email: string, name: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   setPendingJoinCode(code: string | null): void;
+  resetLocalData(): Promise<void>;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -32,6 +34,8 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
       const restored = await created.auth.restore(await created.cachedUser());
       await created.rememberUser(restored);
       if (cancelled) return;
+      const saved = await created.getPref('appearance');
+      if (saved === 'light' || saved === 'dark' || saved === 'system') setAppearance(saved as AppearanceMode);
       setServices(created);
       setUser(restored);
     })();
@@ -70,6 +74,15 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     signIn: async (email, password) => accept(await services.auth.signIn(email, password)),
     register: async (email, name, password) => accept(await services.auth.register(email, name, password)),
     setPendingJoinCode: (code) => { pendingCode.current = code; },
+    resetLocalData: async () => {
+      const keep = { appearance: await services.getPref('appearance'), currency: await services.getPref('currency') };
+      await services.clearLocalData();
+      const fresh = await createServices();
+      if (user) await fresh.rememberUser(user);
+      if (keep.appearance) await fresh.setPref('appearance', keep.appearance);
+      if (keep.currency) await fresh.setPref('currency', keep.currency);
+      setServices(fresh);
+    },
     signOut: async () => {
       await services.auth.signOut();
       await services.clearLocalData();

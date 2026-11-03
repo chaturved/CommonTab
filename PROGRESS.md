@@ -162,10 +162,17 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Join with a code** (`/join`): Home empty state, Groups, and the web Groups header. Forgiving input (lower case, spaces). Clear messages for a wrong or expired code, no connection, too many tries. **Before an account:** Welcome and the web sign-in have "Have an invite code? Join a group", which asks for the code, then Create account or Sign in, then joins automatically. If that last join fails it does so silently (the code can be entered again from Groups).
 - **Core (tests):** `settleLimit`, `directionWith`, `checkSettlement`.
 - **Checked in a browser** (390px, API on Supabase): settled $10.00 of Sam's $54.50 (group $109.00 to $99.00, Sam $44.50), overpayment message, invite code, then signed in as the second account and joined with the code typed in lower case with a space; the group and its expenses appeared and the new member sees "not involved".
-- **Still to do in 6e:** Settings (default currency, appearance, export as CSV, clear data on this device), the tip and split calculator, split by item, and the Simplify debts toggle.
+
+## Step 6e (part 2): settings, calculator, split by item — done (6e complete)
+- **Settings** (Account > Settings): Appearance **System / Light / Dark** (works on web through a `data-theme` override and on native through the OS override; kept across restarts), **Default currency** (used for new groups), **Export as CSV** (expenses and payments; downloads a file on web, opens the share sheet on phones; cells that start like formulas are neutralised), **Clear data on this device** (asks first and counts unsynced changes; you stay signed in and everything downloads again).
+- **Tip & split calculator** (Account > Tools): by person (bill, 15/18/20/25% tip, people; $86.40 at 20% for four is $17.28 tip, $103.68 total, $25.92 each) and by item. "Save as expense" opens Add expense with the total filled in.
+- **Split by item:** a fourth split option in Add and Edit. Items, who had each, tax and tip; shares are exact to the cent. "Use this split" fills the form with an Exact split and the receipt total, so no new wire format was needed.
+- **Core (tests):** `expensesToCsv`, `tipSplit`, `evaluateItemized` and `applyItemized`. ui: `setAppearance` / `useAppearance`.
+- **Checked in a browser** (390px, API on Supabase): dark mode and its persistence, CSV contents (including the payment), calculator numbers, by-item split (Ramen $18 for you, Sake $24 shared by Riya and Sam gives $42.00 with 18 / 12 / 12), clear data and re-download.
+- **Not built:** the **Simplify debts toggle** (the app always shows the simplified payments; a "without simplifying" view would need a pairwise calculation: gap), notification settings (v1.1 push), the design's date row on settle up, receipt scan (v1.1).
 
 ### Plan from here
-6e settle up, invite and join by code, settings, the tip calculator and split by item → 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
+6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

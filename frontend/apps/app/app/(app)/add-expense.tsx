@@ -9,7 +9,7 @@ import { useGroups } from '../../src/data';
 
 export default function AddExpense() {
   const router = useRouter();
-  const { group: groupParam } = useLocalSearchParams<{ group?: string }>();
+  const { group: groupParam, amount } = useLocalSearchParams<{ group?: string; amount?: string }>();
   const { ready, groups } = useGroups();
   const [picked, setPicked] = useState<string | null>(null);
   const id = picked ?? groupParam ?? (groups.length === 1 ? groups[0]!.group.id : null);
@@ -42,7 +42,7 @@ export default function AddExpense() {
 
   return (
     <Screen wide>
-      <ExpenseFormView key={data.group.id} mode="add" data={data} groups={groups} onPickGroup={setPicked} />
+      <ExpenseFormView key={data.group.id} mode="add" data={data} groups={groups} onPickGroup={setPicked} initial={amount ? { amountText: amount } : undefined} />
     </Screen>
   );
 }

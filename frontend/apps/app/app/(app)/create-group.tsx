@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Plus, X } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
@@ -24,6 +24,13 @@ export default function CreateGroup() {
   const [people, setPeople] = useState<Person[]>([{ key: 1, name: '' }, { key: 2, name: '' }]);
   const [busy, setBusy] = useState(false);
   const [nextKey, setNextKey] = useState(3);
+
+  useEffect(() => {
+    void services.getPref('currency').then((saved) => {
+      const found = CURRENCIES.find((c) => c.code === saved);
+      if (found) setCurrency(found);
+    });
+  }, [services]);
 
   const others = people.map((p) => p.name.trim()).filter(Boolean);
   const ready = name.trim().length > 0 && !busy;
