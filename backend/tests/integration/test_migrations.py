@@ -7,17 +7,17 @@ from app.core.db import create_db_engine
 from app.core.migrate import downgrade, upgrade
 
 TABLES = {'users', 'auth_tokens', 'expense_groups', 'members', 'invitations', 'expenses',
-          'settlements', 'bill_sessions', 'event_counts', 'alembic_version'}
+          'settlements', 'bill_sessions', 'event_counts', 'password_resets', 'alembic_version'}
 
 
 @pytest.fixture
 def scratch(database_url):
     """A schema of its own, so migrating up and down cannot disturb the shared test schema."""
     name = f'test_{uuid4().hex[:12]}'
-    admin = create_db_engine(database_url)
+    admin = create_db_engine(database_url, pool_size=1, max_overflow=0)
     with admin.begin() as connection:
         connection.execute(text(f'CREATE SCHEMA "{name}"'))
-    engine = create_db_engine(database_url, schema=name)
+    engine = create_db_engine(database_url, schema=name, pool_size=1, max_overflow=0)
     yield engine, name
     engine.dispose()
     assert name.startswith('test_')
@@ -149,3 +149,15 @@ class TestMigrations:
             downgrade(connection, '0004')
             remaining = connection.execute(text('SELECT token_hash FROM invitations')).scalars().all()
         assert remaining == ['mail'] and nullable() is False
+
+    def test_password_resets_exist_from_0006_and_go_on_downgrade(self, scratch):
+        engine, schema = scratch
+        with engine.begin() as connection:
+            upgrade(connection, '0005')
+        assert 'password_resets' not in tables(engine, schema)
+        with engine.begin() as connection:
+            upgrade(connection)
+        assert 'password_resets' in tables(engine, schema)
+        with engine.begin() as connection:
+            downgrade(connection, '0005')
+        assert 'password_resets' not in tables(engine, schema)

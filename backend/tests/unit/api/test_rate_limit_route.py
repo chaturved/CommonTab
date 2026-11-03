@@ -7,6 +7,7 @@ from app.core.db import Database, get_database
 from app.core.ratelimit import RateLimiters, get_rate_limiters
 from app.services.accounts import AccountService
 from app.services.invitations import InvitationService
+from app.services.password_resets import PasswordResetService
 
 PASSWORD = 'correct horse battery staple'
 
@@ -91,3 +92,19 @@ class TestRateLimitRoute:
         statuses = [self.client.post('/v1/invitations/join', json={'code': 'ABCD-2345'}).status_code for _ in range(3)]
 
         assert statuses == [200, 200, 429]
+
+    @pytest.mark.parametrize('path, body', [
+        ('/v1/auth/password-reset', {'email': 'ada@example.com'}),
+        ('/v1/auth/password-reset/confirm', {'email': 'ada@example.com', 'code': 'ABCD-2345',
+                                              'newPassword': 'a brand new passphrase'}),
+    ])
+    def test_password_reset_routes_share_the_strict_per_ip_limit(self, path, body):
+        self.limit(rate_limit_auth_per_minute=2)
+        resets = MagicMock(spec_set=PasswordResetService)
+        resets.request.return_value = None
+        resets.confirm.return_value = True
+        self.overrides[PasswordResetService] = lambda: resets
+
+        statuses = [self.client.post(path, json=body).status_code for _ in range(3)]
+
+        assert statuses[2] == 429 and 429 not in statuses[:2]

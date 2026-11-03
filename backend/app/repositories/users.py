@@ -40,5 +40,12 @@ class UserRepository:
     def delete_token(self, token_hash: str) -> None:
         self.connection.execute(text('DELETE FROM auth_tokens WHERE token_hash=:h'), {'h': token_hash})
 
+    def set_password(self, user_id: UUID, password_hash: str) -> None:
+        self.connection.execute(text('UPDATE users SET password_hash=:h WHERE id=:id'), {'h': password_hash, 'id': user_id})
+
+    def delete_tokens_for_user(self, user_id: UUID) -> None:
+        """Signs the account out everywhere."""
+        self.connection.execute(text('DELETE FROM auth_tokens WHERE user_id=:u'), {'u': user_id})
+
     def rename(self, user_id: UUID, name: str) -> None:
         self.connection.execute(text('UPDATE users SET name=:name WHERE id=:id'), {'name': name, 'id': user_id})

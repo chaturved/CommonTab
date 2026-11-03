@@ -27,7 +27,7 @@ def database_url() -> str:
 @pytest.fixture(scope='session')
 def test_schema(database_url):
     name = f'test_{uuid4().hex[:12]}'
-    admin = create_db_engine(database_url)
+    admin = create_db_engine(database_url, pool_size=1, max_overflow=0)
     with admin.begin() as connection:
         connection.execute(text(f'CREATE SCHEMA "{name}"'))
     try:
@@ -41,7 +41,7 @@ def test_schema(database_url):
 
 @pytest.fixture(scope='session')
 def engine(database_url, test_schema):
-    engine = create_db_engine(database_url, schema=test_schema, pre_ping=False)
+    engine = create_db_engine(database_url, schema=test_schema, pre_ping=False, pool_size=2, max_overflow=1)
     with engine.begin() as connection:
         upgrade(connection)
     yield engine

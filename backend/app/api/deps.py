@@ -13,11 +13,13 @@ from app.services.bill_sessions import BillSessionService
 from app.services.expenses import ExpenseService
 from app.services.groups import GroupService
 from app.services.invitations import InvitationService
+from app.services.password_resets import PasswordResetService
 from app.services.receipts import ReceiptService
 from app.services.settlements import SettlementService
 
 # Services build themselves: each declares its repositories (and they their connection) with `Depends` in __init__.
 AccountsDep = Annotated[AccountService, Depends(AccountService)]
+PasswordResetsDep = Annotated[PasswordResetService, Depends(PasswordResetService)]
 GroupsDep = Annotated[GroupService, Depends(GroupService)]
 InvitationsDep = Annotated[InvitationService, Depends(InvitationService)]
 ExpensesDep = Annotated[ExpenseService, Depends(ExpenseService)]

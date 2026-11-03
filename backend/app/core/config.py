@@ -50,6 +50,8 @@ class Settings:
     rate_limit_per_minute: int = 600  # everything else, per session
     trust_proxy: bool = False  # read the client IP from X-Forwarded-For (only behind a proxy you control)
     bill_session_lifetime_seconds: int = 7 * 24 * 60 * 60
+    resend_api_key: str | None = field(default=None, repr=False)  # no key: reset codes are logged, not emailed
+    mail_from: str = 'CommonTab <onboarding@resend.dev>'  # use an address on a domain verified in Resend
     cookie_secure: bool = True  # the session cookie is only sent over https (set COOKIE_SECURE=false for local http)
 
 
@@ -65,6 +67,8 @@ def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE
         rate_limit_auth_per_minute=int(env.get('RATE_LIMIT_AUTH_PER_MINUTE', defaults.rate_limit_auth_per_minute)),
         rate_limit_per_minute=int(env.get('RATE_LIMIT_PER_MINUTE', defaults.rate_limit_per_minute)),
         trust_proxy=env.get('TRUST_PROXY', '').lower() in ('1', 'true', 'yes'),
+        resend_api_key=env.get('RESEND_API_KEY') or None,
+        mail_from=env.get('MAIL_FROM') or defaults.mail_from,
         cookie_secure=env.get('COOKIE_SECURE', 'true').lower() not in ('0', 'false', 'no'),
     )
 

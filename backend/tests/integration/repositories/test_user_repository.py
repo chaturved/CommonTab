@@ -45,3 +45,21 @@ class TestUserRepository:
         assert self.repo.token('hash-1').user_id == user_id
         self.repo.delete_token('hash-1')
         assert self.repo.token('hash-1') is None
+
+    def test_setting_a_password_replaces_only_the_hash(self):
+        user_id = add_user(self.connection, 'ada@example.com', 'Ada')
+
+        self.repo.set_password(user_id, 'new-hash')
+
+        row = self.repo.user_by_id(user_id)
+        assert (row.password_hash, row.name) == ('new-hash', 'Ada')
+
+    def test_signing_out_everywhere_deletes_every_token_of_that_account_only(self):
+        ada, bob = add_user(self.connection), add_user(self.connection)
+        for token, user in (('a1', ada), ('a2', ada), ('b1', bob)):
+            self.repo.insert_token(token, user, NOW + timedelta(days=1))
+
+        self.repo.delete_tokens_for_user(ada)
+
+        assert self.repo.token('a1') is None and self.repo.token('a2') is None
+        assert self.repo.token('b1') is not None

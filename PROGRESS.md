@@ -107,6 +107,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - Migration 0005 makes `invitations.email` optional (a row with no email is a code). `POST /groups/{id}/invite-code` (any member; optional `memberID`) returns an 8-character code (`ABCD-2345`, 7 days); `POST /invitations/join {code}` adds the account and returns the group. Group codes are reusable until they expire; person codes link once. Codes are stored hashed, typed forgivingly (case, dash, I/L/O), and joining is rate limited per IP like sign-in. Email invitations are unchanged; the two kinds cannot be used on each other's route.
 - Supabase `public` schema is migrated to 0005.
 
+## Step 5f: forgot password — done
+- Migration 0006 adds `password_resets` (code hash, user, expiry, used time, wrong-guess count). `POST /auth/password-reset {email}` always answers 202 and emails a code through Resend after the response (`app/integrations/mailer.py`; with no `RESEND_API_KEY` the code is logged instead, for development only); `POST /auth/password-reset/confirm {email, code, newPassword}` sets the password, signs out every session, and uses the code up. One email a minute per account, one hour of validity, five wrong guesses burn the code, per-IP limit like sign-in. A wrong code returns a 400 response instead of raising so the count of guesses is committed.
+- `httpx` is now a runtime dependency. Needed from you before real emails: `RESEND_API_KEY` and `MAIL_FROM` on a domain verified in Resend (the default sender only reaches your own Resend account email).
+- Test engines use small connection pools so four parallel workers stay under Supabase's 15-client session limit.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.
