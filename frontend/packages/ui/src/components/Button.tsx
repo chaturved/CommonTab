@@ -1,0 +1,59 @@
+import { ReactNode } from 'react';
+import { ActivityIndicator, Pressable, PressableProps } from 'react-native';
+import { cx } from '../theme';
+import { Text, TextTone } from './Text';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'hero' | 'hero-outline';
+
+export interface ButtonProps extends Omit<PressableProps, 'children' | 'accessibilityLabel'> {
+  label: string;
+  variant?: ButtonVariant;
+  /** `large` is 52 high, `small` is 48 (DESIGN.md). Ghost buttons are 44. */
+  size?: 'large' | 'small';
+  icon?: ReactNode;
+  loading?: boolean;
+  /** Defaults to `label`. Set it when the visible label is not enough on its own. */
+  accessibilityLabel?: string;
+  className?: string;
+}
+
+const BOX: Record<ButtonVariant, string> = {
+  primary: 'bg-primary',
+  secondary: 'border-[1.5px] border-accent',
+  ghost: '',
+  hero: 'bg-white',
+  'hero-outline': 'border-[1.5px] border-white/50',
+};
+
+const TONE: Record<ButtonVariant, TextTone> = {
+  primary: 'on-primary',
+  secondary: 'accent',
+  ghost: 'accent',
+  hero: 'hero-to',
+  'hero-outline': 'white',
+};
+
+export function Button({ label, variant = 'primary', size = 'large', icon, loading, disabled, accessibilityLabel, className, ...props }: ButtonProps) {
+  const inactive = Boolean(disabled || loading);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled: inactive, busy: Boolean(loading) }}
+      disabled={inactive}
+      className={cx(
+        'flex-row items-center justify-center gap-2 active:opacity-80',
+        variant === 'ghost' ? 'min-h-touch px-2' : cx('rounded-pill px-5', size === 'large' ? 'min-h-button' : 'min-h-button-small'),
+        BOX[variant],
+        inactive && 'opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      {loading ? <ActivityIndicator accessibilityElementsHidden /> : icon}
+      <Text variant={variant === 'ghost' ? 'body-small' : 'button'} tone={TONE[variant]} className={variant === 'ghost' ? 'font-semibold' : undefined}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
