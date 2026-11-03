@@ -116,7 +116,7 @@ commontab/
     pyproject.toml
     Dockerfile
     app/
-      main.py                      # create_app: wiring only
+      main.py                      # the app: wiring only
       api/                         # deps.py (get_db, auth), routes/ (one router per resource)
       schemas/                     # request and response models
       services/                    # business rules

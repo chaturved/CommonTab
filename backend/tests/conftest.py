@@ -54,3 +54,10 @@ def database(engine) -> Database:
             "SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename <> 'alembic_version'"))]
         connection.execute(text('TRUNCATE ' + ', '.join(f'"{n}"' for n in names) + ' CASCADE'))
     return Database(engine)
+
+
+@pytest.fixture(autouse=True)
+def clean_overrides():
+    from app.main import app
+    yield
+    app.dependency_overrides.clear()

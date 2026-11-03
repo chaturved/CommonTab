@@ -1,13 +1,10 @@
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
-from app.main import create_app
-from helpers import expense, headers, register
+from helpers import client_for, expense, headers, register
 
 
 def setup(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     return api, register(api, 'ada@example.com', 'Ada')
 
 

@@ -36,6 +36,7 @@ class Settings:
     rate_limit_auth_per_minute: int = 10  # sign-up and sign-in, per IP
     rate_limit_per_minute: int = 600  # everything else, per session
     trust_proxy: bool = False  # read the client IP from X-Forwarded-For (only behind a proxy you control)
+    bill_session_lifetime_seconds: int = 7 * 24 * 60 * 60
 
 
 def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE) -> Settings:

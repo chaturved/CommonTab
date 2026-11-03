@@ -1,9 +1,6 @@
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
-from app.core.config import Settings
-from app.main import create_app
+from helpers import client_for
 
 
 def sample_bill() -> dict:
@@ -23,7 +20,7 @@ def sample_bill() -> dict:
 
 
 def test_create_read_update_and_version_conflict(database):
-    client = TestClient(create_app(database))
+    client = client_for(database)
     bill = sample_bill()
 
     created = client.post("/v1/sessions", json={"bill": bill})
@@ -47,7 +44,7 @@ def test_create_read_update_and_version_conflict(database):
 
 
 def test_session_requires_secret(database):
-    client = TestClient(create_app(database))
+    client = client_for(database)
     session = client.post("/v1/sessions", json={"bill": sample_bill()}).json()
     url = f"/v1/sessions/{session['id']}"
 
@@ -56,7 +53,7 @@ def test_session_requires_secret(database):
 
 
 def test_rejects_unknown_item_assignment(database):
-    client = TestClient(create_app(database))
+    client = client_for(database)
     bill = sample_bill()
     bill["items"][0]["assignedPersonIDs"] = [str(uuid4())]
 
@@ -65,7 +62,7 @@ def test_rejects_unknown_item_assignment(database):
 
 
 def test_expired_session(database):
-    client = TestClient(create_app(database, lifetime_seconds=-1))
+    client = client_for(database, bill_session_lifetime_seconds=-1)
     session = client.post("/v1/sessions", json={"bill": sample_bill()}).json()
     url = f"/v1/sessions/{session['id']}"
 
@@ -74,7 +71,7 @@ def test_expired_session(database):
 
 
 def test_anonymous_event_counts_and_protected_metrics(database):
-    client = TestClient(create_app(database, settings=Settings(database_url="", metrics_token="admin-secret")))
+    client = client_for(database, metrics_token="admin-secret")
     for _ in range(2):
         assert client.post("/v1/events", json={"name": "scan_opened", "variant": "B"}).status_code == 202
     assert client.post("/v1/events", json={"name": "unknown", "variant": "B"}).status_code == 422

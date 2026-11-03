@@ -1,11 +1,6 @@
-from dataclasses import replace
-
-from fastapi.testclient import TestClient
-
-from app.core.config import Settings, load_settings
+from app.core.config import load_settings
 from app.core.ratelimit import SlidingWindow
-from app.main import create_app
-from helpers import headers, register
+from helpers import client_for, headers, register
 
 
 class Clock:
@@ -37,7 +32,7 @@ def test_settings_read_limits_from_the_environment(tmp_path):
 
 
 def app_with(database, **limits):
-    return TestClient(create_app(database, settings=replace(Settings(database_url=''), **limits)))
+    return client_for(database, **limits)
 
 
 def test_sign_in_attempts_are_limited_per_ip(database):

@@ -1,13 +1,10 @@
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
-from app.main import create_app
-from helpers import create_group, expense, headers, join, m, register
+from helpers import client_for, create_group, expense, headers, join, m, register
 
 
 def two_people(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
@@ -152,7 +149,7 @@ def accept(api, user, invitation):
 
 
 def test_accepting_an_invitation_for_a_person_links_them_to_the_account(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     group = create_group(api, ada)
     sam, _ = add_person(api, group, ada, 'Sam')
@@ -190,7 +187,7 @@ def test_cannot_invite_for_someone_who_already_has_an_account_or_another_groups_
 
 
 def test_a_person_can_only_be_linked_once(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     group = create_group(api, ada)
     sam, _ = add_person(api, group, ada, 'Sam')
@@ -205,7 +202,7 @@ def test_a_person_can_only_be_linked_once(database):
 
 
 def test_an_account_already_in_the_group_cannot_also_be_a_person_in_it(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)

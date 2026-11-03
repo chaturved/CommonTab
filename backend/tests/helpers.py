@@ -1,5 +1,23 @@
 """Shared helpers for the HTTP tests."""
+from dataclasses import replace
 from uuid import uuid4
+
+from fastapi.testclient import TestClient
+
+from app.api.deps import get_database, get_rate_limiters, get_settings
+from app.core.config import Settings
+from app.core.ratelimit import RateLimiters
+from app.main import app
+
+
+def client_for(database, **settings) -> TestClient:
+    """The real app wired to the test database (and to Settings with the given changes) through dependency overrides."""
+    configured = replace(Settings(database_url=''), **settings)
+    app.dependency_overrides[get_database] = lambda: database
+    app.dependency_overrides[get_settings] = lambda: configured
+    limiters = RateLimiters(configured)
+    app.dependency_overrides[get_rate_limiters] = lambda: limiters
+    return TestClient(app)
 
 
 def register(client, email, name):

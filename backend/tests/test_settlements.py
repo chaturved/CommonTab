@@ -1,14 +1,11 @@
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
-from app.main import create_app
-from helpers import create_group, expense, headers, join, m, register
+from helpers import client_for, create_group, expense, headers, join, m, register
 
 
 def setup(database, amount=10000):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
@@ -107,7 +104,7 @@ def test_two_payments_racing_for_the_same_balance_cannot_both_succeed(database):
 
     def attempt(_):
         # a TestClient per thread; both talk to the same database
-        client = TestClient(create_app(database))
+        client = client_for(database)
         return client.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 5000)).status_code
 
     with ThreadPoolExecutor(max_workers=2) as pool:

@@ -2,15 +2,12 @@ from uuid import uuid4
 from io import BytesIO
 from PIL import Image
 
-from fastapi.testclient import TestClient
 
-from app.main import create_app
-
-from helpers import create_group, expense, headers, join, m, register
+from helpers import client_for, create_group, expense, headers, join, m, register
 
 
 def client(database):
-    return TestClient(create_app(database))
+    return client_for(database)
 
 
 def test_account_auth_and_private_group(database):
@@ -122,7 +119,7 @@ def test_profile_group_and_invitation_permissions(database):
 
 
 def test_shared_expense_validation_and_persistence_after_restart(database):
-    api = TestClient(create_app(database))
+    api = client_for(database)
     ada = register(api, 'ada@example.com', 'Ada')
     outsider = register(api, 'eve@example.com', 'Eve')
     group = create_group(api, ada)
@@ -135,7 +132,7 @@ def test_shared_expense_validation_and_persistence_after_restart(database):
     assert api.put(url, headers=headers(outsider), json=record).status_code == 404
     assert api.put(url, headers=headers(ada), json=record).status_code == 200
 
-    restarted = TestClient(create_app(database))
+    restarted = client_for(database)
     loaded = restarted.get(f"/v1/groups/{group['id']}", headers=headers(ada))
     assert loaded.status_code == 200
     assert loaded.json()['expenses'][0]['amountMinor'] == 4250

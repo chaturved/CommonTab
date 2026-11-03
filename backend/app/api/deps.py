@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Annotated, Iterator
 
 from argon2 import PasswordHasher
 from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy import Connection
 
-from app.core.config import Settings
-from app.core.db import Database
+from app.core.config import Settings, load_settings
+from app.core.db import Database, create_db_engine
+from app.core.errors import APIError
+from app.core.ratelimit import RateLimiters
 from app.repositories.analytics import AnalyticsRepository
 from app.repositories.bill_sessions import BillSessionRepository
 from app.repositories.expenses import ExpenseRepository
@@ -29,23 +32,40 @@ from app.services.receipts import ReceiptService
 from app.services.settlements import SettlementService
 from app.services.snapshots import SnapshotBuilder
 
-# --- application-wide objects, created once in create_app -------------------------------------------
+# --- application-wide objects: created on first use, then shared by every request ---------------------
 
 
-def get_database(request: Request) -> Database:
-    return request.app.state.database
+@lru_cache
+def get_settings() -> Settings:
+    return load_settings()
 
 
-def get_settings(request: Request) -> Settings:
-    return request.app.state.settings
+@lru_cache
+def get_database() -> Database:
+    return Database(create_db_engine(get_settings().database_url))
 
 
-def get_password_hasher(request: Request) -> PasswordHasher:
-    return request.app.state.password_hasher
+@lru_cache
+def get_password_hasher() -> PasswordHasher:
+    return PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
+
+
+@lru_cache
+def get_rate_limiters() -> RateLimiters:
+    return RateLimiters(get_settings())
 
 
 DatabaseDep = Annotated[Database, Depends(get_database)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+
+def enforce_rate_limit(request: Request, limiters: Annotated[RateLimiters, Depends(get_rate_limiters)]) -> None:
+    """Runs before every route, ahead of any database work."""
+    wait = limiters.check(request)
+    if wait:
+        seconds = int(wait) + 1
+        raise APIError(429, 'Too many requests. Try again shortly.', 'rate_limited', {'retryAfterSeconds': seconds},
+                       headers={'Retry-After': str(seconds)})
 
 
 # --- one database transaction per request --------------------------------------------------------------
@@ -158,8 +178,8 @@ def get_receipt_service(receipts: Receipts, groups: Groups, guard: Guard) -> Rec
     return ReceiptService(receipts, groups, guard, ReceiptImageProcessor())
 
 
-def get_bill_session_service(store: BillSessionStore, request: Request) -> BillSessionService:
-    return BillSessionService(store, lifetime_seconds=request.app.state.bill_session_lifetime_seconds)
+def get_bill_session_service(store: BillSessionStore, settings: SettingsDep) -> BillSessionService:
+    return BillSessionService(store, lifetime_seconds=settings.bill_session_lifetime_seconds)
 
 
 def get_analytics_service(store: AnalyticsStore) -> AnalyticsService:

@@ -3,7 +3,7 @@
 FastAPI service for accounts, shared groups, expenses, settlements, temporary bill sessions and aggregate analytics. Postgres (Supabase in production), Alembic migrations, a layered layout under `app/`:
 
 ```
-app/main.py          create_app: builds the Database once, installs error handling, rate limits and routers
+app/main.py          the FastAPI app: error handling, rate limit and routers; settings and database come from api/deps.py on first use
 app/api/             deps.py (get_db, repositories, services, current user) and routes/ (one module per resource)
 app/schemas/         Pydantic request and response models
 app/services/        business rules; no SQL, no HTTP
@@ -23,7 +23,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[test]'
 cp .env.example .env        # then put your Postgres URL in DATABASE_URL
 .venv/bin/alembic upgrade head
-.venv/bin/uvicorn app.main:create_app --factory --reload
+.venv/bin/uvicorn app.main:app --reload
 ```
 
 `GET /healthz` should answer `{"status":"ok"}`. The OpenAPI schema is at `/openapi.json`.

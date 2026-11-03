@@ -45,7 +45,7 @@ The app defaults to `http://localhost:8000` for local development. A simulator o
 
 ## Run the API
 
-The API needs a Postgres database. See [backend/README.md](backend/README.md) for setup. In short, from `backend/`: copy `.env.example` to `.env`, set `DATABASE_URL`, run `alembic upgrade head`, then `uvicorn app.main:create_app --factory --reload`.
+The API needs a Postgres database. See [backend/README.md](backend/README.md) for setup. In short, from `backend/`: copy `.env.example` to `.env`, set `DATABASE_URL`, run `alembic upgrade head`, then `uvicorn app.main:app --reload`.
 
 Check that the API is running at `http://localhost:8000/healthz`. HTTPS is required outside localhost.
 

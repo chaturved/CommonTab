@@ -5,8 +5,7 @@ import time
 from collections import deque
 from typing import Callable
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import Request
 
 from app.core.config import Settings
 
@@ -47,29 +46,26 @@ def client_ip(request: Request, trust_proxy: bool) -> str:
     return request.client.host if request.client else 'unknown'
 
 
-def install_rate_limits(app: FastAPI, settings: Settings, clock: Callable[[], float] = time.monotonic) -> None:
+class RateLimiters:
     """
     Sign-up and sign-in are limited per IP (password guessing). Everything else is limited per
     signed-in session, so people sharing a mobile-carrier IP do not block each other. The limits
     leave room for a device flushing a queue of offline changes.
     """
-    auth = SlidingWindow(settings.rate_limit_auth_per_minute, clock=clock)
-    api = SlidingWindow(settings.rate_limit_per_minute, clock=clock)
 
-    @app.middleware('http')
-    async def rate_limit(request: Request, call_next):
+    def __init__(self, settings: Settings, clock: Callable[[], float] = time.monotonic):
+        self.trust_proxy = settings.trust_proxy
+        self.auth = SlidingWindow(settings.rate_limit_auth_per_minute, clock=clock)
+        self.api = SlidingWindow(settings.rate_limit_per_minute, clock=clock)
+
+    def check(self, request: Request) -> float:
+        """0 when the request is allowed, otherwise the seconds to wait."""
         path = request.url.path
         if path in EXEMPT_PATHS or request.method == 'OPTIONS':
-            return await call_next(request)
-        ip = client_ip(request, settings.trust_proxy)
+            return 0.0
+        ip = client_ip(request, self.trust_proxy)
         if path in AUTH_PATHS and request.method == 'POST':
-            wait = auth.check(f'ip:{ip}')
-        else:
-            bearer = request.headers.get('authorization', '')
-            key = 'token:' + hashlib.sha256(bearer.encode()).hexdigest()[:16] if bearer.startswith('Bearer ') else f'ip:{ip}'
-            wait = api.check(key)
-        if wait:
-            return JSONResponse(status_code=429, headers={'Retry-After': str(int(wait) + 1)},
-                                content={'detail': 'Too many requests. Try again shortly.', 'code': 'rate_limited',
-                                         'retryAfterSeconds': int(wait) + 1})
-        return await call_next(request)
+            return self.auth.check(f'ip:{ip}')
+        bearer = request.headers.get('authorization', '')
+        key = 'token:' + hashlib.sha256(bearer.encode()).hexdigest()[:16] if bearer.startswith('Bearer ') else f'ip:{ip}'
+        return self.api.check(key)
