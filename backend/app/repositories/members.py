@@ -47,3 +47,12 @@ class MemberRepository:
         return self.connection.execute(text('''SELECT 1 FROM members m JOIN users u ON u.id=m.user_id
                                   WHERE m.group_id=:g AND u.email=:email'''),
                           {'g': group_id, 'email': email}).fetchone() is not None
+
+    def other_user_ids(self, group_id: UUID, user_id: UUID) -> list[UUID]:
+        rows = self.connection.execute(text('''SELECT user_id FROM members
+                                  WHERE group_id=:g AND user_id IS NOT NULL AND user_id<>:u
+                                  ORDER BY created_at, id'''), {'g': group_id, 'u': user_id}).fetchall()
+        return [row.user_id for row in rows]
+
+    def unlink_user(self, user_id: UUID) -> None:
+        self.connection.execute(text('UPDATE members SET user_id=NULL WHERE user_id=:u'), {'u': user_id})

@@ -36,3 +36,11 @@ class GroupRepository:
 
     def bump_version(self, group_id: UUID) -> None:
         self.connection.execute(text('UPDATE expense_groups SET version=version+1 WHERE id=:g'), {'g': group_id})
+
+    def set_owner(self, group_id: UUID, user_id: UUID) -> None:
+        self.connection.execute(text('UPDATE expense_groups SET owner_id=:u WHERE id=:g'), {'u': user_id, 'g': group_id})
+
+    def delete_group(self, group_id: UUID) -> None:
+        for table in ('settlements', 'expenses', 'invitations', 'members'):
+            self.connection.execute(text(f'DELETE FROM {table} WHERE group_id=:g'), {'g': group_id})
+        self.connection.execute(text('DELETE FROM expense_groups WHERE id=:g'), {'g': group_id})

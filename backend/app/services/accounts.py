@@ -12,6 +12,8 @@ from fastapi import Depends
 from app.core.errors import fail
 from app.core.security import get_password_hasher, hash_token
 from app.domain.emails import normalize_email
+from app.repositories.groups import GroupRepository
+from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
 from app.schemas.accounts import AccountInput
 
@@ -20,9 +22,13 @@ TOKEN_LIFETIME = timedelta(days=30)
 
 class AccountService:
     def __init__(self, users: UserRepository = Depends(UserRepository),
-                 passwords: PasswordHasher = Depends(get_password_hasher)):
+                 passwords: PasswordHasher = Depends(get_password_hasher),
+                 groups: GroupRepository = Depends(GroupRepository),
+                 members: MemberRepository = Depends(MemberRepository)):
         self.users = users
         self.passwords = passwords
+        self.groups = groups
+        self.members = members
 
     @staticmethod
     def public_user(row: Row) -> dict:
@@ -69,3 +75,32 @@ class AccountService:
             fail(422, 'Name is required')
         self.users.rename(UUID(user_id), name.strip())
         return self.public_user(self.users.user_by_id(UUID(user_id)))
+
+    def check_password(self, user_id: UUID, password: str) -> None:
+        row = self.users.user_by_id(user_id)
+        try:
+            self.passwords.verify(row.password_hash, password)
+        except (VerifyMismatchError, VerificationError):
+            fail(403, 'That password is not right', 'wrong_password')
+
+    def change_password(self, user_id: str, token: str, current_password: str, new_password: str) -> None:
+        uid = UUID(user_id)
+        self.check_password(uid, current_password)
+        self.users.set_password(uid, self.passwords.hash(new_password))
+        self.users.delete_tokens_except(uid, hash_token(token))
+
+    def delete_account(self, user_id: str, password: str) -> None:
+        uid = UUID(user_id)
+        self.check_password(uid, password)
+        for group_id in self.groups.group_ids_for_user(uid):
+            others = self.members.other_user_ids(group_id, uid)
+            if not others:
+                self.groups.delete_group(group_id)
+                continue
+            if self.groups.group(group_id).owner_id == uid:
+                self.groups.set_owner(group_id, others[0])
+            self.groups.bump_version(group_id)
+        self.members.unlink_user(uid)
+        self.users.delete_tokens_for_user(uid)
+        self.users.delete_password_resets(uid)
+        self.users.delete_user(uid)

@@ -47,3 +47,36 @@ class TestGroupRepository:
 
         assert self.repo.group_ids_for_user(self.owner) == [mine]
         assert other not in self.repo.group_ids_for_user(self.owner)
+
+    def test_the_owner_can_be_handed_to_another_account(self):
+        group_id = add_group(self.connection, self.owner)
+        sam = add_user(self.connection, name='Sam')
+
+        self.repo.set_owner(group_id, sam)
+
+        assert self.repo.group(group_id).owner_id == sam
+
+    def test_deleting_a_group_removes_its_people_expenses_and_payments_only(self):
+        from app.repositories.expenses import ExpenseRepository
+        from app.repositories.settlements import SettlementRepository
+        group_id = add_group(self.connection, self.owner)
+        ada = add_member(self.connection, group_id, self.owner, 'Ada')
+        sam = add_member(self.connection, group_id, None, 'Sam')
+        other = add_group(self.connection, self.owner)
+        keep = add_member(self.connection, other, self.owner, 'Ada')
+        ExpenseRepository(self.connection).insert_expense({
+            'id': uuid4(), 'group_id': group_id, 'merchant': 'Dinner', 'occurred_at': NOW, 'category': 'other', 'notes': '',
+            'amount_minor': 1000, 'payer_id': ada, 'method': 'equal', 'allocations': [], 'input_values': [], 'version': 1,
+            'updated_at': NOW})
+        SettlementRepository(self.connection).insert_settlement(uuid4(), group_id, sam, ada, 100, NOW)
+
+        self.repo.delete_group(group_id)
+
+        assert self.repo.group(group_id) is None
+        assert self.repo.group(other) is not None
+        from sqlalchemy import text
+        counts = self.connection.execute(text('''SELECT (SELECT count(*) FROM members WHERE group_id=:g),
+                                                        (SELECT count(*) FROM expenses WHERE group_id=:g),
+                                                        (SELECT count(*) FROM settlements WHERE group_id=:g)'''), {'g': group_id}).one()
+        assert tuple(counts) == (0, 0, 0)
+        assert keep is not None

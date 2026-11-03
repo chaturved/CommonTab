@@ -75,3 +75,28 @@ class TestMemberRepository:
         assert self.repo.is_member_email(self.group, 'ada@example.com')
         assert not self.repo.is_member_email(other_group, 'ada@example.com')
         assert not self.repo.is_member_email(self.group, 'nobody@example.com')
+
+
+class TestMemberRepositoryAccountRemoval:
+    @pytest.fixture(autouse=True)
+    def setup(self, connection) -> None:
+        self.connection = connection
+        self.repo = MemberRepository(connection)
+        self.ada = add_user(connection, name='Ada')
+        self.sam = add_user(connection, name='Sam')
+        self.group = add_group(connection, self.ada)
+
+    def test_other_accounts_in_a_group_come_in_the_order_they_joined(self):
+        add_member(self.connection, self.group, self.ada, 'Ada')
+        add_member(self.connection, self.group, self.sam, 'Sam')
+        add_member(self.connection, self.group, None, 'Riya')
+
+        assert self.repo.other_user_ids(self.group, self.ada) == [self.sam]
+
+    def test_unlinking_keeps_the_person_and_their_name(self):
+        member = add_member(self.connection, self.group, self.ada, 'Ada')
+
+        self.repo.unlink_user(self.ada)
+
+        row = self.repo.member(member)
+        assert (row.user_id, row.name) == (None, 'Ada')

@@ -63,3 +63,35 @@ class TestAccountsRoute:
         self.client.patch('/v1/me', json={'name': 'Ada L'})
 
         self.service.rename_me.assert_called_once_with(USER_ID, 'Ada L')
+
+
+class TestAccountLifecycleRoutes:
+    @pytest.fixture(autouse=True)
+    def setup(self, client, overrides) -> None:
+        self.client = client
+        self.service = MagicMock(spec_set=AccountService)
+        overrides[AccountService] = lambda: self.service
+
+    def test_changing_the_password_is_204_and_passes_the_token_so_this_session_survives(self):
+        response = self.client.post('/v1/me/password', headers={'Authorization': 'Bearer abc'},
+                                    json={'currentPassword': 'old', 'newPassword': 'a new long password'})
+
+        assert (response.status_code, response.content) == (204, b'')
+        self.service.change_password.assert_called_once_with(USER_ID, 'abc', 'old', 'a new long password')
+
+    @pytest.mark.parametrize('body', [{'currentPassword': 'old', 'newPassword': 'short'}, {'newPassword': 'a new long password'}])
+    def test_a_short_new_password_or_a_missing_current_one_is_422(self, body):
+        response = self.client.post('/v1/me/password', headers={'Authorization': 'Bearer abc'}, json=body)
+
+        assert response.status_code == 422
+        self.service.change_password.assert_not_called()
+
+    def test_deleting_the_account_is_204_and_clears_the_cookie(self):
+        response = self.client.post('/v1/me/delete', headers={'Authorization': 'Bearer abc'}, json={'password': 'pw'})
+
+        assert (response.status_code, response.content) == (204, b'')
+        assert 'commontab_session=""' in response.headers['set-cookie'] or 'Max-Age=0' in response.headers['set-cookie']
+        self.service.delete_account.assert_called_once_with(USER_ID, 'pw')
+
+    def test_deleting_needs_the_password(self):
+        assert self.client.post('/v1/me/delete', headers={'Authorization': 'Bearer abc'}, json={}).status_code == 422

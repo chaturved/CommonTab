@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Response
 from app.api.deps import AccountsDep, AccountToken, CurrentUser
 from app.core.config import SESSION_COOKIE, Settings, get_settings
 from app.services.accounts import TOKEN_LIFETIME
-from app.schemas.accounts import AccountInput, LoginInput, UpdateProfileInput
+from app.schemas.accounts import AccountInput, ChangePasswordInput, DeleteAccountInput, LoginInput, UpdateProfileInput
 
 router = APIRouter(prefix='/v1')
 
@@ -43,3 +43,16 @@ def me(user: CurrentUser, accounts: AccountsDep):
 @router.patch('/me')
 def update_me(input: UpdateProfileInput, user: CurrentUser, accounts: AccountsDep):
     return accounts.rename_me(user, input.name)
+
+
+@router.post('/me/password', status_code=204)
+def change_password(input: ChangePasswordInput, user: CurrentUser, token: AccountToken, accounts: AccountsDep):
+    accounts.change_password(user, token, input.current_password, input.new_password)
+
+
+@router.post('/me/delete', status_code=204)
+def delete_account(input: DeleteAccountInput, user: CurrentUser, accounts: AccountsDep):
+    accounts.delete_account(user, input.password)
+    response = Response(status_code=204)
+    response.delete_cookie(SESSION_COOKIE, path='/')
+    return response

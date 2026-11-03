@@ -11,7 +11,7 @@ from fastapi import Request
 from app.core.config import SESSION_COOKIE, Settings, get_settings
 
 AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions', '/v1/invitations/join', '/v1/auth/password-reset',
-              '/v1/auth/password-reset/confirm'}
+              '/v1/auth/password-reset/confirm', '/v1/me/password', '/v1/me/delete'}
 EXEMPT_PATHS = {'/healthz', '/health'}
 
 

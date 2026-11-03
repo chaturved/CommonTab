@@ -8,6 +8,8 @@ from argon2.exceptions import VerifyMismatchError
 
 from app.core.errors import APIError
 from app.core.security import hash_token
+from app.repositories.groups import GroupRepository
+from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
 from app.schemas.accounts import AccountInput
 from app.services.accounts import AccountService
@@ -25,7 +27,9 @@ class TestAccountService:
         self.ada = user_row(name='Ada', email='ada@example.com', password_hash='hashed')
         self.users.insert_user.return_value = True
         self.users.user_by_email.return_value = self.ada
-        self.service = AccountService(self.users, self.passwords)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.service = AccountService(self.users, self.passwords, self.groups, self.members)
 
     def account_input(self, **changes) -> AccountInput:
         return AccountInput.model_validate({'email': 'Ada@Example.com', 'name': ' Ada ', 'password': PASSWORD, **changes})

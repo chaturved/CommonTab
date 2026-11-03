@@ -191,6 +191,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Settle up (WebSettleUp):** a **Simplify debts** switch and the list of payments ("SIMPLIFIED · 2 PAYMENTS", or "WITHOUT SIMPLIFYING · N PAYMENTS" using each pair's direct debts), pick one and "Record a payment" opens the amount step. Payments between other people are listed but greyed ("Only they can record this one"), because the server only lets a participant record a payment. New core `directPayments` with tests. **Simplify toggle is no longer a gap.** Recording a direct (non-simplified) payment is still limited by the server's rule (the most the payer owes and the payee is owed overall), and says so if you go over.
 - **Checked in a browser at 1280px:** currency popover with search, Balances, Members, Settle up (both toggle states and the amount step), Join, Calculator, Create group, Create account; phone: currency sheet. Not re-checked: Invite at 500px, the Edit dialog.
 
+## Step 6f part 1: account — backend done, screens next
+- **API (approved):** `POST /v1/me/password {currentPassword, newPassword}` (204; other sessions end, this one stays; a wrong current password is 403 `wrong_password`, not 401, so an app does not read it as an expired session) and `POST /v1/me/delete {password}` (204, cookie cleared). `PATCH /v1/me` already existed. Documented in `docs/shared-api.md`. No migration: deleting an account removes its tokens and reset codes, deletes groups nobody else belongs to, hands a shared group's ownership to the longest-standing other account, and leaves the person in shared groups by name with no account, so balances do not change.
+- **Rate limit:** both routes use the strict per-IP limit (they check a password).
+- **Tests:** unit service and route tests, repository tests, and an HTTP test of the whole flow (other devices signed out; the email can be reused; a shared group keeps its expenses and the balance is unchanged). Backend unit 295 (was 283).
+
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 

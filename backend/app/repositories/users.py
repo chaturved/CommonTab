@@ -45,3 +45,13 @@ class UserRepository:
 
     def rename(self, user_id: UUID, name: str) -> None:
         self.connection.execute(text('UPDATE users SET name=:name WHERE id=:id'), {'name': name, 'id': user_id})
+
+    def delete_tokens_except(self, user_id: UUID, token_hash: str) -> None:
+        self.connection.execute(text('DELETE FROM auth_tokens WHERE user_id=:u AND token_hash<>:h'),
+                                {'u': user_id, 'h': token_hash})
+
+    def delete_password_resets(self, user_id: UUID) -> None:
+        self.connection.execute(text('DELETE FROM password_resets WHERE user_id=:u'), {'u': user_id})
+
+    def delete_user(self, user_id: UUID) -> None:
+        self.connection.execute(text('DELETE FROM users WHERE id=:id'), {'id': user_id})

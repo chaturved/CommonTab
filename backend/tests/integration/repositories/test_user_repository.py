@@ -63,3 +63,23 @@ class TestUserRepository:
 
         assert self.repo.token('a1') is None and self.repo.token('a2') is None
         assert self.repo.token('b1') is not None
+
+    def test_all_tokens_except_one_can_be_removed(self):
+        user_id = add_user(self.connection)
+        for name in ('keep', 'drop1', 'drop2'):
+            self.repo.insert_token(name, user_id, NOW + timedelta(days=1))
+
+        self.repo.delete_tokens_except(user_id, 'keep')
+
+        assert self.repo.token('keep') is not None
+        assert self.repo.token('drop1') is None and self.repo.token('drop2') is None
+
+    def test_deleting_a_user_removes_the_row_after_its_tokens_and_resets_go(self):
+        user_id = add_user(self.connection)
+        self.repo.insert_token('t', user_id, NOW + timedelta(days=1))
+
+        self.repo.delete_tokens_for_user(user_id)
+        self.repo.delete_password_resets(user_id)
+        self.repo.delete_user(user_id)
+
+        assert self.repo.user_by_id(user_id) is None
