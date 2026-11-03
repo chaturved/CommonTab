@@ -129,3 +129,13 @@ def test_deleted_expenses_have_no_receipt_access(database):
     api.delete(url, headers=headers(ada))
     assert api.get(receipt, headers=headers(bob)).status_code == 404
     assert api.put(receipt, headers=h, content=stream.getvalue()).status_code == 404
+
+
+def test_expenses_and_tombstones_carry_updated_at(database):
+    api, ada, bob, group, record, url = setup(database)
+    [live] = snapshot(api, group, ada)['expenses']
+    assert live['updatedAt'].endswith('Z')
+    assert api.delete(url, headers=headers(ada)).status_code == 204
+    [tombstone] = snapshot(api, group, ada)['deletedExpenses']
+    assert tombstone['updatedAt'] >= live['updatedAt']
+    assert tombstone['updatedAt'] == tombstone['deletedAt']
