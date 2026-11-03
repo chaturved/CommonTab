@@ -7,3 +7,4 @@ export * from './storage';
 export * from './outbox';
 export * from './api';
 export * from './auth';
+export * from './sync';
