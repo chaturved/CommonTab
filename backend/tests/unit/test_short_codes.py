@@ -1,7 +1,6 @@
 import pytest
 
-from app.core.errors import APIError
-from app.domain.invite_codes import ALPHABET, CODE_LENGTH, display_code, new_code, normalize_code
+from app.domain.short_codes import ALPHABET, CODE_LENGTH, display_code, new_code, normalize_code
 
 
 class TestInviteCodes:
@@ -27,8 +26,5 @@ class TestInviteCodes:
         assert normalize_code('OIlO-1234') == '01101234'
 
     @pytest.mark.parametrize('typed', ['', 'ABC', 'ABCD-23456', 'ABCD-234!', 'ABCD-234U'])
-    def test_anything_that_cannot_be_a_code_looks_like_an_unknown_code(self, typed):
-        with pytest.raises(APIError) as caught:
-            normalize_code(typed)
-
-        assert (caught.value.status, caught.value.message) == (404, 'Invitation missing or expired')
+    def test_anything_that_cannot_be_a_code_is_none(self, typed):
+        assert normalize_code(typed) is None

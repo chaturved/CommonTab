@@ -10,7 +10,7 @@ from fastapi import Depends
 from app.core.errors import fail
 from app.core.security import hash_token
 from app.domain.emails import normalize_email
-from app.domain.invite_codes import display_code, new_code, normalize_code
+from app.domain.short_codes import display_code, new_code, normalize_code
 from app.repositories.groups import GroupRepository
 from app.repositories.invitations import InvitationRepository
 from app.repositories.members import MemberRepository
@@ -73,7 +73,10 @@ class InvitationService:
     def join_with_code(self, user_id: str, raw_code: str) -> dict:
         """Join the group a code belongs to. Joining a group you are already in is not an error: you get the group."""
         uid = UUID(user_id)
-        token_hash = hash_token(normalize_code(raw_code))
+        code = normalize_code(raw_code)
+        if code is None:
+            fail(404, 'Invitation missing or expired')
+        token_hash = hash_token(code)
         row = self.invitations.invitation(token_hash)
         now = datetime.now(timezone.utc)
         if row is None or row.email is not None or row.expires_at <= now or row.accepted_at is not None:

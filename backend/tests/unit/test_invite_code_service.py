@@ -6,7 +6,7 @@ import pytest
 
 from app.core.errors import APIError
 from app.core.security import hash_token
-from app.domain.invite_codes import normalize_code
+from app.domain.short_codes import normalize_code
 from app.repositories.groups import GroupRepository
 from app.repositories.invitations import InvitationRepository
 from app.repositories.members import MemberRepository

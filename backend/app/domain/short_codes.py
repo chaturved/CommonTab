@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import secrets
 
-from app.core.errors import fail
-
 # Crockford base32: no I, L, O or U, so a code read aloud or typed from a screenshot is hard to get wrong.
 ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 CODE_LENGTH = 8  # 32^8 is about 10^12 codes
@@ -19,9 +17,9 @@ def display_code(code: str) -> str:
     return f'{code[:4]}-{code[4:]}'
 
 
-def normalize_code(raw: str) -> str:
-    """What the person typed -> the stored form. Anything that cannot be a code is treated like an unknown code."""
+def normalize_code(raw: str) -> str | None:
+    """What the person typed -> the stored form, or None when it cannot be a code (callers treat that as unknown)."""
     code = ''.join(raw.split()).replace('-', '').upper().translate(LOOKALIKES)
     if len(code) != CODE_LENGTH or any(char not in ALPHABET for char in code):
-        fail(404, 'Invitation missing or expired')
+        return None
     return code
