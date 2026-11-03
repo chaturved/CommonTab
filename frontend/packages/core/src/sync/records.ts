@@ -45,7 +45,7 @@ export function groupFromSnapshot(snapshot: GroupSnapshot, local?: LocalGroup): 
   return {
     id: snapshot.id, name: snapshot.name, currencyCode: snapshot.currencyCode, ownerID: snapshot.ownerID,
     meMemberID: snapshot.meMemberID, version: snapshot.version, members: snapshot.members,
-    syncState: 'synced', localOnly: local?.localOnly ?? false,
+    syncState: 'synced', localOnly: local?.localOnly ?? false, archived: snapshot.archived ?? false,
   };
 }
 

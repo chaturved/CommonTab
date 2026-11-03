@@ -1,4 +1,4 @@
-import { applySnapshot, type LocalExpense } from '../src';
+import { applySnapshot, type GroupSnapshot, type LocalExpense } from '../src';
 import { FakeServer } from './fakeServer';
 import { device, draft, TestClock, type Device } from './harness';
 
@@ -443,7 +443,7 @@ describe('pull', () => {
     w.server.offline = true;
     await w.phone.actions.putMember(w.groupId, { name: 'Cy' });
     w.server.offline = false;
-    const snapshot = (await w.server.api(() => w.phone.token).listGroups())[0]!;
+    const snapshot = (await w.server.api(() => w.phone.token).listGroups())[0] as GroupSnapshot;
     await w.phone.storage.transaction((tx) => applySnapshot(tx, snapshot, 0));
     expect((await w.phone.storage.getGroup(w.groupId))!.members.map((m) => m.name)).toEqual(['Ada', 'Bob', 'Cy']);
   });

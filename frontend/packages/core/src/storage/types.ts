@@ -32,6 +32,8 @@ export interface LocalGroup {
   members: Member[];
   syncState: SyncState;
   localOnly: boolean;
+  archived?: boolean;
+  closed?: { status: 'removed' | 'deleted'; since: string };
 }
 
 export interface LocalExpense extends WireExpense {
@@ -50,6 +52,7 @@ export interface Store {
   getGroup(id: string): Promise<LocalGroup | undefined>;
   putGroup(group: LocalGroup): Promise<void>;
   listGroups(): Promise<LocalGroup[]>;
+  deleteGroup(id: string): Promise<void>;
 
   getExpense(id: string): Promise<LocalExpense | undefined>;
   putExpense(expense: LocalExpense): Promise<void>;

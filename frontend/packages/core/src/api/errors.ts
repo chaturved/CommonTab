@@ -9,7 +9,7 @@ export class ApiError extends Error {
     readonly status: number,
     message: string,
     readonly code: string | null = null,
-    readonly extra: { current?: WireExpense; maxAmountMinor?: number; retryAfterSeconds?: number } = {},
+    readonly extra: { current?: WireExpense; maxAmountMinor?: number; balanceMinor?: number; retryAfterSeconds?: number } = {},
   ) {
     super(message);
     this.name = 'ApiError';
@@ -19,5 +19,6 @@ export class ApiError extends Error {
   get isRetryable(): boolean { return this.status === 0 || this.status === 429 || this.status >= 500; }
   get current(): WireExpense | undefined { return this.extra.current; }
   get maxAmountMinor(): number | undefined { return this.extra.maxAmountMinor; }
+  get balanceMinor(): number | undefined { return this.extra.balanceMinor; }
   get retryAfterMs(): number { return (this.extra.retryAfterSeconds ?? 0) * 1000; }
 }

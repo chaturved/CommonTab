@@ -43,6 +43,12 @@ export class MemoryStorage implements Storage {
       getGroup: async (id) => copy(t.groups.get(id)),
       putGroup: async (group) => void t.groups.set(group.id, copy(group)),
       listGroups: async () => [...t.groups.values()].map(copy),
+      deleteGroup: async (id) => {
+        t.groups.delete(id);
+        for (const [key, e] of t.expenses) if (e.groupID === id) t.expenses.delete(key);
+        for (const [key, s] of t.settlements) if (s.groupID === id) t.settlements.delete(key);
+        for (const [key, o] of t.outbox) if (o.groupId === id) t.outbox.delete(key);
+      },
       getExpense: async (id) => copy(t.expenses.get(id)),
       putExpense: async (e) => void t.expenses.set(e.id, copy(e)),
       deleteExpense: async (id) => void t.expenses.delete(id),
@@ -63,6 +69,7 @@ export class MemoryStorage implements Storage {
   getGroup = (id: string) => this.committed.getGroup(id);
   putGroup = (g: LocalGroup) => this.transaction((tx) => tx.putGroup(g));
   listGroups = () => this.committed.listGroups();
+  deleteGroup = (id: string) => this.transaction((tx) => tx.deleteGroup(id));
   getExpense = (id: string) => this.committed.getExpense(id);
   putExpense = (e: LocalExpense) => this.transaction((tx) => tx.putExpense(e));
   deleteExpense = (id: string) => this.transaction((tx) => tx.deleteExpense(id));

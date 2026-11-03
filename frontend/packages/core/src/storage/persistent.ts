@@ -52,6 +52,7 @@ export class PersistentStorage implements Storage {
   getGroup = (id: string) => this.memory.getGroup(id);
   putGroup = (g: LocalGroup) => this.transaction((tx) => tx.putGroup(g));
   listGroups = () => this.memory.listGroups();
+  deleteGroup = (id: string) => this.transaction((tx) => tx.deleteGroup(id));
   getExpense = (id: string) => this.memory.getExpense(id);
   putExpense = (e: LocalExpense) => this.transaction((tx) => tx.putExpense(e));
   deleteExpense = (id: string) => this.transaction((tx) => tx.deleteExpense(id));
@@ -67,12 +68,20 @@ export class PersistentStorage implements Storage {
   setMeta = (key: string, value: string) => this.transaction((tx) => tx.setMeta(key, value));
 }
 
+async function forgetGroup(tx: Store, id: string, remove: (table: Table, key: string) => void): Promise<void> {
+  for (const e of await tx.listExpenses(id)) remove('expenses', e.id);
+  for (const s of await tx.listSettlements(id)) remove('settlements', s.id);
+  for (const o of await tx.listOutbox()) if (o.groupId === id) remove('outbox', o.opId);
+  remove('groups', id);
+}
+
 function recording(tx: Store, writes: StoredWrite[]): Store {
   const put = (table: Table, key: string, value: unknown) => void writes.push({ table, key, json: JSON.stringify(value) });
   const remove = (table: Table, key: string) => void writes.push({ table, key, json: null });
   return {
     ...tx,
     putGroup: async (g) => { await tx.putGroup(g); put('groups', g.id, g); },
+    deleteGroup: async (id) => { await forgetGroup(tx, id, remove); await tx.deleteGroup(id); },
     putExpense: async (e) => { await tx.putExpense(e); put('expenses', e.id, e); },
     deleteExpense: async (id) => { await tx.deleteExpense(id); remove('expenses', id); },
     putSettlement: async (s) => { await tx.putSettlement(s); put('settlements', s.id, s); },

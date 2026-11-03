@@ -44,6 +44,11 @@ export class Actions {
     return group;
   }
 
+  async deleteLocalGroup(groupId: string): Promise<void> {
+    await this.deps.storage.deleteGroup(groupId);
+    this.deps.notify();
+  }
+
   async uploadGroup(groupId: string): Promise<void> {
     await this.deps.storage.transaction(async (tx) => {
       const group = await tx.getGroup(groupId);

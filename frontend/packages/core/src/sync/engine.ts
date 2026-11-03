@@ -4,7 +4,7 @@ import { afterFailure, nextForGroup, nextRetryAt } from '../outbox/outbox';
 import type { OutboxEntry } from '../outbox/types';
 import type { LocalSettlement, Storage, Store, SyncError } from '../storage/types';
 import type { Clock, ExpenseInput, Random, WireExpense } from '../types';
-import { applySnapshot } from './apply';
+import { applyClosed, applySnapshot } from './apply';
 import { contentOf, iso, syncedExpense, syncedSettlement, withHistory } from './records';
 import type { Connectivity, SyncResult, SyncStatus } from './status';
 
@@ -250,9 +250,9 @@ export class SyncEngine {
   }
 
   private async pull(): Promise<void> {
-    const snapshots = await this.deps.api.listGroups();
-    for (const snapshot of snapshots) {
-      await this.deps.storage.transaction((tx) => applySnapshot(tx, snapshot, this.deps.clock.now()));
+    const listed = await this.deps.api.listGroups();
+    for (const item of listed) {
+      await this.deps.storage.transaction((tx) => ('status' in item ? applyClosed(tx, item) : applySnapshot(tx, item, this.deps.clock.now())));
     }
     this.notify();
   }

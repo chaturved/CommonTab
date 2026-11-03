@@ -1,5 +1,5 @@
 import {
-  allocate, ApiError, type Api, type Clock, type ExpenseInput, type GroupCreateInput, type GroupSnapshot, type Member,
+  allocate, ApiError, type Api, type Clock, type ExpenseInput, type GroupCreateInput, type GroupSnapshot, type GroupStub, type Member,
   type Session, type SettlementInput, type WireExpense, type WireSettlement,
 } from '../src';
 
@@ -22,6 +22,7 @@ export class FakeServer {
   private counter = 0;
 
   offline = false;
+  closed = new Map<string, { status: 'removed' | 'deleted'; since: string }>();
   unhealthy = false;
   dropResponses = 0;
   failNext: { status: number; code?: string; extra?: Record<string, unknown> }[] = [];
@@ -84,19 +85,28 @@ export class FakeServer {
       deleteAccount: notSimulated,
       requestPasswordReset: notSimulated,
       confirmPasswordReset: notSimulated,
+      leaveGroup: notSimulated,
+      removeMember: notSimulated,
+      archiveGroup: notSimulated,
+      unarchiveGroup: notSimulated,
+      deleteGroup: notSimulated,
       createInviteCode: notSimulated,
       joinWithCode: notSimulated,
       healthy: async () => {
         if (this.offline) throw new ApiError(0, 'offline');
         return !this.unhealthy;
       },
-      listGroups: () => guard('GET /groups', false, (u) => [...this.groups.values()].filter((g) => this.me(g, u)).map((g) => this.snapshot(g, u))),
+      listGroups: () => guard('GET /groups', false, (u) => [...this.groups.values()].filter((g) => this.me(g, u) && !this.closed.has(g.id)).map((g): GroupSnapshot | GroupStub => this.snapshot(g, u)).concat(this.stubs())),
       createGroup: (input) => guard('POST /groups', true, (u) => this.createGroup(u, input)),
       putMember: (groupId, member) => guard(`PUT member ${member.id}`, true, (u) => this.putMember(u, groupId, member)),
       putExpense: (groupId, expense) => guard(`PUT expense ${expense.id}`, true, (u) => this.putExpense(u, groupId, expense)),
       deleteExpense: (groupId, expenseId) => guard(`DELETE expense ${expenseId}`, true, (u) => this.deleteExpense(u, groupId, expenseId)),
       createSettlement: (groupId, settlement) => guard(`POST settlement ${settlement.id}`, true, (u) => this.createSettlement(u, groupId, settlement)),
     };
+  }
+
+  private stubs(): GroupStub[] {
+    return [...this.closed].map(([id, c]) => ({ id, name: this.groups.get(id)?.name ?? 'Group', status: c.status, since: c.since }));
   }
 
   private me(group: Group, userId: string) { return group.members.find((m) => m.userID === userId); }

@@ -16,6 +16,7 @@ export interface Member {
   name: string;
   userID: string | null;
   email: string | null;
+  removedAt?: string | null;
 }
 
 export interface ExpenseInput {
@@ -80,6 +81,14 @@ export interface GroupSnapshot {
   deletedExpenses: WireExpense[];
   settlements: WireSettlement[];
   balances: { memberID: string; minorUnits: number }[];
+  archived?: boolean;
+}
+
+export interface GroupStub {
+  id: string;
+  name: string;
+  status: 'removed' | 'deleted';
+  since: string;
 }
 
 export interface GroupCreateInput {

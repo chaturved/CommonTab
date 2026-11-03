@@ -1,4 +1,4 @@
-import type { ExpenseInput, GroupCreateInput, GroupSnapshot, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
+import type { ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
 import { ApiError } from './errors';
 import type { Api, InviteCode, Profile, Session } from './types';
 
@@ -48,6 +48,7 @@ export class HttpApi implements Api {
       typeof json['code'] === 'string' ? json['code'] : null, {
         current: json['current'] as WireExpense | undefined,
         maxAmountMinor: typeof json['maxAmountMinor'] === 'number' ? json['maxAmountMinor'] : undefined,
+        balanceMinor: typeof json['balanceMinor'] === 'number' ? json['balanceMinor'] : undefined,
         retryAfterSeconds: typeof json['retryAfterSeconds'] === 'number' ? json['retryAfterSeconds'] : Number.isFinite(retryHeader) && retryHeader > 0 ? retryHeader : undefined,
       });
   }
@@ -73,7 +74,7 @@ export class HttpApi implements Api {
     }
   }
 
-  listGroups = () => this.call<GroupSnapshot[]>('GET', '/groups');
+  listGroups = () => this.call<(GroupSnapshot | GroupStub)[]>('GET', '/groups');
   createGroup = (input: GroupCreateInput) => this.call<GroupSnapshot>('POST', '/groups', input);
   putMember = (groupId: string, member: { id: string; name: string }) =>
     this.call<Member>('PUT', `/groups/${groupId}/members/${member.id}`, { name: member.name });
@@ -81,6 +82,11 @@ export class HttpApi implements Api {
     this.call<WireExpense>('PUT', `/groups/${groupId}/expenses/${expense.id}`, expense);
   deleteExpense = (groupId: string, expenseId: string) =>
     this.call<void>('DELETE', `/groups/${groupId}/expenses/${expenseId}`);
+  leaveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/leave`);
+  removeMember = (groupId: string, memberId: string) => this.call<void>('DELETE', `/groups/${groupId}/members/${memberId}`);
+  archiveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/archive`);
+  unarchiveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/unarchive`);
+  deleteGroup = (groupId: string) => this.call<void>('DELETE', `/groups/${groupId}`);
   createInviteCode = (groupId: string, memberId?: string) =>
     this.call<InviteCode>('POST', `/groups/${groupId}/invite-code`, { memberID: memberId ?? null });
   joinWithCode = (code: string) => this.call<GroupSnapshot>('POST', '/invitations/join', { code });

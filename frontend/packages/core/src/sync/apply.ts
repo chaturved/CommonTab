@@ -1,5 +1,5 @@
 import type { Store } from '../storage/types';
-import type { GroupSnapshot } from '../types';
+import type { GroupSnapshot, GroupStub } from '../types';
 import { groupFromSnapshot, iso, sameContent, syncedExpense, syncedSettlement, withHistory } from './records';
 
 /**
@@ -32,4 +32,10 @@ export async function applySnapshot(tx: Store, snapshot: GroupSnapshot, nowMs: n
     const existing = await tx.getSettlement(wire.id);
     if (!existing || existing.syncState === 'synced') await tx.putSettlement(syncedSettlement(wire));
   }
+}
+
+export async function applyClosed(tx: Store, stub: GroupStub): Promise<void> {
+  const local = await tx.getGroup(stub.id);
+  if (!local || (local.closed?.status === stub.status && local.closed.since === stub.since)) return;
+  await tx.putGroup({ ...local, closed: { status: stub.status, since: stub.since } });
 }

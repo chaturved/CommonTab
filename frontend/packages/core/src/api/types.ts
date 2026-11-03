@@ -1,4 +1,4 @@
-import type { ExpenseInput, GroupCreateInput, GroupSnapshot, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
+import type { ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
 
 export interface Session {
   accessToken: string;
@@ -22,11 +22,16 @@ export interface Api {
   confirmPasswordReset(input: { email: string; code: string; newPassword: string }): Promise<void>;
   healthy(): Promise<boolean>;
 
-  listGroups(): Promise<GroupSnapshot[]>;
+  listGroups(): Promise<(GroupSnapshot | GroupStub)[]>;
   createGroup(input: GroupCreateInput): Promise<GroupSnapshot>;
   putMember(groupId: string, member: { id: string; name: string }): Promise<Member>;
   putExpense(groupId: string, expense: ExpenseInput): Promise<WireExpense>;
   deleteExpense(groupId: string, expenseId: string): Promise<void>;
+  leaveGroup(groupId: string): Promise<void>;
+  removeMember(groupId: string, memberId: string): Promise<void>;
+  archiveGroup(groupId: string): Promise<void>;
+  unarchiveGroup(groupId: string): Promise<void>;
+  deleteGroup(groupId: string): Promise<void>;
   createInviteCode(groupId: string, memberId?: string): Promise<InviteCode>;
   joinWithCode(code: string): Promise<GroupSnapshot>;
   createSettlement(groupId: string, settlement: SettlementInput): Promise<WireSettlement>;
