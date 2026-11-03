@@ -34,7 +34,12 @@ export default function Groups() {
         <PageHeader
           title="Groups"
           subtitle={`${active.length} active, ${settled.length} settled`}
-          actions={<Button label="Create group" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/create-group')} />}
+          actions={
+            <>
+              <Button label="Join with a code" variant="secondary" size="small" onPress={() => router.push('/join')} />
+              <Button label="Create group" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/create-group')} />
+            </>
+          }
         />
         <ConnectionBanner />
         {ready && groups.length === 0 ? (
@@ -90,6 +95,7 @@ export default function Groups() {
           <GroupCard key={g.group.id} data={g} detail offline={offline} onPress={() => open(g.group.id)} />
         ))}
       </View>
+      <Button label="Have an invite code? Join a group" variant="ghost" onPress={() => router.push('/join')} />
     </Screen>
   );
 }

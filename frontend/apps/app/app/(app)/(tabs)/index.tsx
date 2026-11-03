@@ -62,6 +62,7 @@ export default function Home() {
               Make a group, add what you spend, and CommonTab keeps track of who owes who.
             </Text>
             <Button label="Create a group" variant="hero" icon={<Icon icon={Plus} size={20} strokeWidth={2.4} tone="hero-to" />} onPress={() => router.push('/create-group')} />
+            <Button label="Join with a code" variant="hero-outline" onPress={() => router.push('/join')} />
           </Hero>
           <SectionHeader title="How it works" />
           <Card className="overflow-hidden">

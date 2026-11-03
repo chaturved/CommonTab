@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import type { SignedInUser } from '@commontab/core';
 import { createServices, type Services } from './services';
@@ -9,6 +9,7 @@ interface AppValue {
   signIn(email: string, password: string): Promise<void>;
   register(email: string, name: string, password: string): Promise<void>;
   signOut(): Promise<void>;
+  setPendingJoinCode(code: string | null): void;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -22,6 +23,7 @@ export function useApp(): AppValue {
 export function AppProvider({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
   const [services, setServices] = useState<Services | null>(null);
   const [user, setUser] = useState<SignedInUser | null>(null);
+  const pendingCode = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +57,11 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     await services!.rememberUser(next);
     services!.engine.resume();
     setUser(next);
+    const code = pendingCode.current;
+    if (code) {
+      pendingCode.current = null;
+      void services!.api.joinWithCode(code).then(() => services!.engine.sync()).catch(() => undefined);
+    }
   }, [services]);
 
   const value = useMemo<AppValue | null>(() => services && {
@@ -62,6 +69,7 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     user,
     signIn: async (email, password) => accept(await services.auth.signIn(email, password)),
     register: async (email, name, password) => accept(await services.auth.register(email, name, password)),
+    setPendingJoinCode: (code) => { pendingCode.current = code; },
     signOut: async () => {
       await services.auth.signOut();
       await services.clearLocalData();

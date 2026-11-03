@@ -36,7 +36,13 @@ export function GroupDesktop({ data }: { data: GroupData }) {
       <PageHeader
         title={group.name}
         subtitle={subtitle}
-        actions={<Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />}
+        actions={
+          <>
+            <Button label="Invite" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/invite', params: { id: group.id } })} />
+            {summary.counterparts.length > 0 ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/settle', params: { id: group.id } })} /> : null}
+            <Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
+          </>
+        }
       />
       <ConnectionBanner />
       <View accessibilityRole="tablist" className="flex-row gap-1.5 border-b border-divider">
@@ -71,7 +77,7 @@ export function GroupDesktop({ data }: { data: GroupData }) {
           </View>
         )
       ) : null}
-      {tab === 'Balances' ? <BalancesList data={data} /> : null}
+      {tab === 'Balances' ? <BalancesList data={data} onSettle={(memberId) => router.push({ pathname: '/group/[id]/settle', params: { id: group.id, with: memberId } })} /> : null}
       {tab === 'Members' ? <MembersList data={data} /> : null}
       {tab === 'History' ? <HistoryList data={data} /> : null}
     </>

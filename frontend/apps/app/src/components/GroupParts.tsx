@@ -1,11 +1,11 @@
 import { View } from 'react-native';
 import { formatCurrency, longDate, shortDate } from '@commontab/core';
-import { Avatar, Card, Pill, Text } from '@commontab/ui';
+import { Avatar, Button, Card, Pill, Text } from '@commontab/ui';
 import type { GroupData } from '../data';
 
 const rowClass = (i: number, count: number) => `min-h-row flex-row items-center gap-3.5 px-4 py-2.5 ${i < count - 1 ? 'border-b border-divider' : ''}`;
 
-export function BalancesList({ data }: { data: GroupData }) {
+export function BalancesList({ data, onSettle }: { data: GroupData; onSettle?: (memberId: string) => void }) {
   const { summary } = data;
   const currency = summary.currencyCode;
   if (summary.counterparts.length === 0) {
@@ -28,6 +28,7 @@ export function BalancesList({ data }: { data: GroupData }) {
               <Text variant="caption" tone={c.direction === 'owesMe' ? 'accent' : 'owe'} className="text-[13px] font-bold">{formatCurrency(c.minorUnits, currency)}</Text>
             </Text>
           </View>
+          {onSettle ? <Button label="Settle up" variant="secondary" size="small" accessibilityLabel={`Settle up with ${c.name}`} onPress={() => onSettle(c.memberID)} /> : null}
         </View>
       ))}
     </Card>

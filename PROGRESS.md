@@ -156,6 +156,14 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Not done:** the web Add expense is a centered form, not the canvas's dialog over the group page; the date is picked with Today / Yesterday or typed as YYYY-MM-DD (no calendar picker); By item, the Tip and split calculator, receipt scan, foreign-currency expenses (needs API fields: asked in 6f), and categories as an editable list. Edited-by names ("You edited the amount $160 to $163.50") need the server change feed (6f).
 - Fixed on the way: an input's minimum width made the whole form overflow sideways on phones.
 
+## Step 6e (part 1): settle up, invite, join — done
+- **Settle up** (`/group/[id]/settle`): from a person's "Settle up" button in Balances (phone and web) or the web header. Shows who pays whom, an amount with "Full balance" and "Half" shortcuts, and "Record payment". The client mirrors the server's limit (the smaller of what the payer owes and what the payee is owed), so an overpayment says "That's more than is owed. The most Sam can pay you is $54.50." before anything is sent. A payment queued offline syncs like any other change. I left out the design's Date row: payments have no date field in the API (the day recorded is the date).
+- **Invite** (`/group/[id]/invite`): "Add friends to Austin Trip" with the 8-character code (`JF0H-P0YW`), "Expires in 7 days", Share invite, Copy code. Making a code needs a connection and a group that has synced. **Reset code is not built**: the server has no way to revoke a code yet (6f).
+- **Join with a code** (`/join`): Home empty state, Groups, and the web Groups header. Forgiving input (lower case, spaces). Clear messages for a wrong or expired code, no connection, too many tries. **Before an account:** Welcome and the web sign-in have "Have an invite code? Join a group", which asks for the code, then Create account or Sign in, then joins automatically. If that last join fails it does so silently (the code can be entered again from Groups).
+- **Core (tests):** `settleLimit`, `directionWith`, `checkSettlement`.
+- **Checked in a browser** (390px, API on Supabase): settled $10.00 of Sam's $54.50 (group $109.00 to $99.00, Sam $44.50), overpayment message, invite code, then signed in as the second account and joined with the code typed in lower case with a space; the group and its expenses appeared and the new member sees "not involved".
+- **Still to do in 6e:** Settings (default currency, appearance, export as CSV, clear data on this device), the tip and split calculator, split by item, and the Simplify debts toggle.
+
 ### Plan from here
 6e settle up, invite and join by code, settings, the tip calculator and split by item → 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 

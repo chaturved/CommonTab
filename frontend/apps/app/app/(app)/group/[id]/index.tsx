@@ -80,7 +80,7 @@ export default function GroupDetail() {
       {summary.counterparts.length > 0 ? (
         <>
           <SectionHeader title="Balances" />
-          <BalancesList data={data} />
+          <BalancesList data={data} onSettle={(memberId) => router.push({ pathname: '/group/[id]/settle', params: { id: group.id, with: memberId } })} />
         </>
       ) : null}
 

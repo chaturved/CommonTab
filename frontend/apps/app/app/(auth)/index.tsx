@@ -1,6 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Circle, Defs } from 'react-native-svg';
 import { Button, Text, colors } from '@commontab/ui';
@@ -42,6 +42,9 @@ export default function Welcome() {
           <View className="gap-3">
             <Button label="Create account" variant="hero" onPress={() => router.push('/create-account')} />
             <Button label="Sign in" variant="hero-outline" onPress={() => router.push('/sign-in')} />
+            <Pressable accessibilityRole="button" accessibilityLabel="Have an invite code? Join a group" onPress={() => router.push('/join-code')} className="min-h-touch items-center justify-center active:opacity-80">
+              <Text variant="body-small" tone="mint" className="text-[15px] font-semibold">Have an invite code? Join a group</Text>
+            </Pressable>
             <Text variant="caption" tone="hero-muted" className="pt-1 text-center text-xs leading-[18px]">
               By continuing you agree to the Terms and Privacy Policy.
             </Text>

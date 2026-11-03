@@ -27,7 +27,7 @@ export default function SignIn() {
 
   return (
     <AuthScreen
-      footer={desktop ? <View className="gap-3.5">{button}<View className="items-center">{createLink}</View></View> : button}
+      footer={desktop ? <View className="gap-3.5">{button}<View className="items-center">{createLink}</View><View className="items-center border-t border-field-border pt-4"><Button label="Have an invite code? Join a group" variant="ghost" size="small" onPress={() => router.push('/join-code')} /></View></View> : button}
     >
       {desktop ? (
         <View className="gap-1.5">
