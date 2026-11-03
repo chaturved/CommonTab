@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from app.repositories.unit_of_work import UnitOfWorkFactory
+from app.repositories.analytics import AnalyticsRepository
+
 
 
 class AnalyticsService:
-    def __init__(self, uow: UnitOfWorkFactory):
-        self.uow = uow
+    def __init__(self, analytics: AnalyticsRepository):
+        self.analytics = analytics
 
     def record(self, name: str, variant: str) -> None:
-        with self.uow() as uow:
-            uow.analytics.record(name, variant)
+        self.analytics.record(name, variant)
 
     def counts(self) -> list[dict]:
-        with self.uow() as uow:
-            return uow.analytics.counts()
+        return self.analytics.counts()

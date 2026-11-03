@@ -5,7 +5,10 @@ from uuid import UUID
 from sqlalchemy import Row
 
 from app.domain.rules import balances, format_utc
-from app.repositories.unit_of_work import UnitOfWork
+from app.repositories.expenses import ExpenseRepository
+from app.repositories.groups import GroupRepository
+from app.repositories.members import MemberRepository
+from app.repositories.settlements import SettlementRepository
 
 
 def member_payload(row: Row) -> dict:
@@ -30,13 +33,20 @@ def settlement_payload(row: Row) -> dict:
 class SnapshotBuilder:
     """The complete picture of one group as the signed-in member sees it (what `GET /groups/{id}` returns)."""
 
-    def build(self, uow: UnitOfWork, group_id: UUID, user_id: UUID) -> dict:
-        group = uow.groups.group(group_id)
-        members = uow.members.members(group_id)
-        rows = uow.expenses.expenses(group_id)
+    def __init__(self, groups: GroupRepository, members: MemberRepository, expenses: ExpenseRepository,
+                 settlements: SettlementRepository):
+        self.groups = groups
+        self.members = members
+        self.expenses = expenses
+        self.settlements = settlements
+
+    def build(self, group_id: UUID, user_id: UUID) -> dict:
+        group = self.groups.group(group_id)
+        members = self.members.members(group_id)
+        rows = self.expenses.expenses(group_id)
         expenses = [expense_payload(row) for row in rows if row.deleted_at is None]
         deleted = [expense_payload(row) for row in rows if row.deleted_at is not None]
-        settlements = [settlement_payload(row) for row in uow.settlements.settlements(group_id)]
+        settlements = [settlement_payload(row) for row in self.settlements.settlements(group_id)]
         member_ids = [str(member.id) for member in members]
         by_user = {m.user_id: m.id for m in members if m.user_id is not None}
         return {

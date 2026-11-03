@@ -4,14 +4,18 @@ from uuid import UUID
 
 from app.core.errors import fail
 from app.domain.limits import MAX_RECEIPT_BYTES
-from app.repositories.unit_of_work import UnitOfWorkFactory
-from app.services.access import require_member
+from app.repositories.groups import GroupRepository
+from app.repositories.receipts import ReceiptRepository
+from app.services.access import MembershipGuard
 from app.services.receipt_images import ReceiptImageProcessor
 
 
 class ReceiptService:
-    def __init__(self, uow: UnitOfWorkFactory, images: ReceiptImageProcessor):
-        self.uow = uow
+    def __init__(self, receipts: ReceiptRepository, groups: GroupRepository, guard: MembershipGuard,
+                 images: ReceiptImageProcessor):
+        self.receipts = receipts
+        self.groups = groups
+        self.guard = guard
         self.images = images
 
     def put_receipt(self, group_id: str, expense_id: str, user_id: str, data: bytes, mime: str) -> dict:
@@ -21,29 +25,24 @@ class ReceiptService:
            (mime == 'image/png' and not data.startswith(b'\x89PNG\r\n\x1a\n')):
             fail(422, 'Receipt content does not match its type')
         gid = UUID(group_id)
-        with self.uow() as uow:
-            require_member(uow, gid, UUID(user_id))
-        data = self.images.normalize(data, mime)  # outside any transaction: decoding can take a while
-        with self.uow() as uow:
-            require_member(uow, gid, UUID(user_id))
-            if not uow.receipts.set_receipt(gid, UUID(expense_id), data, 'image/jpeg'):
-                fail(404, 'Expense not found')
-            uow.groups.bump_version(gid)
+        self.guard.require(gid, UUID(user_id))
+        data = self.images.normalize(data, mime)
+        if not self.receipts.set_receipt(gid, UUID(expense_id), data, 'image/jpeg'):
+            fail(404, 'Expense not found')
+        self.groups.bump_version(gid)
         return {'hasReceipt': True}
 
     def get_receipt(self, group_id: str, expense_id: str, user_id: str) -> tuple[bytes, str]:
         gid = UUID(group_id)
-        with self.uow() as uow:
-            require_member(uow, gid, UUID(user_id))
-            row = uow.receipts.receipt(gid, UUID(expense_id))
+        self.guard.require(gid, UUID(user_id))
+        row = self.receipts.receipt(gid, UUID(expense_id))
         if row is None or row.receipt is None:
             fail(404, 'Receipt not found')
         return bytes(row.receipt), row.receipt_type
 
     def delete_receipt(self, group_id: str, expense_id: str, user_id: str) -> None:
         gid = UUID(group_id)
-        with self.uow() as uow:
-            require_member(uow, gid, UUID(user_id))
-            if not uow.receipts.set_receipt(gid, UUID(expense_id), None, None):
-                fail(404, 'Expense not found')
-            uow.groups.bump_version(gid)
+        self.guard.require(gid, UUID(user_id))
+        if not self.receipts.set_receipt(gid, UUID(expense_id), None, None):
+            fail(404, 'Expense not found')
+        self.groups.bump_version(gid)

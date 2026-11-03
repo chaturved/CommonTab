@@ -12,7 +12,7 @@ router = APIRouter(prefix='/v1')
 
 @router.get('/groups')
 def groups(user: CurrentUser, service: GroupsDep):
-    return service.groups(user)
+    return service.list_groups(user)
 
 
 @router.post('/groups', status_code=201)
