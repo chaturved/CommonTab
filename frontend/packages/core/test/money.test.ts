@@ -1,6 +1,7 @@
 import {
   allocateProportionally,
   CoreError,
+  formatCurrency,
   formatMinorUnits,
   fractionDigits,
   parseMinorUnits,
@@ -89,5 +90,24 @@ describe('allocateProportionally', () => {
   test('no precision loss above 2^53', () => {
     const shares = allocateProportionally(9_007_199_254_740_993n, [1n, 1n, 1n]);
     expect(shares.reduce((a, b) => a + b, 0n)).toBe(9_007_199_254_740_993n);
+  });
+});
+
+describe('formatCurrency', () => {
+  test.each([
+    [1001, 'USD', '$10.01'],
+    [0, 'USD', '$0.00'],
+    [123456789, 'USD', '$1,234,567.89'],
+    [99900, 'USD', '$999.00'],
+    [123456, 'JPY', '¥123,456'],
+    [1234, 'EUR', '€12.34'],
+    [100000, 'CAD', 'CA$1,000.00'],
+    [5000, 'CHF', 'CHF 50.00'],
+    [1234, 'KWD', 'KWD 1.234'],
+  ])('%i %s -> %s', (units, code, text) => expect(formatCurrency(units, code)).toBe(text));
+
+  test('rejects negatives and unknown currencies', () => {
+    expect(() => formatCurrency(-1, 'USD')).toThrow(CoreError);
+    expect(() => formatCurrency(1, 'dollars')).toThrow(CoreError);
   });
 });
