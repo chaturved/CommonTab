@@ -52,3 +52,17 @@ def test_money_and_ids_use_exact_types(scratch):
     assert columns['id'] == 'UUID'
     assert columns['allocations'] == 'JSONB'
     assert columns['occurred_at'].startswith('TIMESTAMP')
+
+
+def test_tombstone_column_is_added_by_0002_and_removed_on_downgrade(scratch):
+    engine, schema = scratch
+    names = lambda: {c['name'] for c in inspect(engine).get_columns('expenses', schema=schema)}  # noqa: E731
+    with engine.begin() as connection:
+        upgrade(connection, '0001')
+    assert 'deleted_at' not in names()
+    with engine.begin() as connection:
+        upgrade(connection)
+    assert 'deleted_at' in names()
+    with engine.begin() as connection:
+        downgrade(connection, '0001')
+    assert 'deleted_at' not in names()

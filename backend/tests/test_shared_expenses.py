@@ -49,7 +49,6 @@ def test_allocation_balance_settlement_and_versions(database):
     payload['version'] = 1
     payload['amountMinor'] = 10000
     assert api.put(url, headers=headers(bob), json=payload).json()['version'] == 2
-    assert api.delete(url + '?version=1', headers=headers(ada)).status_code == 409
     settled = api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(bob), json={
         'id': str(uuid4()), 'groupVersion': api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()['version'],
         'fromID': bid, 'toID': aid, 'amountMinor': 5000

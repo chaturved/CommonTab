@@ -34,14 +34,16 @@ class GroupService:
     def snapshot(self, db: Connection, group_id: UUID) -> dict:
         group = self.repository.group(db, group_id)
         members = self.repository.members(db, group_id)
-        expenses = [self.expense_payload(row) for row in self.repository.expenses(db, group_id)]
+        rows = self.repository.expenses(db, group_id)
+        expenses = [self.expense_payload(row) for row in rows if row.deleted_at is None]
+        deleted = [self.expense_payload(row) for row in rows if row.deleted_at is not None]
         settlements = [self.settlement_payload(row) for row in self.repository.settlements(db, group_id)]
         member_ids = [str(member.id) for member in members]
         return {
             'id': str(group.id), 'name': group.name, 'currencyCode': group.currency_code,
             'ownerID': str(group.owner_id), 'version': group.version,
             'members': [{'id': str(m.id), 'name': m.name, 'email': m.email} for m in members],
-            'expenses': expenses, 'settlements': settlements,
+            'expenses': expenses, 'deletedExpenses': deleted, 'settlements': settlements,
             'balances': balances(member_ids, expenses, settlements),
         }
 
@@ -110,7 +112,8 @@ class GroupService:
                 'occurredAt': format_utc(row.occurred_at), 'category': row.category, 'notes': row.notes,
                 'amountMinor': row.amount_minor, 'payerID': str(row.payer_id), 'method': row.method,
                 'allocations': row.allocations, 'values': row.input_values, 'version': row.version,
-                'hasReceipt': row.has_receipt}
+                'hasReceipt': row.has_receipt,
+                'deletedAt': format_utc(row.deleted_at) if row.deleted_at else None}
 
     @staticmethod
     def settlement_payload(row: Row) -> dict:
@@ -140,13 +143,19 @@ class GroupService:
             if existing:
                 if existing.group_id != gid:
                     fail(409, 'Expense ID belongs to another group', 'id_conflict')
-                if self.same_content(existing, values):
+                if existing.deleted_at is not None:
+                    # Deleted: only an explicit restore (based on the tombstone's own version) goes through.
+                    if input.version != existing.version:
+                        fail(409, 'Expense was deleted', 'version_conflict', current=self.expense_payload(existing))
+                    self.repository.update_expense(db, {**values, 'version': existing.version + 1, 'deleted_at': None})
+                elif self.same_content(existing, values):
                     # A retry after a lost response (or an identical edit): the write is already there.
                     return self.expense_payload(existing)
-                if input.version != existing.version:
-                    fail(409, 'Expense changed; reload before saving', 'version_conflict',
-                         current=self.expense_payload(existing))
-                self.repository.update_expense(db, {**values, 'version': existing.version + 1})
+                else:
+                    if input.version != existing.version:
+                        fail(409, 'Expense changed; reload before saving', 'version_conflict',
+                             current=self.expense_payload(existing))
+                    self.repository.update_expense(db, {**values, 'version': existing.version + 1, 'deleted_at': None})
             else:
                 if input.version is not None:
                     fail(409, 'Expense missing; reload before saving', 'not_found')
@@ -162,12 +171,20 @@ class GroupService:
                 and row.method == values['method'] and row.allocations == values['allocations']
                 and row.input_values == values['input_values'])
 
-    def delete_expense(self, group_id: str, expense_id: str, user_id: str, version: int) -> None:
+    def delete_expense(self, group_id: str, expense_id: str, user_id: str) -> None:
+        """
+        Delete wins: it succeeds whatever version the caller last saw, and repeating it is a no-op.
+        The row stays as a tombstone so other devices learn about the delete (and can restore it).
+        """
         gid = UUID(group_id)
         with self.db.transaction() as db:
             self.require_member(db, gid, UUID(user_id))
-            if not self.repository.delete_expense(db, gid, UUID(expense_id), version):
-                fail(409, 'Expense changed or missing; reload before deleting')
+            existing = self.repository.expense(db, UUID(expense_id), lock=True)
+            if existing is None or existing.deleted_at is not None:
+                return  # nothing to delete: the end state is what the caller wanted
+            if existing.group_id != gid:
+                fail(404, 'Expense not found')
+            self.repository.tombstone_expense(db, existing.id, datetime.now(timezone.utc))
             self.repository.bump_version(db, gid)
 
     # --- settlements --------------------------------------------------------

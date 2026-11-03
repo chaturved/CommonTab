@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # Everything but the receipt bytes, which only the receipt endpoint needs.
 EXPENSE_COLUMNS = ('id, group_id, merchant, occurred_at, category, notes, amount_minor, payer_id, method, '
-                   'allocations, input_values, version, updated_at, (receipt IS NOT NULL) AS has_receipt')
+                   'allocations, input_values, version, updated_at, deleted_at, (receipt IS NOT NULL) AS has_receipt')
 
 
 class GroupRepository:
@@ -95,17 +95,17 @@ class GroupRepository:
     _expense_update = sa.text('''
         UPDATE expenses SET merchant=:merchant, occurred_at=:occurred_at, category=:category, notes=:notes,
                amount_minor=:amount_minor, payer_id=:payer_id, method=:method, allocations=:allocations,
-               input_values=:input_values, version=:version, updated_at=:updated_at
+               input_values=:input_values, version=:version, updated_at=:updated_at, deleted_at=:deleted_at
         WHERE id=:id
     ''').bindparams(sa.bindparam('allocations', type_=JSONB), sa.bindparam('input_values', type_=JSONB))
 
     def update_expense(self, db: Connection, values: dict) -> None:
         db.execute(self._expense_update, values)
 
-    def delete_expense(self, db: Connection, group_id: UUID, expense_id: UUID, version: int) -> bool:
-        result = db.execute(text('DELETE FROM expenses WHERE id=:id AND group_id=:g AND version=:v'),
-                            {'id': expense_id, 'g': group_id, 'v': version})
-        return result.rowcount == 1
+    def tombstone_expense(self, db: Connection, expense_id: UUID, now: datetime) -> None:
+        """Mark deleted and bump the version, so other devices see the delete and can still restore."""
+        db.execute(text('UPDATE expenses SET deleted_at=:now, updated_at=:now, version=version+1 WHERE id=:id'),
+                   {'now': now, 'id': expense_id})
 
     # --- settlements --------------------------------------------------------
     def settlements(self, db: Connection, group_id: UUID) -> list[Row]:
@@ -124,10 +124,12 @@ class GroupRepository:
 
     # --- receipts -----------------------------------------------------------
     def set_receipt(self, db: Connection, group_id: UUID, expense_id: UUID, data: bytes | None, mime: str | None) -> bool:
-        result = db.execute(text('UPDATE expenses SET receipt=:data, receipt_type=:mime WHERE id=:id AND group_id=:g'),
+        result = db.execute(text('''UPDATE expenses SET receipt=:data, receipt_type=:mime
+                                    WHERE id=:id AND group_id=:g AND deleted_at IS NULL'''),
                             {'data': data, 'mime': mime, 'id': expense_id, 'g': group_id})
         return result.rowcount == 1
 
     def receipt(self, db: Connection, group_id: UUID, expense_id: UUID) -> Row | None:
-        return db.execute(text('SELECT receipt, receipt_type FROM expenses WHERE id=:id AND group_id=:g'),
+        return db.execute(text('''SELECT receipt, receipt_type FROM expenses
+                                  WHERE id=:id AND group_id=:g AND deleted_at IS NULL'''),
                           {'id': expense_id, 'g': group_id}).fetchone()
