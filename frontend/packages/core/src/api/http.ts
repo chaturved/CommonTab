@@ -17,10 +17,13 @@ export interface HttpApiOptions {
   getToken: () => Promise<string | null> | string | null;
 }
 
+/** The API lives under this path (docs/shared-api.md). `/healthz` is the one route outside it. */
+export const API_PREFIX = '/v1';
+
 export class HttpApi implements Api {
   constructor(private readonly options: HttpApiOptions) {}
 
-  private async call<T>(method: string, path: string, body?: unknown, auth = true): Promise<T> {
+  private async call<T>(method: string, path: string, body?: unknown, auth = true, prefix = API_PREFIX): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (auth) {
@@ -29,7 +32,7 @@ export class HttpApi implements Api {
     }
     let response: FetchResponse;
     try {
-      response = await this.options.fetch(this.options.baseUrl + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      response = await this.options.fetch(this.options.baseUrl + prefix + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     } catch (error) {
       throw new ApiError(0, error instanceof Error ? error.message : 'Network request failed');
     }
@@ -54,7 +57,7 @@ export class HttpApi implements Api {
 
   async healthy(): Promise<boolean> {
     try {
-      await this.call('GET', '/healthz', undefined, false);
+      await this.call('GET', '/healthz', undefined, false, '');
       return true;
     } catch (error) {
       if (error instanceof ApiError && error.isNetwork) throw error;

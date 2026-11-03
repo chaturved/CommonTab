@@ -24,7 +24,14 @@ describe('HttpApi', () => {
   test('sends the bearer token and JSON, and returns the body', async () => {
     const { api, calls } = client([{ status: 200, body: { id: 'e' } }]);
     await api.putExpense('g', { id: 'e', merchant: 'm', occurredAt: 't', category: 'c', notes: '', amountMinor: 1, payerID: 'p', method: 'equal', participants: ['p'], values: [], version: null });
-    expect(calls[0]).toMatchObject({ url: 'https://api.test/groups/g/expenses/e', method: 'PUT', headers: { Authorization: 'Bearer secret-token', 'Content-Type': 'application/json' } });
+    expect(calls[0]).toMatchObject({ url: 'https://api.test/v1/groups/g/expenses/e', method: 'PUT', headers: { Authorization: 'Bearer secret-token', 'Content-Type': 'application/json' } });
+  });
+
+  test('calls go under /v1 and the health check does not', async () => {
+    const { api, calls } = client([{ status: 200, body: {} }, { status: 200, body: {} }]);
+    await api.listGroups();
+    await api.healthy();
+    expect(calls.map((c) => c.url)).toEqual(['https://api.test/v1/groups', 'https://api.test/healthz']);
   });
 
   test('sign-in and health calls carry no token', async () => {
