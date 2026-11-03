@@ -61,3 +61,31 @@ def test_errors_without_a_code_keep_the_plain_detail_shape(database):
     response = api.get(f'/v1/groups/{uuid4()}', headers=headers(ada))
     assert response.status_code == 404
     assert response.json() == {'detail': 'Group not found'}
+
+
+def test_retry_of_a_create_whose_response_was_lost_is_not_a_conflict(database):
+    api, ada, bob, group, record, url = setup(database)
+    before = api.get(f"/v1/groups/{group['id']}", headers=headers(ada)).json()
+    again = api.put(url, headers=headers(ada), json=record)  # same payload, version null, as if re-sent
+    assert again.status_code == 200
+    assert again.json()['version'] == 1
+    after = api.get(f"/v1/groups/{group['id']}", headers=headers(ada)).json()
+    assert len(after['expenses']) == 1
+    assert after['version'] == before['version']  # a replay changes nothing
+
+
+def test_retry_of_an_edit_whose_response_was_lost_is_not_a_conflict(database):
+    api, ada, bob, group, record, url = setup(database)
+    edit = {**record, 'version': 1, 'amountMinor': 20000}
+    first = api.put(url, headers=headers(ada), json=edit)
+    assert first.status_code == 200 and first.json()['version'] == 2
+    retry = api.put(url, headers=headers(ada), json=edit)  # still based on version 1
+    assert retry.status_code == 200
+    assert retry.json() == first.json()
+
+
+def test_same_content_with_a_stale_version_still_returns_the_current_record(database):
+    api, ada, bob, group, record, url = setup(database)
+    api.put(url, headers=headers(bob), json={**record, 'version': 1, 'amountMinor': 20000})
+    response = api.put(url, headers=headers(ada), json={**record, 'version': 1, 'amountMinor': 20000})
+    assert response.status_code == 200 and response.json()['version'] == 2

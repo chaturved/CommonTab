@@ -43,7 +43,9 @@ def test_allocation_balance_settlement_and_versions(database):
                                            {'memberID': bid, 'minorUnits': 5000}]
     current = api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()
     assert {v['memberID']: v['minorUnits'] for v in current['balances']} == {aid: 5000, bid: -5000}
-    assert api.put(url, headers=headers(ada), json=payload).status_code == 409
+    # Re-sending the identical create is a replay (200); a different body claiming to be new is a conflict.
+    assert api.put(url, headers=headers(ada), json=payload).status_code == 200
+    assert api.put(url, headers=headers(ada), json={**payload, 'amountMinor': 10000}).status_code == 409
     payload['version'] = 1
     payload['amountMinor'] = 10000
     assert api.put(url, headers=headers(bob), json=payload).json()['version'] == 2

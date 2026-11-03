@@ -140,6 +140,9 @@ class GroupService:
             if existing:
                 if existing.group_id != gid:
                     fail(409, 'Expense ID belongs to another group', 'id_conflict')
+                if self.same_content(existing, values):
+                    # A retry after a lost response (or an identical edit): the write is already there.
+                    return self.expense_payload(existing)
                 if input.version != existing.version:
                     fail(409, 'Expense changed; reload before saving', 'version_conflict',
                          current=self.expense_payload(existing))
@@ -150,6 +153,14 @@ class GroupService:
                 self.repository.insert_expense(db, {**values, 'version': 1})
             self.repository.bump_version(db, gid)
             return self.expense_payload(self.repository.expense(db, input.id))
+
+    @staticmethod
+    def same_content(row: Row, values: dict) -> bool:
+        return (row.merchant == values['merchant'] and row.occurred_at == values['occurred_at']
+                and row.category == values['category'] and row.notes == values['notes']
+                and row.amount_minor == values['amount_minor'] and row.payer_id == values['payer_id']
+                and row.method == values['method'] and row.allocations == values['allocations']
+                and row.input_values == values['input_values'])
 
     def delete_expense(self, group_id: str, expense_id: str, user_id: str, version: int) -> None:
         gid = UUID(group_id)
