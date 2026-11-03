@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import re
 from contextlib import contextmanager
+from functools import lru_cache
 from typing import Iterator
 
+from fastapi import Depends
 from sqlalchemy import Connection, Engine, create_engine, event, text
+
+from app.core.config import get_settings
 
 SCHEMA_NAME = re.compile(r'^[a-z_][a-z0-9_]{0,62}$')
 
@@ -43,3 +47,23 @@ class Database:
     def ping(self) -> None:
         with self.engine.connect() as connection:
             connection.execute(text('SELECT 1'))
+
+
+@lru_cache
+def get_database() -> Database:
+    """The one Database, created on first use. FastAPI dependency; tests override it."""
+    return Database(create_db_engine(get_settings().database_url))
+
+
+def get_db(database: Database = Depends(get_database)) -> Iterator[Connection]:
+    """
+    A connection inside one transaction: committed when the request handler returns, rolled back if it raises.
+    Used as `Depends(get_db, scope='function')`, which makes FastAPI run this cleanup before the response is sent,
+    so a client can never see a response for a write that has not been committed yet.
+    """
+    with database.transaction() as connection:
+        yield connection
+
+
+# What every repository takes as its connection.
+DbConnection = Depends(get_db, scope='function')

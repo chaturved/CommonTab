@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.domain.limits import MAX_RECEIPT_BYTES
 from app.repositories.groups import GroupRepository
@@ -11,8 +13,10 @@ from app.services.receipt_images import ReceiptImageProcessor
 
 
 class ReceiptService:
-    def __init__(self, receipts: ReceiptRepository, groups: GroupRepository, guard: MembershipGuard,
-                 images: ReceiptImageProcessor):
+    def __init__(self, receipts: ReceiptRepository = Depends(ReceiptRepository),
+                 groups: GroupRepository = Depends(GroupRepository),
+                 guard: MembershipGuard = Depends(MembershipGuard),
+                 images: ReceiptImageProcessor = Depends(ReceiptImageProcessor)):
         self.receipts = receipts
         self.groups = groups
         self.guard = guard

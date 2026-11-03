@@ -7,6 +7,8 @@ import sqlalchemy as sa
 from sqlalchemy import Connection, Row, text
 from sqlalchemy.dialects.postgresql import JSONB
 
+from app.core.db import DbConnection
+
 
 # Everything but the receipt bytes, which only the receipt endpoint needs.
 EXPENSE_COLUMNS = ('id, group_id, merchant, occurred_at, category, notes, amount_minor, payer_id, method, '
@@ -16,7 +18,7 @@ EXPENSE_COLUMNS = ('id, group_id, merchant, occurred_at, category, notes, amount
 class ExpenseRepository:
     """SQL only. Expenses and their tombstones. Receipt bytes are excluded from every query here."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def expenses(self, group_id: UUID) -> list[Row]:

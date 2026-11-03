@@ -4,9 +4,9 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_database, get_rate_limiters, get_settings
-from app.core.config import Settings
-from app.core.ratelimit import RateLimiters
+from app.core.config import Settings, get_settings
+from app.core.db import get_database
+from app.core.ratelimit import RateLimiters, get_rate_limiters
 from app.main import app
 
 

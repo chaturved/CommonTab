@@ -117,7 +117,7 @@ commontab/
     Dockerfile
     app/
       main.py                      # the app: wiring only
-      api/                         # deps.py (get_db, auth), routes/ (one router per resource)
+      api/                         # deps.py (auth, rate limit), routes/ (one router per resource)
       schemas/                     # request and response models
       services/                    # business rules
       repositories/                # SQL only

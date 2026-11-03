@@ -5,11 +5,13 @@ from uuid import UUID
 
 from sqlalchemy import Connection, Row, text
 
+from app.core.db import DbConnection
+
 
 class InvitationRepository:
     """SQL only. Invitation codes (only their hashes are stored)."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def insert_invitation(self, token_hash: str, group_id: UUID, email: str, expires_at: datetime,

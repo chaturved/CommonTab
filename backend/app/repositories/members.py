@@ -5,11 +5,13 @@ from uuid import UUID
 
 from sqlalchemy import Connection, Row, text
 
+from app.core.db import DbConnection
+
 
 class MemberRepository:
     """SQL only. The people in a group, with or without an account."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def member_of(self, group_id: UUID, user_id: UUID) -> Row | None:

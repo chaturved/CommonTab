@@ -4,6 +4,8 @@ from uuid import UUID
 
 from sqlalchemy import Row
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.repositories.members import MemberRepository
 
@@ -11,7 +13,7 @@ from app.repositories.members import MemberRepository
 class MembershipGuard:
     """Who may see a group: only its members."""
 
-    def __init__(self, members: MemberRepository):
+    def __init__(self, members: MemberRepository = Depends(MemberRepository)):
         self.members = members
 
     def require(self, group_id: UUID, user_id: UUID) -> Row:

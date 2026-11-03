@@ -9,15 +9,18 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Row
 
+from fastapi import Depends
+from app.core.config import Settings, get_settings
 from app.core.errors import fail
 from app.repositories.bill_sessions import BillSessionRepository
 from app.schemas.bill_sessions import Bill
 
 
 class BillSessionService:
-    def __init__(self, bill_sessions: BillSessionRepository, lifetime_seconds: int = 7 * 24 * 60 * 60):
+    def __init__(self, bill_sessions: BillSessionRepository = Depends(BillSessionRepository),
+                 settings: Settings = Depends(get_settings)):
         self.bill_sessions = bill_sessions
-        self.lifetime = timedelta(seconds=lifetime_seconds)
+        self.lifetime = timedelta(seconds=settings.bill_session_lifetime_seconds)
 
     @staticmethod
     def _hash(token: str) -> str:

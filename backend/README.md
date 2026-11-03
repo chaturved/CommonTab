@@ -3,8 +3,8 @@
 FastAPI service for accounts, shared groups, expenses, settlements, temporary bill sessions and aggregate analytics. Postgres (Supabase in production), Alembic migrations, a layered layout under `app/`:
 
 ```
-app/main.py          the FastAPI app: error handling, rate limit and routers; settings and database come from api/deps.py on first use
-app/api/             deps.py (get_db, repositories, services, current user) and routes/ (one module per resource)
+app/main.py          the FastAPI app: error handling, rate limit and routers; settings and database come from `get_settings` / `get_database` on first use
+app/api/             deps.py (service aliases, rate limit, bearer token, current user) and routes/ (one module per resource)
 app/schemas/         Pydantic request and response models
 app/services/        business rules; no SQL, no HTTP
 app/repositories/    SQL only; one class per aggregate

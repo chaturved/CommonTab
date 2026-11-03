@@ -8,8 +8,9 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError
 from sqlalchemy import Row
 
+from fastapi import Depends
 from app.core.errors import fail
-from app.core.security import hash_token
+from app.core.security import get_password_hasher, hash_token
 from app.domain.emails import normalize_email
 from app.repositories.users import UserRepository
 from app.schemas.accounts import AccountInput
@@ -18,7 +19,8 @@ TOKEN_LIFETIME = timedelta(days=30)
 
 
 class AccountService:
-    def __init__(self, users: UserRepository, passwords: PasswordHasher):
+    def __init__(self, users: UserRepository = Depends(UserRepository),
+                 passwords: PasswordHasher = Depends(get_password_hasher)):
         self.users = users
         self.passwords = passwords
 

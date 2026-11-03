@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.api.deps import DatabaseDep
+from app.core.db import Database, get_database
 
 router = APIRouter()
 
 
 @router.get('/healthz')
 @router.get('/health')  # older name, same behavior
-def health(database: DatabaseDep) -> JSONResponse:
+def health(database: Database = Depends(get_database)) -> JSONResponse:
     """
     Lets the app tell "server down" from "no connection": 200 when the API can reach its database,
     503 otherwise. Reveals nothing else.

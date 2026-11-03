@@ -4,11 +4,13 @@ from uuid import UUID
 
 from sqlalchemy import Connection, Row, text
 
+from app.core.db import DbConnection
+
 
 class ReceiptRepository:
     """SQL only. Receipt images, kept apart so listing expenses never loads their bytes."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def set_receipt(self, group_id: UUID, expense_id: UUID, data: bytes | None, mime: str | None) -> bool:

@@ -4,6 +4,8 @@ from uuid import UUID
 
 from sqlalchemy import Row
 
+from fastapi import Depends
+
 from app.domain.rules import balances, format_utc
 from app.repositories.expenses import ExpenseRepository
 from app.repositories.groups import GroupRepository
@@ -33,8 +35,10 @@ def settlement_payload(row: Row) -> dict:
 class SnapshotBuilder:
     """The complete picture of one group as the signed-in member sees it (what `GET /groups/{id}` returns)."""
 
-    def __init__(self, groups: GroupRepository, members: MemberRepository, expenses: ExpenseRepository,
-                 settlements: SettlementRepository):
+    def __init__(self, groups: GroupRepository = Depends(GroupRepository),
+                 members: MemberRepository = Depends(MemberRepository),
+                 expenses: ExpenseRepository = Depends(ExpenseRepository),
+                 settlements: SettlementRepository = Depends(SettlementRepository)):
         self.groups = groups
         self.members = members
         self.expenses = expenses

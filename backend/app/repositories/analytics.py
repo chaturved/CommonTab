@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from sqlalchemy import Connection, text
 
+from app.core.db import DbConnection
+
 
 class AnalyticsRepository:
     """Aggregate counts only: an allowlisted event name and A/B variant, nothing about the user."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def record(self, name: str, variant: str) -> None:

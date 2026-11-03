@@ -5,6 +5,8 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.core.security import hash_token
 from app.domain.emails import normalize_email
@@ -19,8 +21,11 @@ INVITE_LIFETIME = timedelta(days=7)
 
 
 class InvitationService:
-    def __init__(self, invitations: InvitationRepository, members: MemberRepository, groups: GroupRepository,
-                 users: UserRepository, guard: MembershipGuard, snapshots: SnapshotBuilder):
+    def __init__(self, invitations: InvitationRepository = Depends(InvitationRepository),
+                 members: MemberRepository = Depends(MemberRepository),
+                 groups: GroupRepository = Depends(GroupRepository), users: UserRepository = Depends(UserRepository),
+                 guard: MembershipGuard = Depends(MembershipGuard),
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
         self.invitations = invitations
         self.members = members
         self.groups = groups

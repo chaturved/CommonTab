@@ -5,11 +5,13 @@ from uuid import UUID
 
 from sqlalchemy import Connection, Row, text
 
+from app.core.db import DbConnection
+
 
 class GroupRepository:
     """SQL only. Groups: lookup, creation, rename and the version that changes with every write."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def group(self, group_id: UUID, lock: bool = False) -> Row:

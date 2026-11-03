@@ -7,11 +7,13 @@ import sqlalchemy as sa
 from sqlalchemy import Connection, Row, text
 from sqlalchemy.dialects.postgresql import JSONB
 
+from app.core.db import DbConnection
+
 
 class BillSessionRepository:
     """SQL only. Authorization, expiry and versioning rules live in BillSessionService."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def delete_expired(self, now: datetime) -> None:

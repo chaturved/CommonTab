@@ -3,11 +3,12 @@ from __future__ import annotations
 import hashlib
 import time
 from collections import deque
+from functools import lru_cache
 from typing import Callable
 
 from fastapi import Request
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 
 AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions'}
 EXEMPT_PATHS = {'/healthz', '/health'}
@@ -69,3 +70,8 @@ class RateLimiters:
         bearer = request.headers.get('authorization', '')
         key = 'token:' + hashlib.sha256(bearer.encode()).hexdigest()[:16] if bearer.startswith('Bearer ') else f'ip:{ip}'
         return self.api.check(key)
+
+
+@lru_cache
+def get_rate_limiters() -> RateLimiters:
+    return RateLimiters(get_settings())

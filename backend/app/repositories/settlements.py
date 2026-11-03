@@ -5,11 +5,13 @@ from uuid import UUID
 
 from sqlalchemy import Connection, Row, text
 
+from app.core.db import DbConnection
+
 
 class SettlementRepository:
     """SQL only. Payments between members. Append-only."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def settlements(self, group_id: UUID) -> list[Row]:

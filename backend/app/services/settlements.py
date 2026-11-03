@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.repositories.groups import GroupRepository
 from app.repositories.settlements import SettlementRepository
@@ -12,8 +14,10 @@ from app.services.snapshots import SnapshotBuilder, settlement_payload
 
 
 class SettlementService:
-    def __init__(self, settlements: SettlementRepository, groups: GroupRepository, guard: MembershipGuard,
-                 snapshots: SnapshotBuilder):
+    def __init__(self, settlements: SettlementRepository = Depends(SettlementRepository),
+                 groups: GroupRepository = Depends(GroupRepository),
+                 guard: MembershipGuard = Depends(MembershipGuard),
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
         self.settlements = settlements
         self.groups = groups
         self.guard = guard

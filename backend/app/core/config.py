@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -52,3 +53,9 @@ def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE
         rate_limit_per_minute=int(env.get('RATE_LIMIT_PER_MINUTE', defaults.rate_limit_per_minute)),
         trust_proxy=env.get('TRUST_PROXY', '').lower() in ('1', 'true', 'yes'),
     )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """The settings, read once from the environment. FastAPI dependency; tests override it."""
+    return load_settings()

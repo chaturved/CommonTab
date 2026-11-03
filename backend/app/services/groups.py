@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
@@ -15,8 +17,10 @@ from app.services.snapshots import SnapshotBuilder, member_payload
 class GroupService:
     """Groups and the people in them."""
 
-    def __init__(self, groups: GroupRepository, members: MemberRepository, users: UserRepository,
-                 guard: MembershipGuard, snapshots: SnapshotBuilder):
+    def __init__(self, groups: GroupRepository = Depends(GroupRepository),
+                 members: MemberRepository = Depends(MemberRepository), users: UserRepository = Depends(UserRepository),
+                 guard: MembershipGuard = Depends(MembershipGuard),
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
         self.groups = groups
         self.members = members
         self.users = users

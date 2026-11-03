@@ -5,6 +5,8 @@ from uuid import UUID
 
 from sqlalchemy import Row
 
+from fastapi import Depends
+
 from app.core.errors import fail
 from app.domain.rules import allocation, parse_utc
 from app.repositories.expenses import ExpenseRepository
@@ -16,8 +18,10 @@ from app.services.snapshots import expense_payload
 
 
 class ExpenseService:
-    def __init__(self, expenses: ExpenseRepository, members: MemberRepository, groups: GroupRepository,
-                 guard: MembershipGuard):
+    def __init__(self, expenses: ExpenseRepository = Depends(ExpenseRepository),
+                 members: MemberRepository = Depends(MemberRepository),
+                 groups: GroupRepository = Depends(GroupRepository),
+                 guard: MembershipGuard = Depends(MembershipGuard)):
         self.expenses = expenses
         self.members = members
         self.groups = groups
