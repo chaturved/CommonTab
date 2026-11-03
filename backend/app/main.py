@@ -3,7 +3,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from app.api.errors import install_error_handlers
-from app.api.routes import accounts, analytics, bill_sessions, groups, health
+from app.api.routes import (accounts, analytics, bill_sessions, expenses, groups, health, invitations, receipts,
+                            settlements)
 from app.container import build_container
 from app.core.config import Settings, load_settings
 from app.core.db import Database, create_db_engine
@@ -22,6 +23,6 @@ def create_app(database: Database | None = None, lifetime_seconds: int = 7 * 24 
     app.state.container = build_container(database, settings, lifetime_seconds)
     install_error_handlers(app)
     install_rate_limits(app, settings)
-    for module in (accounts, groups, bill_sessions, analytics, health):
+    for module in (accounts, groups, invitations, expenses, settlements, receipts, bill_sessions, analytics, health):
         app.include_router(module.router)
     return app

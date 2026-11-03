@@ -7,7 +7,12 @@ from sqlalchemy import Connection
 from app.core.db import Database
 from app.repositories.analytics import AnalyticsRepository
 from app.repositories.bill_sessions import BillSessionRepository
+from app.repositories.expenses import ExpenseRepository
 from app.repositories.groups import GroupRepository
+from app.repositories.invitations import InvitationRepository
+from app.repositories.members import MemberRepository
+from app.repositories.receipts import ReceiptRepository
+from app.repositories.settlements import SettlementRepository
 from app.repositories.users import UserRepository
 
 
@@ -24,6 +29,11 @@ class UnitOfWork:
 
     users: UserRepository
     groups: GroupRepository
+    members: MemberRepository
+    invitations: InvitationRepository
+    expenses: ExpenseRepository
+    settlements: SettlementRepository
+    receipts: ReceiptRepository
     bill_sessions: BillSessionRepository
     analytics: AnalyticsRepository
 
@@ -42,6 +52,11 @@ class UnitOfWork:
     def _attach(self, connection: Connection) -> None:
         self.users = UserRepository(connection)
         self.groups = GroupRepository(connection)
+        self.members = MemberRepository(connection)
+        self.invitations = InvitationRepository(connection)
+        self.expenses = ExpenseRepository(connection)
+        self.settlements = SettlementRepository(connection)
+        self.receipts = ReceiptRepository(connection)
         self.bill_sessions = BillSessionRepository(connection)
         self.analytics = AnalyticsRepository(connection)
 

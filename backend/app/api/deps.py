@@ -8,7 +8,11 @@ from app.container import Container
 from app.services.accounts import AccountService
 from app.services.analytics import AnalyticsService
 from app.services.bill_sessions import BillSessionService
+from app.services.expenses import ExpenseService
 from app.services.groups import GroupService
+from app.services.invitations import InvitationService
+from app.services.receipts import ReceiptService
+from app.services.settlements import SettlementService
 
 
 def get_container(request: Request) -> Container:
@@ -26,6 +30,22 @@ def get_groups(container: ContainerDep) -> GroupService:
     return container.groups
 
 
+def get_invitations(container: ContainerDep) -> InvitationService:
+    return container.invitations
+
+
+def get_expenses(container: ContainerDep) -> ExpenseService:
+    return container.expenses
+
+
+def get_settlements(container: ContainerDep) -> SettlementService:
+    return container.settlements
+
+
+def get_receipts(container: ContainerDep) -> ReceiptService:
+    return container.receipts
+
+
 def get_bill_sessions(container: ContainerDep) -> BillSessionService:
     return container.bill_sessions
 
@@ -36,6 +56,10 @@ def get_analytics(container: ContainerDep) -> AnalyticsService:
 
 AccountsDep = Annotated[AccountService, Depends(get_accounts)]
 GroupsDep = Annotated[GroupService, Depends(get_groups)]
+InvitationsDep = Annotated[InvitationService, Depends(get_invitations)]
+ExpensesDep = Annotated[ExpenseService, Depends(get_expenses)]
+SettlementsDep = Annotated[SettlementService, Depends(get_settlements)]
+ReceiptsDep = Annotated[ReceiptService, Depends(get_receipts)]
 BillSessionsDep = Annotated[BillSessionService, Depends(get_bill_sessions)]
 AnalyticsDep = Annotated[AnalyticsService, Depends(get_analytics)]
 
