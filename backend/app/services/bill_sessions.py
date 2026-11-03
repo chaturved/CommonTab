@@ -9,9 +9,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Row
 
-from app.core.db import Database
+from app.repositories.unit_of_work import UnitOfWorkFactory
 from app.schemas.bill_sessions import Bill
-from app.repositories.bill_sessions import BillSessionRepository
 
 
 class SessionMissing(Exception):
@@ -27,11 +26,9 @@ class VersionConflict(Exception):
 
 
 class BillSessionService:
-    def __init__(self, db: Database, lifetime_seconds: int = 7 * 24 * 60 * 60,
-                 repository: BillSessionRepository | None = None):
-        self.db = db
+    def __init__(self, uow: UnitOfWorkFactory, lifetime_seconds: int = 7 * 24 * 60 * 60):
+        self.uow = uow
         self.lifetime = timedelta(seconds=lifetime_seconds)
-        self.repository = repository or BillSessionRepository()
 
     @staticmethod
     def _hash(token: str) -> str:
@@ -51,25 +48,25 @@ class BillSessionService:
         token = secrets.token_urlsafe(32)
         now = datetime.now(timezone.utc)
         expiry = now + self.lifetime
-        with self.db.transaction() as db:
-            self.repository.delete_expired(db, now)
-            self.repository.insert(db, session_id, self._hash(token), self._json(bill), expiry)
+        with self.uow() as uow:
+            uow.bill_sessions.delete_expired(now)
+            uow.bill_sessions.insert(session_id, self._hash(token), self._json(bill), expiry)
         return {'id': session_id, 'accessToken': token, 'version': 1, 'expiresAt': expiry.isoformat(),
                 'bill': bill.model_dump(mode='json', by_alias=True)}
 
     def get(self, session_id: UUID, token: str) -> dict:
-        with self.db.transaction() as db:
-            row = self.repository.get(db, session_id)
+        with self.uow() as uow:
+            row = uow.bill_sessions.get(session_id)
         self._authorize(row, token)
         return self._payload(row)
 
     def update(self, session_id: UUID, token: str, version: int, bill: Bill) -> dict:
-        with self.db.transaction() as db:
-            row = self.repository.get(db, session_id)
+        with self.uow() as uow:
+            row = uow.bill_sessions.get(session_id)
             self._authorize(row, token)
-            if not self.repository.update(db, session_id, version, self._json(bill), datetime.now(timezone.utc)):
+            if not uow.bill_sessions.update(session_id, version, self._json(bill), datetime.now(timezone.utc)):
                 raise VersionConflict
-            return self._payload(self.repository.get(db, session_id))
+            return self._payload(uow.bill_sessions.get(session_id))
 
     def _authorize(self, row: Row | None, token: str) -> None:
         if row is None or not hmac.compare_digest(row.token_hash, self._hash(token)):

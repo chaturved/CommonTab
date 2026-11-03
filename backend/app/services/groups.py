@@ -7,13 +7,13 @@ from io import BytesIO
 from uuid import UUID, uuid4
 
 from PIL import Image, ImageOps, UnidentifiedImageError
-from sqlalchemy import Connection, Row
+from sqlalchemy import Row
 
-from app.services.accounts import AccountService
-from app.core.db import Database
+from app.core.security import hash_token
+from app.domain.emails import normalize_email
+from app.repositories.unit_of_work import UnitOfWork, UnitOfWorkFactory
 from app.core.errors import fail
 from app.schemas.groups import ExpenseInput, GroupInput, SettlementInput
-from app.repositories.groups import GroupRepository
 from app.domain.rules import allocation, balances, format_utc, parse_utc
 
 INVITE_LIFETIME = timedelta(days=7)
@@ -21,26 +21,24 @@ MAX_RECEIPT_BYTES = 5 * 1024 * 1024
 
 
 class GroupService:
-    def __init__(self, db: Database, accounts: AccountService, repository: GroupRepository | None = None):
-        self.db = db
-        self.accounts = accounts
-        self.repository = repository or GroupRepository()
+    def __init__(self, uow: UnitOfWorkFactory):
+        self.uow = uow
 
     # --- reading ------------------------------------------------------------
-    def require_member(self, db: Connection, group_id: UUID, user_id: UUID) -> Row:
+    def require_member(self, uow: UnitOfWork, group_id: UUID, user_id: UUID) -> Row:
         """The member linked to this account. Accounts that are not in the group get 404 (it may not exist)."""
-        me = self.repository.member_of(db, group_id, user_id)
+        me = uow.groups.member_of(group_id, user_id)
         if me is None:
             fail(404, 'Group not found')
         return me
 
-    def snapshot(self, db: Connection, group_id: UUID, user_id: UUID) -> dict:
-        group = self.repository.group(db, group_id)
-        members = self.repository.members(db, group_id)
-        rows = self.repository.expenses(db, group_id)
+    def snapshot(self, uow: UnitOfWork, group_id: UUID, user_id: UUID) -> dict:
+        group = uow.groups.group(group_id)
+        members = uow.groups.members(group_id)
+        rows = uow.groups.expenses(group_id)
         expenses = [self.expense_payload(row) for row in rows if row.deleted_at is None]
         deleted = [self.expense_payload(row) for row in rows if row.deleted_at is not None]
-        settlements = [self.settlement_payload(row) for row in self.repository.settlements(db, group_id)]
+        settlements = [self.settlement_payload(row) for row in uow.groups.settlements(group_id)]
         member_ids = [str(member.id) for member in members]
         by_user = {m.user_id: m.id for m in members if m.user_id is not None}
         return {
@@ -53,14 +51,14 @@ class GroupService:
 
     def group(self, group_id: str, user_id: str) -> dict:
         gid, uid = UUID(group_id), UUID(user_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, uid)
-            return self.snapshot(db, gid, uid)
+        with self.uow() as uow:
+            self.require_member(uow, gid, uid)
+            return self.snapshot(uow, gid, uid)
 
     def groups(self, user_id: str) -> list[dict]:
         uid = UUID(user_id)
-        with self.db.transaction() as db:
-            return [self.snapshot(db, gid, uid) for gid in self.repository.group_ids_for_user(db, uid)]
+        with self.uow() as uow:
+            return [self.snapshot(uow, gid, uid) for gid in uow.groups.group_ids_for_user(uid)]
 
     # --- groups, invitations ------------------------------------------------
     def create_group(self, user_id: str, input: GroupInput) -> tuple[dict, bool]:
@@ -75,37 +73,37 @@ class GroupService:
         group_id = input.id or uuid4()
         uid = UUID(user_id)
         now = datetime.now(timezone.utc)
-        with self.db.transaction() as db:
-            if not self.repository.insert_group(db, group_id, name, input.currency_code, uid, now):
-                return self.replay_group(db, group_id, uid, name, input), False
+        with self.uow() as uow:
+            if not uow.groups.insert_group(group_id, name, input.currency_code, uid, now):
+                return self.replay_group(uow, group_id, uid, name, input), False
             if input.members is None:
-                people = [(uuid4(), uid, self.accounts.name_of(db, uid))]
+                people = [(uuid4(), uid, uow.users.user_by_id(uid).name)]
             else:
                 people = [(m.id, uid if m.id == input.me_member_id else None, m.name.strip()) for m in input.members]
             for member_id, member_user, member_name in people:
-                if not self.repository.insert_member(db, member_id, group_id, member_user, member_name, now):
+                if not uow.groups.insert_member(member_id, group_id, member_user, member_name, now):
                     fail(409, 'Member ID already in use', 'id_conflict')
-            return self.snapshot(db, group_id, uid), True
+            return self.snapshot(uow, group_id, uid), True
 
-    def replay_group(self, db: Connection, group_id: UUID, uid: UUID, name: str, input: GroupInput) -> dict:
-        group = self.repository.group(db, group_id)
-        me = self.repository.member_of(db, group_id, uid)
+    def replay_group(self, uow: UnitOfWork, group_id: UUID, uid: UUID, name: str, input: GroupInput) -> dict:
+        group = uow.groups.group(group_id)
+        me = uow.groups.member_of(group_id, uid)
         if me is None or group.name != name or group.currency_code != input.currency_code:
             fail(409, 'Group ID already in use', 'id_conflict')
         if input.members is not None:
-            existing = {m.id: m.name for m in self.repository.members(db, group_id)}
+            existing = {m.id: m.name for m in uow.groups.members(group_id)}
             if me.id != input.me_member_id or any(existing.get(m.id) != m.name.strip() for m in input.members):
                 fail(409, 'Group ID already in use', 'id_conflict')
-        return self.snapshot(db, group_id, uid)
+        return self.snapshot(uow, group_id, uid)
 
     def rename_group(self, group_id: str, user_id: str, name: str) -> dict:
         if not name.strip():
             fail(422, 'Group name is required')
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            self.repository.rename_group(db, gid, name.strip())
-            return self.snapshot(db, gid, UUID(user_id))
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            uow.groups.rename_group(gid, name.strip())
+            return self.snapshot(uow, gid, UUID(user_id))
 
     def put_member(self, group_id: str, member_id: str, user_id: str, name: str) -> dict:
         """
@@ -116,18 +114,18 @@ class GroupService:
         if not name:
             fail(422, 'Name is required')
         gid, mid = UUID(group_id), UUID(member_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            existing = self.repository.member(db, mid, lock=True)
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            existing = uow.groups.member(mid, lock=True)
             if existing is None:
-                self.repository.insert_member(db, mid, gid, None, name, datetime.now(timezone.utc))
-                self.repository.bump_version(db, gid)
+                uow.groups.insert_member(mid, gid, None, name, datetime.now(timezone.utc))
+                uow.groups.bump_version(gid)
             elif existing.group_id != gid:
                 fail(409, 'Member ID belongs to another group', 'id_conflict')
             elif existing.name != name:
-                self.repository.rename_member(db, mid, name)
-                self.repository.bump_version(db, gid)
-            return self.member_payload(self.repository.member(db, mid))
+                uow.groups.rename_member(mid, name)
+                uow.groups.bump_version(gid)
+            return self.member_payload(uow.groups.member(mid))
 
     @staticmethod
     def member_payload(row: Row) -> dict:
@@ -135,47 +133,47 @@ class GroupService:
                 'email': row.email}
 
     def invite(self, group_id: str, user_id: str, email: str, member_id: UUID | None = None) -> dict:
-        email = self.accounts.email(email)
+        email = normalize_email(email)
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            if self.repository.is_member_email(db, gid, email):
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            if uow.groups.is_member_email(gid, email):
                 fail(409, 'Already a member')
             if member_id is not None:
-                person = self.repository.member(db, member_id)
+                person = uow.groups.member(member_id)
                 if person is None or person.group_id != gid:
                     fail(422, 'That person is not in this group')
                 if person.user_id is not None:
                     fail(422, 'That person already has an account')
             token = secrets.token_urlsafe(32)
             expires = datetime.now(timezone.utc) + INVITE_LIFETIME
-            self.repository.insert_invitation(db, self.accounts.token_hash(token), gid, email, expires, member_id)
+            uow.groups.insert_invitation(hash_token(token), gid, email, expires, member_id)
         return {'inviteToken': token, 'expiresAt': expires.isoformat(), 'email': email, 'groupID': group_id,
                 'memberID': str(member_id) if member_id else None}
 
     def accept_invite(self, user_id: str, token: str) -> dict:
         uid = UUID(user_id)
-        with self.db.transaction() as db:
-            token_hash = self.accounts.token_hash(token)
-            row = self.repository.invitation(db, token_hash)
-            email = self.accounts.email_of(db, uid)
+        with self.uow() as uow:
+            token_hash = hash_token(token)
+            row = uow.groups.invitation(token_hash)
+            email = uow.users.user_by_id(uid).email
             now = datetime.now(timezone.utc)
             if row is None or row.expires_at <= now or row.accepted_at is not None:
                 fail(404, 'Invitation missing or expired')
             if not hmac.compare_digest(row.email, email):
                 fail(403, 'Invitation belongs to a different email')
-            if self.repository.member_of(db, row.group_id, uid) is not None:
+            if uow.groups.member_of(row.group_id, uid) is not None:
                 fail(409, 'Already a member')
             if row.member_id is not None:
-                person = self.repository.member(db, row.member_id, lock=True)
+                person = uow.groups.member(row.member_id, lock=True)
                 if person.user_id is not None:
                     fail(409, 'That person was already linked to an account', 'id_conflict')
-                self.repository.link_member(db, person.id, uid)  # past expenses become this account's
+                uow.groups.link_member(person.id, uid)  # past expenses become this account's
             else:
-                self.repository.insert_member(db, uuid4(), row.group_id, uid, self.accounts.name_of(db, uid), now)
-            self.repository.accept_invitation(db, token_hash, now)
-            self.repository.bump_version(db, row.group_id)
-            return self.snapshot(db, row.group_id, uid)
+                uow.groups.insert_member(uuid4(), row.group_id, uid, uow.users.user_by_id(uid).name, now)
+            uow.groups.accept_invitation(token_hash, now)
+            uow.groups.bump_version(row.group_id)
+            return self.snapshot(uow, row.group_id, uid)
 
     # --- payloads -----------------------------------------------------------
     @staticmethod
@@ -200,12 +198,12 @@ class GroupService:
         gid, uid = UUID(group_id), UUID(user_id)
         participants = [str(member) for member in input.participants]
         allocations = allocation(input.amount_minor, input.method, participants, input.values)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, uid)
-            members = self.repository.member_ids(db, gid)
+        with self.uow() as uow:
+            self.require_member(uow, gid, uid)
+            members = uow.groups.member_ids(gid)
             if input.payer_id not in members or not set(input.participants).issubset(members):
                 fail(422, 'Payer and participants must belong to the group')
-            existing = self.repository.expense(db, input.id, lock=True)
+            existing = uow.groups.expense(input.id, lock=True)
             values = {
                 'id': input.id, 'group_id': gid, 'merchant': input.merchant.strip(), 'occurred_at': occurred_at,
                 'category': input.category, 'notes': input.notes, 'amount_minor': input.amount_minor,
@@ -219,7 +217,7 @@ class GroupService:
                     # Deleted: only an explicit restore (based on the tombstone's own version) goes through.
                     if input.version != existing.version:
                         fail(409, 'Expense was deleted', 'version_conflict', current=self.expense_payload(existing))
-                    self.repository.update_expense(db, {**values, 'version': existing.version + 1, 'deleted_at': None})
+                    uow.groups.update_expense({**values, 'version': existing.version + 1, 'deleted_at': None})
                 elif self.same_content(existing, values):
                     # A retry after a lost response (or an identical edit): the write is already there.
                     return self.expense_payload(existing)
@@ -227,13 +225,13 @@ class GroupService:
                     if input.version != existing.version:
                         fail(409, 'Expense changed; reload before saving', 'version_conflict',
                              current=self.expense_payload(existing))
-                    self.repository.update_expense(db, {**values, 'version': existing.version + 1, 'deleted_at': None})
+                    uow.groups.update_expense({**values, 'version': existing.version + 1, 'deleted_at': None})
             else:
                 if input.version is not None:
                     fail(409, 'Expense missing; reload before saving', 'not_found')
-                self.repository.insert_expense(db, {**values, 'version': 1})
-            self.repository.bump_version(db, gid)
-            return self.expense_payload(self.repository.expense(db, input.id))
+                uow.groups.insert_expense({**values, 'version': 1})
+            uow.groups.bump_version(gid)
+            return self.expense_payload(uow.groups.expense(input.id))
 
     @staticmethod
     def same_content(row: Row, values: dict) -> bool:
@@ -249,15 +247,15 @@ class GroupService:
         The row stays as a tombstone so other devices learn about the delete (and can restore it).
         """
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            existing = self.repository.expense(db, UUID(expense_id), lock=True)
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            existing = uow.groups.expense(UUID(expense_id), lock=True)
             if existing is None or existing.deleted_at is not None:
                 return  # nothing to delete: the end state is what the caller wanted
             if existing.group_id != gid:
                 fail(404, 'Expense not found')
-            self.repository.tombstone_expense(db, existing.id, datetime.now(timezone.utc))
-            self.repository.bump_version(db, gid)
+            uow.groups.tombstone_expense(existing.id, datetime.now(timezone.utc))
+            uow.groups.bump_version(gid)
 
     # --- settlements --------------------------------------------------------
     def settle(self, group_id: str, user_id: str, input: SettlementInput) -> tuple[dict, bool]:
@@ -267,21 +265,21 @@ class GroupService:
         same payload) returns the stored settlement instead of an error, so a retry cannot fail or duplicate.
         """
         gid, uid = UUID(group_id), UUID(user_id)
-        with self.db.transaction() as db:
-            me = self.require_member(db, gid, uid)
+        with self.uow() as uow:
+            me = self.require_member(uow, gid, uid)
             # Serialize writers on this group so two payments cannot both pass the balance check.
-            self.repository.group(db, gid, lock=True)
+            uow.groups.group(gid, lock=True)
             from_id, to_id = str(input.from_id), str(input.to_id)
             if me.id not in (input.from_id, input.to_id):
                 fail(403, 'Only a settlement participant may record it')
-            existing = self.repository.settlement(db, input.id)
+            existing = uow.groups.settlement(input.id)
             if existing is not None:
                 same = (existing.group_id == gid and existing.from_id == input.from_id
                         and existing.to_id == input.to_id and existing.amount_minor == input.amount_minor)
                 if not same:
                     fail(409, 'Settlement ID already used for a different payment', 'id_conflict')
                 return self.settlement_payload(existing), False
-            group = self.snapshot(db, gid, uid)
+            group = self.snapshot(uow, gid, uid)
             balance = {item['memberID']: item['minorUnits'] for item in group['balances']}
             if from_id == to_id or from_id not in balance or to_id not in balance:
                 fail(422, 'Settlement members must be different group members')
@@ -289,10 +287,10 @@ class GroupService:
             if input.amount_minor > owed:
                 fail(422, 'Nothing is owed between these members' if owed == 0
                      else 'Settlement exceeds outstanding balance', 'exceeds_balance', maxAmountMinor=owed)
-            self.repository.insert_settlement(db, input.id, gid, input.from_id, input.to_id, input.amount_minor,
+            uow.groups.insert_settlement(input.id, gid, input.from_id, input.to_id, input.amount_minor,
                                               datetime.now(timezone.utc))
-            self.repository.bump_version(db, gid)
-            return self.settlement_payload(self.repository.settlement(db, input.id)), True
+            uow.groups.bump_version(gid)
+            return self.settlement_payload(uow.groups.settlement(input.id)), True
 
     # --- receipts -----------------------------------------------------------
     def put_receipt(self, group_id: str, expense_id: str, user_id: str, data: bytes, mime: str) -> dict:
@@ -302,14 +300,14 @@ class GroupService:
            (mime == 'image/png' and not data.startswith(b'\x89PNG\r\n\x1a\n')):
             fail(422, 'Receipt content does not match its type')
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
         data = self.normalized_jpeg(data, mime)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            if not self.repository.set_receipt(db, gid, UUID(expense_id), data, 'image/jpeg'):
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            if not uow.groups.set_receipt(gid, UUID(expense_id), data, 'image/jpeg'):
                 fail(404, 'Expense not found')
-            self.repository.bump_version(db, gid)
+            uow.groups.bump_version(gid)
         return {'hasReceipt': True}
 
     @staticmethod
@@ -337,17 +335,17 @@ class GroupService:
 
     def get_receipt(self, group_id: str, expense_id: str, user_id: str) -> tuple[bytes, str]:
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            row = self.repository.receipt(db, gid, UUID(expense_id))
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            row = uow.groups.receipt(gid, UUID(expense_id))
         if row is None or row.receipt is None:
             fail(404, 'Receipt not found')
         return bytes(row.receipt), row.receipt_type
 
     def delete_receipt(self, group_id: str, expense_id: str, user_id: str) -> None:
         gid = UUID(group_id)
-        with self.db.transaction() as db:
-            self.require_member(db, gid, UUID(user_id))
-            if not self.repository.set_receipt(db, gid, UUID(expense_id), None, None):
+        with self.uow() as uow:
+            self.require_member(uow, gid, UUID(user_id))
+            if not uow.groups.set_receipt(gid, UUID(expense_id), None, None):
                 fail(404, 'Expense not found')
-            self.repository.bump_version(db, gid)
+            uow.groups.bump_version(gid)

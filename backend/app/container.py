@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from argon2 import PasswordHasher
+
 from app.core.config import Settings
 from app.core.db import Database
-from app.repositories.analytics import AnalyticsRepository
+from app.repositories.unit_of_work import unit_of_work_factory
 from app.services.accounts import AccountService
+from app.services.analytics import AnalyticsService
 from app.services.bill_sessions import BillSessionService
 from app.services.groups import GroupService
 
@@ -19,16 +22,16 @@ class Container:
     accounts: AccountService
     groups: GroupService
     bill_sessions: BillSessionService
-    analytics: AnalyticsRepository
+    analytics: AnalyticsService
 
 
 def build_container(database: Database, settings: Settings, bill_session_lifetime_seconds: int) -> Container:
-    accounts = AccountService(database)
+    uow = unit_of_work_factory(database)
     return Container(
         settings=settings,
         database=database,
-        accounts=accounts,
-        groups=GroupService(database, accounts),
-        bill_sessions=BillSessionService(database, lifetime_seconds=bill_session_lifetime_seconds),
-        analytics=AnalyticsRepository(database),
+        accounts=AccountService(uow, PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)),
+        groups=GroupService(uow),
+        bill_sessions=BillSessionService(uow, lifetime_seconds=bill_session_lifetime_seconds),
+        analytics=AnalyticsService(uow),
     )

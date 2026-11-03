@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException, Request
 
 from app.container import Container
-from app.repositories.analytics import AnalyticsRepository
 from app.services.accounts import AccountService
+from app.services.analytics import AnalyticsService
 from app.services.bill_sessions import BillSessionService
 from app.services.groups import GroupService
 
@@ -30,14 +30,14 @@ def get_bill_sessions(container: ContainerDep) -> BillSessionService:
     return container.bill_sessions
 
 
-def get_analytics(container: ContainerDep) -> AnalyticsRepository:
+def get_analytics(container: ContainerDep) -> AnalyticsService:
     return container.analytics
 
 
 AccountsDep = Annotated[AccountService, Depends(get_accounts)]
 GroupsDep = Annotated[GroupService, Depends(get_groups)]
 BillSessionsDep = Annotated[BillSessionService, Depends(get_bill_sessions)]
-AnalyticsDep = Annotated[AnalyticsRepository, Depends(get_analytics)]
+AnalyticsDep = Annotated[AnalyticsService, Depends(get_analytics)]
 
 
 def bearer_token(authorization: Annotated[str | None, Header()] = None) -> str:
