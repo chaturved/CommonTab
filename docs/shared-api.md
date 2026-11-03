@@ -1,11 +1,11 @@
 # Shared expense API
 
-Base path: `/v1`. Everyone in a group is a **member**: a person with a name who may or may not have an account. Member ids (not account ids) are what expenses, splits, balances and payments refer to. The OpenAPI schema is available at `/openapi.json`. Protected routes require `Authorization: Bearer <accessToken>`. Request and response JSON use camel case for shared expense fields. All money is an integer count of the group's minor currency unit: USD 1250 represents $12.50; JPY 1250 represents ¥1,250.
+Base path: `/v1`. Everyone in a group is a **member**: a person with a name who may or may not have an account. Member ids (not account ids) are what expenses, splits, balances and payments refer to. The OpenAPI schema is available at `/openapi.json`. Protected routes accept `Authorization: Bearer <accessToken>` (native apps) or the httpOnly session cookie `commontab_session` (the web app; the browser sends it, script cannot read it). A write that authenticates by cookie must also send the header `X-CommonTab-Client: 1` (CSRF protection); bearer requests do not need it. The header wins if both are present. Request and response JSON use camel case for shared expense fields. All money is an integer count of the group's minor currency unit: USD 1250 represents $12.50; JPY 1250 represents ¥1,250.
 
 ## Accounts and groups
 
 - `POST /accounts` with `{email,name,password}` creates an account and returns `{accessToken,expiresAt,user}`. Passwords must be at least 15 characters.
-- `POST /auth/sessions` with `{email,password}` returns the same session shape. `DELETE /auth/sessions` revokes the current token. Tokens expire after 30 days.
+- `POST /auth/sessions` with `{email,password}` returns the same session shape. Sign-up and sign-in also set the session cookie (`HttpOnly; Secure; SameSite=Lax`, 30 days; `COOKIE_SECURE=false` for local http). `DELETE /auth/sessions` revokes the current token and clears the cookie. Tokens expire after 30 days.
 - `GET /me` returns the current account; `PATCH /me` changes its name.
 - `GET /healthz` (no login) returns `{"status":"ok"}` when the API can reach its database and `503 {"status":"unavailable"}` when it cannot, so the app can tell "server down" from "no connection". `/health` is an older alias.
 - `GET /groups` returns complete group snapshots for the signed-in account. `GET /groups/{groupId}` returns its current snapshot. `PATCH /groups/{groupId}` changes its name.

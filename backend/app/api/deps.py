@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, Request
 
+from app.core.config import CLIENT_HEADER, SESSION_COOKIE
 from app.core.errors import APIError
 from app.core.ratelimit import RateLimiters, get_rate_limiters
 from app.services.accounts import AccountService
@@ -44,7 +45,26 @@ def bearer_token(authorization: Annotated[str | None, Header()] = None) -> str:
 Token = Annotated[str, Depends(bearer_token)]
 
 
-def current_user(token: Token, accounts: AccountsDep) -> str:
+def account_token(request: Request, authorization: Annotated[str | None, Header()] = None) -> str:
+    """
+    The account's session token: the Authorization header, or else the httpOnly session cookie. Browsers send the
+    cookie on their own, so a write that authenticates by cookie must also carry the X-CommonTab-Client header,
+    which a page on another site cannot add without the API's CORS approval.
+    """
+    if authorization:
+        return bearer_token(authorization)
+    cookie = request.cookies.get(SESSION_COOKIE)
+    if not cookie:
+        raise HTTPException(401, 'Sign in required')
+    if request.method not in ('GET', 'HEAD', 'OPTIONS') and CLIENT_HEADER not in request.headers:
+        raise HTTPException(403, f'{CLIENT_HEADER} header required')
+    return cookie
+
+
+AccountToken = Annotated[str, Depends(account_token)]
+
+
+def current_user(token: AccountToken, accounts: AccountsDep) -> str:
     """The id of the signed-in account, or 401."""
     return accounts.authenticate(token)
 

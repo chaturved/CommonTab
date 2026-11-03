@@ -8,7 +8,7 @@ from typing import Callable
 
 from fastapi import Request
 
-from app.core.config import Settings, get_settings
+from app.core.config import SESSION_COOKIE, Settings, get_settings
 
 AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions'}
 EXEMPT_PATHS = {'/healthz', '/health'}
@@ -67,8 +67,8 @@ class RateLimiters:
         ip = client_ip(request, self.trust_proxy)
         if path in AUTH_PATHS and request.method == 'POST':
             return self.auth.check(f'ip:{ip}')
-        bearer = request.headers.get('authorization', '')
-        key = 'token:' + hashlib.sha256(bearer.encode()).hexdigest()[:16] if bearer.startswith('Bearer ') else f'ip:{ip}'
+        credential = request.headers.get('authorization', '') or request.cookies.get(SESSION_COOKIE, '')
+        key = 'token:' + hashlib.sha256(credential.encode()).hexdigest()[:16] if credential else f'ip:{ip}'
         return self.api.check(key)
 
 

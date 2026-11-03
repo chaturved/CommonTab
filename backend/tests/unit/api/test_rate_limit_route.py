@@ -43,7 +43,7 @@ class TestRateLimitRoute:
 
     def test_sign_in_has_its_own_stricter_limit_per_ip(self):
         self.limit(rate_limit_auth_per_minute=2)
-        self.accounts.login.return_value = {}
+        self.accounts.login.return_value = {'accessToken': 'tok'}
 
         statuses = [self.client.post('/v1/auth/sessions', json={'email': 'a@b.co', 'password': 'pw'}).status_code
                     for _ in range(3)]
@@ -67,7 +67,7 @@ class TestRateLimitRoute:
 
     def test_the_forwarded_address_counts_only_when_the_proxy_is_trusted(self):
         self.limit(rate_limit_auth_per_minute=1)
-        self.accounts.login.return_value = {}
+        self.accounts.login.return_value = {'accessToken': 'tok'}
         body = {'email': 'a@b.co', 'password': 'pw'}
 
         first = self.client.post('/v1/auth/sessions', json=body, headers={'X-Forwarded-For': '1.1.1.1'})

@@ -98,6 +98,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - No real storage yet (SQLite, IndexedDB) and the triggers (foreground, connectivity, 5-minute timer) belong to the app; the engine exposes `nextRetryAt` for the timer.
 - `SYNC_ARCHITECTURE.md` still says retries were already safe; the server fix is in step 4. Not edited.
 
+## Step 5d: cookie and bearer sign-in — done
+- Sign-up and sign-in also set an httpOnly session cookie (`commontab_session`, Secure, SameSite=Lax, 30 days); the token is still in the body and `Authorization: Bearer` still works (header wins). A cookie-authenticated write needs `X-CommonTab-Client` (CSRF). CORS allows `ALLOWED_ORIGINS` with credentials. Bill-session secrets are unchanged (bearer only). No database change.
+- Rate limits key on the header or the cookie. `Settings` no longer prints `database_url`.
+- Web and API must share a site in production (for example `app.` and `api.` on one domain).
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.
