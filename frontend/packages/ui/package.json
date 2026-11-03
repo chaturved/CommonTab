@@ -20,6 +20,7 @@
     "test-renderer": "^1.3.0"
   },
   "dependencies": {
+    "@commontab/core": "*",
     "expo-linear-gradient": "~58.0.3",
     "lucide-react-native": "^1.66.0",
     "react-native-svg": "^15.16.0"

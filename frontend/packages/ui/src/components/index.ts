@@ -4,3 +4,6 @@ export * from './Card';
 export * from './Pill';
 export * from './Banner';
 export * from './SyncChip';
+export * from './AmountText';
+export * from './Avatar';
+export * from './ListRow';
