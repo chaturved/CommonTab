@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { categoryLabel, expenseChanges, expenseRow, formatCurrency, longDate, type LocalExpense } from '@commontab/core';
+import { categoryLabel, expenseChanges, expenseHistory, expenseRow, formatCurrency, longDate, type LocalExpense } from '@commontab/core';
 import { Avatar, Banner, Button, Hero, Sheet, Text } from '@commontab/ui';
 import { useApp } from '../app-context';
-import type { GroupData } from '../data';
+import { useActivityEvents, type GroupData } from '../data';
 
 const methodTitle = (method: LocalExpense['method']) => (method === 'equal' ? 'Split equally' : method === 'exact' ? 'Split by amount' : 'Split by percent');
 
@@ -21,6 +21,8 @@ export function ExpenseBody({ expense, data }: { expense: LocalExpense; data: Gr
   const currency = summary.currencyCode;
   const row = expenseRow(expense, group);
   const nameOf = useNames(data);
+  const { events } = useActivityEvents();
+  const lines = expenseHistory(events, expense.id, group);
   const kicker = row.position.kind === 'lent' ? `YOU LENT ${formatCurrency(row.position.minorUnits, currency)}` : row.position.kind === 'owe' ? `YOU OWE ${formatCurrency(row.position.minorUnits, currency)}` : "YOU'RE NOT INVOLVED";
   return (
     <View className="gap-1">
@@ -51,9 +53,12 @@ export function ExpenseBody({ expense, data }: { expense: LocalExpense; data: Gr
           </View>
         );
       })}
-      {expense.history.length > 0 ? (
+      {expense.history.length > 0 || lines.length > 0 ? (
         <>
           <Text variant="section" accessibilityRole="header" className="pb-1 pt-4 text-base">History</Text>
+          {lines.map((l) => (
+            <Text key={l.seq} variant="caption" tone="muted" className="text-[13px] leading-6">{l.text} · {l.when}</Text>
+          ))}
           {expense.history.map((h, i) => (
             <Text key={i} variant="caption" tone="muted" className="text-[13px] leading-6">
               {h.reason === 'edited_elsewhere' ? 'Edited by someone else' : h.reason === 'you_chose_theirs' ? 'You kept the other version' : 'You replaced the other version'} · {longDate(h.at)}

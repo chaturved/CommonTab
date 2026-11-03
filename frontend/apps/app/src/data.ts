@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { summarizeGroup, type GroupSummary, type LocalExpense, type LocalGroup, type LocalSettlement } from '@commontab/core';
+import { summarizeGroup, type ActivityEvent, type GroupSummary, type LocalExpense, type LocalGroup, type LocalSettlement } from '@commontab/core';
 import { useApp } from './app-context';
 
 export interface GroupData {
@@ -37,4 +37,25 @@ export function useGroups(): { ready: boolean; groups: GroupData[] } {
 export function useGroup(id: string | undefined): { ready: boolean; data: GroupData | undefined } {
   const { ready, groups } = useGroups();
   return { ready, data: groups.find((g) => g.group.id === id) };
+}
+
+export function useActivityEvents(): { ready: boolean; events: ActivityEvent[] } {
+  const { services } = useApp();
+  const [state, setState] = useState<{ ready: boolean; events: ActivityEvent[] }>({ ready: false, events: [] });
+
+  useEffect(() => {
+    let live = true;
+    const load = async () => {
+      const events = await services.storage.listActivity();
+      if (live) setState({ ready: true, events });
+    };
+    void load();
+    const unsubscribe = services.engine.subscribe(() => void load());
+    return () => {
+      live = false;
+      unsubscribe();
+    };
+  }, [services]);
+
+  return state;
 }
