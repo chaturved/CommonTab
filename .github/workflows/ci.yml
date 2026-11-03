@@ -20,6 +20,7 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/commontab
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/commontab
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -30,8 +31,10 @@ jobs:
       - name: Migrations apply to an empty database
         run: alembic upgrade head && alembic downgrade base
         working-directory: backend
-      - name: Test API
-        run: python -m pytest -q backend/tests
+      - name: Unit tests
+        run: python -m pytest -q backend/tests/unit
+      - name: Integration tests
+        run: python -m pytest -q backend/tests/integration
 
   frontend:
     runs-on: ubuntu-latest

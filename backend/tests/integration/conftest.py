@@ -1,25 +1,27 @@
 """
-Tests run against a real Postgres (DATABASE_URL, e.g. Supabase). Each session creates a throwaway
-`test_<random>` schema, migrates it, and drops it at the end; nothing else in the database is touched.
+Integration tests run against a real Postgres named by TEST_DATABASE_URL (a local one; never DATABASE_URL, so a
+test run cannot touch the production database). Each session creates a throwaway `test_<random>` schema,
+migrates it, and drops it at the end; nothing else in the database is touched.
 """
 from __future__ import annotations
 
+import os
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import text
 
-from app.core.config import load_settings
+from app.core.config import normalize_database_url, read_dotenv
 from app.core.db import Database, create_db_engine
 from app.core.migrate import upgrade
 
 
 @pytest.fixture(scope='session')
 def database_url() -> str:
-    try:
-        return load_settings().database_url
-    except RuntimeError as error:
-        pytest.skip(str(error))
+    url = {**read_dotenv(), **os.environ}.get('TEST_DATABASE_URL', '').strip()
+    if not url:
+        pytest.skip('TEST_DATABASE_URL is not set. See backend/README.md ("Tests") to set up a local Postgres.')
+    return normalize_database_url(url)
 
 
 @pytest.fixture(scope='session')

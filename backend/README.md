@@ -48,10 +48,16 @@ The schema lives only in `migrations/versions`. Run `alembic upgrade head` at de
 
 ## Tests
 
+Two folders, run separately:
+
 ```sh
-.venv/bin/python -m pytest -q tests
+.venv/bin/python -m pytest tests/unit          # no database, about a second
+.venv/bin/python -m pytest tests/integration   # route -> service -> repository -> real Postgres
 ```
 
-Tests need `DATABASE_URL` (they skip without it). Each test worker creates a throwaway `test_<random>` schema, migrates it, and drops it at the end, so nothing else in the database is touched; workers run in parallel (`-n 4`). Shared money fixtures in `../fixtures/money` are also run by the TypeScript core.
+- `tests/unit`: services against in-memory fake repositories (`tests/unit/fakes.py`), plus the pure rules, rate limiter and config. Tests are grouped in `Test…` classes.
+- `tests/integration`: the HTTP API on a real Postgres. Install one locally (`brew install postgresql@16 && brew services start postgresql@16`), run `createdb commontab_test`, and set `TEST_DATABASE_URL=postgresql://localhost:5432/commontab_test` in `backend/.env`. They never read `DATABASE_URL`, and skip if `TEST_DATABASE_URL` is unset. Each test worker creates a throwaway `test_<random>` schema, migrates it, and drops it at the end; workers run in parallel (`-n 4`).
+
+Shared money fixtures in `../fixtures/money` are also run by the TypeScript core.
 
 The HTTP contract is documented in [`docs/shared-api.md`](../docs/shared-api.md).
