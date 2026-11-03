@@ -7,3 +7,6 @@ export * from './SyncChip';
 export * from './AmountText';
 export * from './Avatar';
 export * from './ListRow';
+export * from './Hero';
+export * from './Sheet';
+export * from './TabBar';
