@@ -1,22 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { byNewest, expenseRow, formatCurrency, longDate, type LocalExpense } from '@commontab/core';
-import { Avatar, Button, Card, Icon, Text } from '@commontab/ui';
+import { byNewest, expenseRow, formatCurrency, type LocalExpense } from '@commontab/core';
+import { Button, Card, Icon, Text } from '@commontab/ui';
 import { Plus } from 'lucide-react-native';
 import type { GroupData } from '../data';
 import { useSyncStatus } from '../useSyncStatus';
 import { BalancesList, HistoryList, MembersList } from './GroupParts';
 import { ConnectionBanner } from './ConnectionBanner';
+import { ExpenseDetailContent } from './ExpenseDetail';
 import { ExpenseRow } from './ExpenseRow';
 import { PageHeader } from './PageHeader';
 
 const TABS = ['Expenses', 'Balances', 'Members', 'History'] as const;
 type Tab = (typeof TABS)[number];
-
-const titleCase = (value: string) => (value ? value[0]!.toUpperCase() + value.slice(1) : value);
-
-const methodTitle = (method: LocalExpense['method']) => (method === 'equal' ? 'Split equally' : method === 'exact' ? 'Split by amount' : 'Split by percent');
 
 export function GroupDesktop({ data }: { data: GroupData }) {
   const router = useRouter();
@@ -39,7 +36,7 @@ export function GroupDesktop({ data }: { data: GroupData }) {
       <PageHeader
         title={group.name}
         subtitle={subtitle}
-        actions={<Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/add-expense')} />}
+        actions={<Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />}
       />
       <ConnectionBanner />
       <View accessibilityRole="tablist" className="flex-row gap-1.5 border-b border-divider">
@@ -82,50 +79,9 @@ export function GroupDesktop({ data }: { data: GroupData }) {
 }
 
 function ExpensePanel({ expense, data }: { expense: LocalExpense; data: GroupData }) {
-  const { group, summary } = data;
-  const currency = summary.currencyCode;
-  const row = expenseRow(expense, group);
-  const nameOf = (id: string) => {
-    const member = group.members.find((m) => m.id === id);
-    return member ? (member.id === group.meMemberID ? 'You' : member.name) : 'Someone';
-  };
-  const kicker = row.position.kind === 'lent' ? `YOU LENT ${formatCurrency(row.position.minorUnits, currency)}` : row.position.kind === 'owe' ? `YOU OWE ${formatCurrency(row.position.minorUnits, currency)}` : "YOU'RE NOT INVOLVED";
   return (
-    <Card className="w-[400px] shrink-0 gap-1 p-[22px]">
-      <View className="gap-1 rounded-[18px] bg-primary px-5 py-[18px]" style={{ backgroundColor: '#0B4350' }}>
-        <Text variant="label" tone="mint">{kicker}</Text>
-        <Text variant="section" tone="white">{expense.merchant}</Text>
-        <Text variant="large-title" tone="white" className="text-[34px] leading-10">{formatCurrency(expense.amountMinor, currency)}</Text>
-        <Text variant="caption" tone="hero-muted" className="text-[13px]">{group.name} · {titleCase(expense.category)} · {longDate(expense.occurredAt)}</Text>
-      </View>
-      <Text variant="section" accessibilityRole="header" className="pb-1 pt-4 text-base">{methodTitle(expense.method)}</Text>
-      {expense.allocations.map((a, i) => {
-        const name = nameOf(a.memberID);
-        const paid = a.memberID === expense.payerID;
-        const payer = nameOf(expense.payerID);
-        const note = paid ? `Paid ${formatCurrency(expense.amountMinor, currency)}` : payer === 'You' ? `Owes you ${formatCurrency(a.minorUnits, currency)}` : name === 'You' ? `You owe ${payer}` : `Owes ${payer}`;
-        const realName = group.members.find((m) => m.id === a.memberID)?.name ?? name;
-        return (
-          <View key={a.memberID} accessible accessibilityLabel={`${name}, ${note}, share ${formatCurrency(a.minorUnits, currency)}`} className={`flex-row items-center gap-3 py-3 ${i < expense.allocations.length - 1 ? 'border-b border-divider' : ''}`}>
-            <Avatar name={realName} id={a.memberID} />
-            <View className="flex-1">
-              <Text variant="body-small" className="text-sm font-semibold">{name}</Text>
-              <Text variant="caption" tone="muted">{note}</Text>
-            </View>
-            <Text variant="body-small" className="text-sm font-bold">{formatCurrency(a.minorUnits, currency)}</Text>
-          </View>
-        );
-      })}
-      {expense.history.length > 0 ? (
-        <>
-          <Text variant="section" accessibilityRole="header" className="pb-1 pt-4 text-base">History</Text>
-          {expense.history.map((h, i) => (
-            <Text key={i} variant="caption" tone="muted" className="text-[13px] leading-6">
-              {h.reason === 'edited_elsewhere' ? 'Edited by someone else' : h.reason === 'you_chose_theirs' ? 'You kept the other version' : 'You replaced the other version'} · {longDate(h.at)}
-            </Text>
-          ))}
-        </>
-      ) : null}
+    <Card className="w-[400px] shrink-0 p-[22px]">
+      <ExpenseDetailContent expense={expense} data={data} />
     </Card>
   );
 }

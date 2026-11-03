@@ -42,7 +42,7 @@ export function FieldRow({ label, last, className, ...props }: FieldRowProps) {
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={colors.muted}
-        className="min-h-touch flex-1 text-body text-fg"
+        className="min-h-touch min-w-0 flex-1 text-body text-fg"
         style={{ outlineStyle: 'none' } as never}
         {...props}
       />

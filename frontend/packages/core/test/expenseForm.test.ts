@@ -1,5 +1,5 @@
 import {
-  addDifferenceTo, balanceChangeNote, balanceChanges, evaluateForm, formFromExpense, newExpenseForm, splitIssueMessage, splitRestEqually,
+  addDifferenceTo, balanceChangeNote, expenseChanges, balanceChanges, evaluateForm, formFromExpense, newExpenseForm, splitIssueMessage, splitRestEqually,
   switchMethod, toggleParticipant, type ExpenseForm, type LocalExpense, type LocalGroup,
 } from '../src';
 
@@ -175,5 +175,20 @@ describe('editing an existing expense', () => {
 
   test('no note when only you are affected', () => {
     expect(balanceChangeNote([{ memberID: 'me', name: 'You', deltaMinor: 100 }], 'me', 'USD')).toBeNull();
+  });
+});
+
+describe('expenseChanges', () => {
+  const theirs = { merchant: 'Dinner at Uchi', amountMinor: 17000, payerID: 'me', occurredAt: '2026-10-30T18:00:00Z', category: 'dining', method: 'equal' as const, allocations: [{ memberID: 'me', minorUnits: 8500 }, { memberID: 'sam', minorUnits: 8500 }] };
+  const mine = { id: 'e', groupID: 'g', merchant: 'Dinner at Uchi', occurredAt: '2026-10-30T18:00:00Z', category: 'dining', notes: '', amountMinor: 16350, payerID: 'me', method: 'equal' as const, participants: ['me', 'sam'], values: [], allocations: [{ memberID: 'me', minorUnits: 8175 }, { memberID: 'sam', minorUnits: 8175 }], editedAt: '2026-10-30T20:42:00Z'};
+
+  test('lists only what differs, with both sides in words', () => {
+    const changes = expenseChanges(mine as never, theirs, group);
+    expect(changes.map((c) => c.field)).toEqual(['amount', 'split']);
+    expect(changes[0]).toMatchObject({ label: 'Amount', mine: '$163.50', theirs: '$170.00' });
+  });
+
+  test('nothing differs, nothing listed', () => {
+    expect(expenseChanges({ ...mine, amountMinor: 17000, allocations: theirs.allocations } as never, theirs, group)).toEqual([]);
   });
 });

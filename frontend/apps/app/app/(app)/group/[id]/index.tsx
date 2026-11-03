@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check, Ellipsis } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { byNewest, expenseRow, formatCurrency } from '@commontab/core';
-import { BackButton, Card, Icon, Text } from '@commontab/ui';
+import { BackButton, Button, Card, Icon, Text } from '@commontab/ui';
 import { BalanceHero } from '../../../../src/components/BalanceHero';
 import { ConnectionBanner } from '../../../../src/components/ConnectionBanner';
 import { ExpenseRow } from '../../../../src/components/ExpenseRow';
@@ -100,10 +100,13 @@ export default function GroupDetail() {
       ) : (
         <Card className="overflow-hidden">
           {rows.map((row, i) => (
-            <ExpenseRow key={row.id} row={row} currencyCode={currency} subtitle="group" divider={i < rows.length - 1} />
+            <Pressable key={row.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/expense/[id]', params: { id: row.id } })} className="active:opacity-80">
+              <ExpenseRow row={row} currencyCode={currency} subtitle="group" divider={i < rows.length - 1} />
+            </Pressable>
           ))}
         </Card>
       )}
+      <Button label="Add expense" onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
     </Screen>
   );
 }

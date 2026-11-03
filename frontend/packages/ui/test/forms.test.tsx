@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { BackButton, FieldGroup, FieldLayoutProvider, FieldRow, PasswordMeter, SegmentedControl } from '../src';
+import { BackButton, CheckRow, FieldGroup, FieldLayoutProvider, FieldRow, PasswordMeter, SegmentedControl } from '../src';
 
 describe('FieldRow', () => {
   test('the input is found by its label and reports typing', async () => {
@@ -78,5 +78,16 @@ describe('stacked fields', () => {
     );
     expect(screen.getByLabelText('Email')).toBeTruthy();
     expect(String(screen.getByTestId('email').props.className)).toContain('h-12');
+  });
+});
+
+describe('CheckRow', () => {
+  test('is a checkbox that reports its state and toggles', async () => {
+    const onToggle = jest.fn();
+    await render(<CheckRow label="Sam" checked={false} onToggle={onToggle} />);
+    const box = screen.getByRole('checkbox', { name: 'Sam' });
+    expect(box.props.accessibilityState).toMatchObject({ checked: false });
+    await fireEvent.press(box);
+    expect(onToggle).toHaveBeenCalled();
   });
 });

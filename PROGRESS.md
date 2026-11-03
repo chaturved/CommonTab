@@ -148,8 +148,16 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Checked in a browser at 1280px** (API on Supabase) against the canvas: sign-in, Home, Groups, Group detail with the panel, Account, offline. The 390px layout was re-checked and is unchanged. iOS and Android bundles build.
 - ui: `FieldRow` and `FieldGroup` have a stacked layout (`FieldLayoutProvider`), `Hero` takes a padding, new token `field-border`.
 
+## Step 6d: expenses — done
+- **Screens (phone and web):** Add expense (amount, description, group, paid by, date, notes, category chips, Equally / Exact / Percent with a person list), Choose group ("Add expense to…", last used first, "Create a new group"; skipped with one group), Edit expense (same form, offline notice, "Balances for Riya and Sam will change…"), Expense detail (hero, split, history, Edit, Delete) and the Delete sheet, and the Split error state ("Amounts add up to $80.00. $6.40 short of the total." with "Add $6.40 to Sam" and "Split the rest equally"; Save stays off until it adds up). Tapping an expense on a phone opens its detail; on the web the panel has the same Edit and Delete. Group detail has an Add expense button.
+- **Sync states on the expense:** "Waiting to sync" notice; a change the server refused shows the reason with Edit or Discard; a conflict shows what changed (yours and kept) with **Keep theirs / Keep mine** (SPEC wording; the Conflict design's "Got it / Restore my version" was not used, as decided earlier).
+- **Core (tests):** `evaluateForm` (parsing, equal / exact / percent, exact-cents errors, the 33.34 / 33.33 / 33.33 rule), fix-up actions, balance-change note, `expenseChanges`, `timeAgo`, categories. ui: `CheckRow`.
+- **Checked in a browser** (390px and 1280px, API on Supabase): add with an Exact split that is $6.40 short, fix it, save (balances went $109.00 to $145.40, synced), detail, edit to an equal split, delete (back to $109.00).
+- **Not done:** the web Add expense is a centered form, not the canvas's dialog over the group page; the date is picked with Today / Yesterday or typed as YYYY-MM-DD (no calendar picker); By item, the Tip and split calculator, receipt scan, foreign-currency expenses (needs API fields: asked in 6f), and categories as an editable list. Edited-by names ("You edited the amount $160 to $163.50") need the server change feed (6f).
+- Fixed on the way: an input's minimum width made the whole form overflow sideways on phones.
+
 ### Plan from here
-6d expenses (phone and web together) → 6e settle up, invite and join by code, settings → 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
+6e settle up, invite and join by code, settings, the tip calculator and split by item → 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

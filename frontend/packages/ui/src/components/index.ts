@@ -15,3 +15,4 @@ export * from './FieldRow';
 export * from './BackButton';
 export * from './PasswordMeter';
 export * from './SegmentedControl';
+export * from './CheckRow';

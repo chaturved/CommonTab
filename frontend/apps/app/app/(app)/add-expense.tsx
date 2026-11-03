@@ -1,19 +1,48 @@
-import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { BackButton, Text } from '@commontab/ui';
+import { BackButton, Button, Text } from '@commontab/ui';
+import { ChooseGroup } from '../../src/components/ChooseGroup';
+import { ExpenseFormView } from '../../src/components/ExpenseFormView';
 import { Screen } from '../../src/components/Screen';
+import { useGroups } from '../../src/data';
 
 export default function AddExpense() {
   const router = useRouter();
+  const { group: groupParam } = useLocalSearchParams<{ group?: string }>();
+  const { ready, groups } = useGroups();
+  const [picked, setPicked] = useState<string | null>(null);
+  const id = picked ?? groupParam ?? (groups.length === 1 ? groups[0]!.group.id : null);
+  const data = groups.find((g) => g.group.id === id);
+
+  if (!ready) return <Screen wide>{null}</Screen>;
+
+  if (groups.length === 0) {
+    return (
+      <Screen wide>
+        <View className="flex-row items-center pt-1"><BackButton onPress={() => router.back()} /></View>
+        <View className="items-center gap-3 px-6 py-10">
+          <Text variant="section" className="text-center">Create a group first</Text>
+          <Text tone="muted" className="text-center">Expenses live in a group, so make one to start splitting.</Text>
+          <Button label="Create a group" onPress={() => router.replace('/create-group')} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Screen wide>
+        <View className="w-full max-w-[560px] self-center">
+          <ChooseGroup groups={groups} onPick={setPicked} onCreate={() => router.replace('/create-group')} />
+        </View>
+      </Screen>
+    );
+  }
+
   return (
-    <Screen>
-      <View className="flex-row items-center pt-1">
-        <BackButton onPress={() => router.back()} />
-      </View>
-      <View className="gap-2 px-2 pt-2">
-        <Text variant="large-title" accessibilityRole="header">Add expense</Text>
-        <Text tone="muted">Adding expenses arrives in the next step.</Text>
-      </View>
+    <Screen wide>
+      <ExpenseFormView key={data.group.id} mode="add" data={data} groups={groups} onPickGroup={setPicked} />
     </Screen>
   );
 }
