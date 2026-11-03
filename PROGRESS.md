@@ -73,3 +73,27 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Tests:** backend 104 (new: members, group create, linking by invitation, migrations with seeded data). Core and ui unchanged (core treats ids as opaque strings, so the shared fixtures did not change).
 - **Not done:** leave group, remove a member, delete or archive a group, delete account, invite by code only. They remain in the gap list above; the model supports them without another reference migration (a `removed_at` column will come with them).
 - **Open:** your Supabase `public` schema is at revision `0002`. `0003` and `0004` are not applied there yet; run `alembic upgrade head` from `backend/` when you want them (the tables are still empty, so it is safe).
+
+## Step 5: core storage, outbox and sync engine — done
+- **Contract change (approved):** expense records now carry `updatedAt` (UTC time of the last change on the server, also on tombstones and in the `409` `current`). "Newest edit wins" needs it; the server already stored it. One line in `docs/shared-api.md`, one backend test (105 backend tests).
+- **Added to `packages/core`:** `types.ts`, `storage/` (interface + `MemoryStorage`), `outbox/` (coalescing, order, backoff), `api/` (`Api`, `HttpApi`, `ApiError`), `auth/` (`TokenStore`, `AuthSession`), `sync/` (`Actions`, `SyncEngine`, snapshot apply). See `frontend/packages/core/README.md`.
+- **Tests:** core 194 (was 126): outbox/backoff units, HTTP error mapping, and the SYNC_ARCHITECTURE scenarios against a fake server: connection dropped after the server applied a write (create, edit, delete, payment, group create), second device editing the same expense (newer wins, Keep mine, Keep theirs, delete vs edit, Restore), token expiry mid-sync, a payment refused with `exceeds_balance`, 429/503 backoff, relaunch with a pending queue, local-only group upload resumed after a failure. ui 104 and app typecheck unchanged.
+- **Deviations from SYNC_ARCHITECTURE.md (small, listed so you can veto):**
+  - Outbox kinds are `group.create`, `member.put`, `expense.put`, `expense.delete`, `settlement.create`. `member.invite` and `group.patch` (rename) are online-only for now: an invite needs the server to make the code, and a rename is minor. Say if you want them queued.
+  - Entries parked as `failed` or `conflict` do not block the rest of the group; a backing-off entry does (order is kept).
+  - Outbox entries also carry `seq`, `editedAt`, `status` and `lastAttemptAt` (an edit-then-delete of a never-sent expense is cancelled without telling the server; once a send has started it sends the delete).
+
+### SPEC acceptance checks for this step
+- Airplane mode: add, edit, delete, kill and reopen; "waiting to sync"; reconnect sends once, no duplicates: tested in core against `MemoryStorage` (the "relaunch" is a new engine on the same storage). Real persistence comes with SQLite/IndexedDB in step 6.
+- A settlement queued offline never fails with a version error; overpayment is rejected with a clear message: client side tested (failed state keeps what was typed and carries `maxAmountMinor`).
+- Two devices edit the same expense: **partly**. If the earlier editor's push reaches the server after the later edit, they get the Conflict state with Keep mine / Keep theirs. If the earlier editor's push reaches the server first, the later edit wins automatically and the earlier editor only finds out on their next pull, as an `edited_elsewhere` entry in the record's history, not a Conflict screen. The server does not record that an edit overwrote another, so the client cannot tell this apart from an ordinary later edit. See open questions.
+- Signing out with pending changes warns first: `engine.status().waiting` and `failed` are what the app checks; the warning itself is UI (step 6).
+
+### Open / not verified
+- **Open question for you:** is the history entry ("Dinner was edited elsewhere") enough for the earlier editor, or must they always get the Conflict screen? The second needs the server to keep a note when an edit replaces one the first editor already had acknowledged (a data model addition), so I did not do it without asking.
+- The fake server is written by me from the contract; the client has not run against the real backend yet. Worth one smoke test against a local backend before step 6 relies on it.
+- "Newest edit" compares the device clock with the server's `updatedAt`; a phone with a wrong clock can win or lose wrongly.
+- Discarding a refused edit of an already-synced expense leaves the discarded text showing until the next pull.
+- A group that disappears from the server (left, removed) is not handled yet; it needs the leave/remove work from the backend gap list.
+- No real storage yet (SQLite, IndexedDB) and the triggers (foreground, connectivity, 5-minute timer) belong to the app; the engine exposes `nextRetryAt` for the timer.
+- `SYNC_ARCHITECTURE.md` still says retries were already safe; the server fix is in step 4. Not edited.
