@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Account</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0 20px">
+<button type="button" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; box-shadow: 0 2px 10px rgba(14, 26, 28, 0.08); display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 18px; font-weight: 700">Account</h1>
+<div style="width: 44px"></div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 24px 20px 0 20px">
+<div style="width: 76px; height: 76px; border-radius: 38px; background: #CFEDE4; color: #0A4A3C; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700">CL</div>
+<div style="font-size: 22px; font-weight: 800">Chaturved</div>
+<div style="font-size: 14px; color: #5F6B6E">you@example.com</div>
+</div>
+
+<div style="margin: 20px 16px 0 16px; border-radius: 16px; background: #E1F0EC; padding: 12px 16px; box-sizing: border-box; display: flex; align-items: center; gap: 10px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A4A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l3 3 5-6"></path></svg>
+<div style="flex: 1; font-size: 14px; font-weight: 600; color: #0A4A3C">Everything is synced</div>
+<div style="font-size: 13px; color: #0A4A3C">Just now</div>
+</div>
+
+<div style="padding: 24px 20px 0 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #5F6B6E">PROFILE</div>
+<div style="margin: 8px 16px 0 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column">
+<button type="button" style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; gap: 12px; border: 0; border-bottom: 1px solid #ECEEF0; background: transparent; text-align: left"><span style="flex: 1; font-size: 16px; font-weight: 600; color: #0E1A1C">Change name</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+<button type="button" style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; text-align: left"><span style="flex: 1; font-size: 16px; font-weight: 600; color: #0E1A1C">Change password</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+
+<div style="padding: 24px 20px 0 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #5F6B6E">SESSION AND DATA</div>
+<div style="margin: 8px 16px 0 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column">
+<button type="button" style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; border: 0; border-bottom: 1px solid #ECEEF0; background: transparent; text-align: left"><span style="flex: 1; font-size: 16px; font-weight: 600; color: #0E1A1C">Export my data</span></button>
+<button type="button" style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; border: 0; border-bottom: 1px solid #ECEEF0; background: transparent; text-align: left"><span style="flex: 1; font-size: 16px; font-weight: 600; color: #0E1A1C">Sign out</span></button>
+<button type="button" style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; border: 0; background: transparent; text-align: left"><span style="flex: 1; font-size: 16px; font-weight: 600; color: #B3261E">Delete account</span></button>
+</div>
+<div style="padding: 10px 24px 0 24px; font-size: 13px; line-height: 1.4; color: #5F6B6E">Signing out with unsynced changes asks you first, so nothing is lost. Deleting your account removes your data from our servers and from this phone.</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

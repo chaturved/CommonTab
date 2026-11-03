@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Foreign Currency</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0 20px">
+<button type="button" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; box-shadow: 0 2px 10px rgba(14, 26, 28, 0.08); display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 18px; font-weight: 700">Add expense</h1>
+<div style="width: 44px"></div>
+</div>
+
+<div style="margin: 16px 16px 0 16px; border-radius: 20px; background: #FFFFFF; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 13px; color: #5F6B6E">Amount</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" style="height: 44px; border-radius: 22px; border: 1.5px solid #0B6B58; background: #E6F1EE; color: #0A4A3C; font-size: 15px; font-weight: 700; padding: 0 14px">EUR €</button>
+<div style="flex: 1; font-size: 32px; font-weight: 800; letter-spacing: -0.02em">120.00</div>
+</div>
+<div style="border-top: 1px solid #ECEEF0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #34454A">Group currency</span><span style="font-size: 14px; font-weight: 700">USD $</span>
+</div>
+</div>
+
+<div style="margin: 12px 16px 0 16px; border-radius: 20px; background: #FFFFFF; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #34454A">Rate</span>
+<button type="button" style="border: 0; background: transparent; color: #0B6B58; font-size: 14px; font-weight: 700; padding: 0">Edit</button>
+</div>
+<div style="font-size: 17px; font-weight: 700">1 EUR = 1.08 USD</div>
+<div style="font-size: 13px; line-height: 1.4; color: #5F6B6E">Rate from Nov 2. It is saved with this expense, so balances don't change if the rate moves later.</div>
+<div style="border-top: 1px solid #ECEEF0; margin-top: 8px; padding-top: 12px; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #34454A">Counts as</span><span style="font-size: 20px; font-weight: 800">$129.60</span>
+</div>
+</div>
+
+<div style="margin: 12px 16px 0 16px; border-radius: 16px; background: #FDF1DC; padding: 12px 14px; box-sizing: border-box; display: flex; align-items: center; gap: 10px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A4B08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+<div style="flex: 1; font-size: 13px; line-height: 1.35; color: #5C3205">You're offline, so this rate is from your last sync (Nov 1). It will be kept as is.</div>
+</div>
+
+<div style="margin: 12px 16px 0 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column">
+<div style="height: 56px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ECEEF0"><span style="font-size: 15px; color: #34454A">Paid by</span><span style="font-size: 15px; font-weight: 700">You</span></div>
+<div style="height: 56px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; justify-content: space-between"><span style="font-size: 15px; color: #34454A">Split</span><span style="font-size: 15px; font-weight: 700">Equally · $43.20 each</span></div>
+</div>
+
+<button type="button" style="position: absolute; left: 16px; right: 16px; bottom: 24px; height: 52px; border-radius: 26px; border: 0; background: #0B4350; color: #FFFFFF; font-size: 16px; font-weight: 700">Save expense</button>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

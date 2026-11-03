@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Shared Groups</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0 20px">
+<button type="button" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; box-shadow: 0 2px 10px rgba(14, 26, 28, 0.08); display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 18px; font-weight: 700">Your groups</h1>
+<div style="width: 44px"></div>
+</div>
+
+<div style="margin: 20px 16px 0 16px; border-radius: 20px; background: #FFFFFF; padding: 14px 16px; box-sizing: border-box; display: flex; align-items: center; gap: 12px">
+<div style="width: 40px; height: 40px; border-radius: 20px; background: #CFEDE4; color: #0A4A3C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0">CL</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 16px; font-weight: 600">Chaturved</span><span style="font-size: 13px; color: #0A4A3C">All changes synced · just now</span></div>
+</div>
+
+<div style="padding: 24px 20px 0 20px; font-size: 20px; font-weight: 700">Groups</div>
+<div style="margin: 10px 16px 0 16px; box-sizing: border-box; border-radius: 22px; background: #FFFFFF; padding: 16px; display: flex; align-items: center; gap: 14px">
+<div style="display: flex; align-items: center; width: 80px; flex-shrink: 0">
+<div style="width: 28px; height: 28px; border-radius: 14px; background: #CFEDE4; color: #0A4A3C; border: 2px solid #FFFFFF; box-sizing: content-box; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">CL</div>
+<div style="width: 28px; height: 28px; border-radius: 14px; background: #E3E6F8; color: #2B3A8C; border: 2px solid #FFFFFF; box-sizing: content-box; margin-left: -10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">SM</div>
+<div style="width: 28px; height: 28px; border-radius: 14px; background: #FBE3D6; color: #8A3A12; border: 2px solid #FFFFFF; box-sizing: content-box; margin-left: -10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">JT</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<div style="font-size: 17px; font-weight: 700">Apartment</div>
+<div style="font-size: 13px; color: #5F6B6E">3 members · USD</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+<div style="font-size: 12px; color: #5F6B6E">you owe</div>
+<div style="font-size: 17px; font-weight: 700; color: #B3261E">$12.00</div>
+</div>
+</div>
+
+<div style="display: flex; gap: 10px; padding: 16px 16px 0 16px">
+<button type="button" style="flex: 1; height: 52px; border-radius: 26px; border: 0; background: #0B4350; color: #FFFFFF; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+Create group
+</button>
+<button type="button" style="flex: 1; height: 52px; border-radius: 26px; border: 1.5px solid #0B6B58; background: transparent; color: #0B6B58; font-size: 15px; font-weight: 700">Join with code</button>
+</div>
+
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

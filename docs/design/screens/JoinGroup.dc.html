@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Join Group</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0 20px; height: 44px">
+<button type="button" style="border: 0; background: transparent; padding: 10px 0; color: #0B6B58; font-size: 16px; font-weight: 600">Cancel</button>
+<h1 style="margin: 0; font-size: 18px; font-weight: 700">Join group</h1>
+<div style="width: 52px"></div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 36px 32px 0 32px; text-align: center">
+<div style="width: 72px; height: 72px; border-radius: 22px; background: #E6F1EE; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M19 8v6M16 11h6"></path></svg>
+</div>
+<div style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em">Got an invitation?</div>
+<div style="font-size: 15px; line-height: 1.4; color: #5F6B6E">Enter the code a friend sent you. You will be added right away and can see the group on all your devices.</div>
+</div>
+
+<div style="margin: 28px 16px 0 16px; border-radius: 20px; background: #FFFFFF; box-sizing: border-box; padding: 0 16px; height: 64px; display: flex; align-items: center; gap: 12px">
+<label for="code" style="width: 100px; font-size: 14px; color: #5F6B6E">Invitation code</label>
+<input id="code" type="text" placeholder="Paste code" autocapitalize="off" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 17px; font-weight: 600; color: #0E1A1C; padding: 0; outline: none">
+</div>
+
+<div style="margin: 12px 28px 0 28px; text-align: center; font-size: 13px; line-height: 1.4; color: #5F6B6E">No account yet? You will create one first, then join automatically.</div>
+
+<button type="button" style="position: absolute; left: 16px; right: 16px; bottom: 24px; height: 52px; border-radius: 26px; border: 0; background: #C9D3D5; color: #34454A; font-size: 16px; font-weight: 700">Join group</button>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
