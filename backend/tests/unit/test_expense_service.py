@@ -1,4 +1,4 @@
-from unittest.mock import create_autospec
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -16,9 +16,9 @@ from rows import NOW, expense_row, member_row
 class TestExpenseService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.members = create_autospec(MemberRepository, instance=True)
-        self.groups = create_autospec(GroupRepository, instance=True)
-        self.expenses = create_autospec(ExpenseRepository, instance=True)
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.expenses = MagicMock(spec_set=ExpenseRepository)
         self.me = member_row(name='Ada')  # the signed-in member
         self.other = uuid4()
         self.group_id, self.user_id = self.me.group_id, self.me.user_id

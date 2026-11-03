@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from unittest.mock import create_autospec
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -19,11 +19,11 @@ from rows import invitation_row, member_row, user_row
 class TestInvite:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.members = create_autospec(MemberRepository, instance=True)
-        self.groups = create_autospec(GroupRepository, instance=True)
-        self.users = create_autospec(UserRepository, instance=True)
-        self.invitations = create_autospec(InvitationRepository, instance=True)
-        self.snapshots = create_autospec(SnapshotBuilder, instance=True)
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.users = MagicMock(spec_set=UserRepository)
+        self.invitations = MagicMock(spec_set=InvitationRepository)
+        self.snapshots = MagicMock(spec_set=SnapshotBuilder)
         me = member_row(name='Ada')  # the signed-in member
         self.group_id, self.user_id = me.group_id, me.user_id
         self.members.member_of.return_value = me
@@ -73,11 +73,11 @@ class TestInvite:
 class TestAcceptInvite:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        self.members = create_autospec(MemberRepository, instance=True)
-        self.groups = create_autospec(GroupRepository, instance=True)
-        self.users = create_autospec(UserRepository, instance=True)
-        self.invitations = create_autospec(InvitationRepository, instance=True)
-        self.snapshots = create_autospec(SnapshotBuilder, instance=True)
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.users = MagicMock(spec_set=UserRepository)
+        self.invitations = MagicMock(spec_set=InvitationRepository)
+        self.snapshots = MagicMock(spec_set=SnapshotBuilder)
         me = member_row(name='Ada')  # the signed-in member
         self.group_id, self.user_id = me.group_id, me.user_id
         self.members.member_of.return_value = me

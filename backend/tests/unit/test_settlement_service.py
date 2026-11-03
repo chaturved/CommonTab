@@ -1,4 +1,4 @@
-from unittest.mock import create_autospec
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -18,10 +18,10 @@ class TestSettlementService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         """Bob (the signed-in member) owes Ada 500."""
-        self.members = create_autospec(MemberRepository, instance=True)
-        self.groups = create_autospec(GroupRepository, instance=True)
-        self.settlements = create_autospec(SettlementRepository, instance=True)
-        self.snapshots = create_autospec(SnapshotBuilder, instance=True)
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.settlements = MagicMock(spec_set=SettlementRepository)
+        self.snapshots = MagicMock(spec_set=SnapshotBuilder)
         me = member_row(name='Bob')
         self.bob, self.ada = me.id, uuid4()
         self.group_id, self.user_id = me.group_id, me.user_id
