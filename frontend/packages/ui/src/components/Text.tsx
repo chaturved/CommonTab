@@ -18,6 +18,7 @@ const TONE = {
   fg: 'text-fg',
   'fg-soft': 'text-fg-soft',
   muted: 'text-muted',
+  tab: 'text-tab',
   accent: 'text-accent',
   owe: 'text-owe',
   'on-tint': 'text-on-tint',

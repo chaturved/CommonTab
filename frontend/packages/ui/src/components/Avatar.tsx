@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { avatarColors } from '../tokens';
-import { cx, useThemeColors } from '../theme';
+import { cx } from '../theme';
 import { Text } from './Text';
 
 export function initials(name: string): string {
@@ -27,16 +27,16 @@ export interface AvatarProps {
 }
 
 export function Avatar({ name, id, size = 'sm', className }: AvatarProps) {
-  const colors = useThemeColors();
   const swatch = avatarColors[avatarColorIndex(id ?? name)]!;
-  const box = size === 'sm' ? 'h-7 w-7' : 'h-10 w-10';
+  // Design: 28px disc plus a 2px ring in the card color (so overlapped avatars read as separate), 32 in total.
+  const box = size === 'sm' ? 'h-8 w-8' : 'h-11 w-11';
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={name}
-      style={{ backgroundColor: swatch.bg, borderColor: colors.card, borderWidth: 2, boxSizing: 'content-box' } as object}
-      className={cx('items-center justify-center rounded-pill', box, className)}
+      style={{ backgroundColor: swatch.bg }}
+      className={cx('items-center justify-center rounded-pill border-2 border-card', box, className)}
     >
       <Text variant="caption" className={cx('font-bold', size === 'sm' ? 'text-[11px]' : 'text-[14px]')} style={{ color: swatch.fg }}>
         {initials(name)}

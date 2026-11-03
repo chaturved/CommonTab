@@ -33,6 +33,9 @@ const TONE: Record<ButtonVariant, TextTone> = {
   'hero-outline': 'white',
 };
 
+// Spinner color has to be a value, not a class; hero variants sit on dark, the others on light fills or the page.
+const SPINNER: Record<ButtonVariant, string> = { primary: '#FFFFFF', secondary: '#0B6B58', ghost: '#0B6B58', hero: '#06222B', 'hero-outline': '#FFFFFF' };
+
 export function Button({ label, variant = 'primary', size = 'large', icon, loading, disabled, accessibilityLabel, className, ...props }: ButtonProps) {
   const inactive = Boolean(disabled || loading);
   return (
@@ -50,7 +53,7 @@ export function Button({ label, variant = 'primary', size = 'large', icon, loadi
       )}
       {...props}
     >
-      {loading ? <ActivityIndicator accessibilityElementsHidden /> : icon}
+      {loading ? <ActivityIndicator accessibilityElementsHidden color={SPINNER[variant]} /> : icon}
       <Text variant={variant === 'ghost' ? 'body-small' : 'button'} tone={TONE[variant]} className={variant === 'ghost' ? 'font-semibold' : undefined}>
         {label}
       </Text>

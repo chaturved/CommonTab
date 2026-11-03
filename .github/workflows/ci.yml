@@ -20,6 +20,9 @@ jobs:
         working-directory: frontend
       - run: npm test
         working-directory: frontend
+      - name: Export web bundle (checks Metro and NativeWind config)
+        run: npx expo export --platform web
+        working-directory: frontend/apps/app
 
   verify:
     runs-on: macos-26

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { Button, Card, Pill, Text } from '../src';
+import { Button, Card, Icon, Pill, Text } from '../src';
 
 describe('Button', () => {
   test('is a labeled button and fires onPress', async () => {
@@ -68,4 +68,12 @@ test('Card renders children on a card surface', async () => {
 test('Pill shows its label', async () => {
   await render(<Pill label="3 members" tone="neutral" />);
   expect(screen.getByText('3 members')).toBeTruthy();
+});
+
+describe('Icon', () => {
+  test('resolves the token for the current color scheme', async () => {
+    const Probe = (props: { color?: string }) => <Text>{props.color}</Text>;
+    await render(<Icon icon={Probe} tone="accent" />);
+    expect(screen.getByText('#0B6B58')).toBeTruthy(); // light accent
+  });
 });

@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { cx, useThemeColors } from '../theme';
+import { cx } from '../theme';
+import { Icon } from './Icon';
 import { Text } from './Text';
 
 export interface ListRowProps {
@@ -23,7 +24,6 @@ export interface ListRowProps {
 
 /** Row with a minimum height, so large text makes it grow instead of clipping. */
 export function ListRow({ title, subtitle, leading, trailing, onPress, chevron, divider, tall, accessibilityLabel, className }: ListRowProps) {
-  const colors = useThemeColors();
   const showChevron = chevron ?? (Boolean(onPress) && !trailing);
   const body = (
     <>
@@ -39,7 +39,7 @@ export function ListRow({ title, subtitle, leading, trailing, onPress, chevron, 
         ) : null}
       </View>
       {trailing}
-      {showChevron ? <ChevronRight size={16} color={colors.muted} strokeWidth={2.2} /> : null}
+      {showChevron ? <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" /> : null}
     </>
   );
   const box = cx('flex-row items-center gap-3.5 px-4 py-2', tall ? 'min-h-row-tall' : 'min-h-row', divider && 'border-b border-divider', className);
