@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from commontab_api.main import create_app
+from app.main import create_app
 
 
 def sample_bill() -> dict:

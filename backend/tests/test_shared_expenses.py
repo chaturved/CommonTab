@@ -4,7 +4,7 @@ from PIL import Image
 
 from fastapi.testclient import TestClient
 
-from commontab_api.main import create_app
+from app.main import create_app
 
 
 def client(tmp_path):
