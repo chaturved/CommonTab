@@ -90,7 +90,7 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - Signing out with pending changes warns first: `engine.status().waiting` and `failed` are what the app checks; the warning itself is UI (step 6).
 
 ### Open / not verified
-- **Open question for you:** is the history entry ("Dinner was edited elsewhere") enough for the earlier editor, or must they always get the Conflict screen? The second needs the server to keep a note when an edit replaces one the first editor already had acknowledged (a data model addition), so I did not do it without asking.
+- **Decided (option 1):** if the earlier editor's push is accepted first and a later edit replaces it, they get a notice ("edited by someone else") and the old version in the record's history, not the Conflict screen. They get the Conflict screen only when their own push is the one refused. This is a small departure from the SPEC wording; revisit if testers want a one-tap way to put their version back (that would need a server note when an edit replaces another).
 - The fake server is written by me from the contract; the client has not run against the real backend yet. Worth one smoke test against a local backend before step 6 relies on it.
 - "Newest edit" compares the device clock with the server's `updatedAt`; a phone with a wrong clock can win or lose wrongly.
 - Discarding a refused edit of an already-synced expense leaves the discarded text showing until the next pull.
