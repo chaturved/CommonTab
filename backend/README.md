@@ -1,19 +1,45 @@
-# Shared API
+# CommonTab API
 
-The FastAPI service owns accounts, shared groups, bill sessions, balances, and receipts. The iOS app can run without it for personal expenses.
+FastAPI service for accounts, shared groups, expenses, settlements, temporary bill sessions and aggregate analytics. Postgres (Supabase in production), Alembic migrations, routes / service / repository layers per area under `app/`.
 
-From the repository root:
+## Run it
 
-```sh
-python3 -m venv backend/.venv
-backend/.venv/bin/python -m pip install -e './backend[test]'
-backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --reload
-```
-
-The default database is `backend/data/splittip.sqlite3`. Set `SPLITTIP_DB_PATH` to override it. Run the HTTP tests with:
+From `backend/`:
 
 ```sh
-backend/.venv/bin/python -m pytest -q backend/tests
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[test]'
+cp .env.example .env        # then put your Postgres URL in DATABASE_URL
+.venv/bin/alembic upgrade head
+.venv/bin/uvicorn app.main:create_app --factory --reload
 ```
+
+`GET /healthz` should answer `{"status":"ok"}`. The OpenAPI schema is at `/openapi.json`.
+
+## Configuration
+
+Environment variables win over `backend/.env` (which is gitignored; never commit it).
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Postgres URL. For Supabase use the **Session pooler** string (port 5432): it works over IPv4 and supports migrations. |
+| `SPLITTIP_METRICS_TOKEN` | Bearer token for `GET /v1/metrics` (kept from the old name). |
+| `RATE_LIMIT_AUTH_PER_MINUTE` | Sign-up and sign-in attempts per IP (default 10). |
+| `RATE_LIMIT_PER_MINUTE` | Other requests per session (default 600). |
+| `TRUST_PROXY` | `true` to read the client IP from `X-Forwarded-For`; only behind a proxy you control. |
+
+Rate limiting is in memory, which is right for one API instance. Move it to a shared store before running several.
+
+## Migrations
+
+The schema lives only in `migrations/versions`. Run `alembic upgrade head` at deploy time; the app does not migrate itself. Create a new revision with `alembic revision -m "what changed"` and write the SQL operations by hand.
+
+## Tests
+
+```sh
+.venv/bin/python -m pytest -q tests
+```
+
+Tests need `DATABASE_URL` (they skip without it). Each test worker creates a throwaway `test_<random>` schema, migrates it, and drops it at the end, so nothing else in the database is touched; workers run in parallel (`-n 4`). Shared money fixtures in `../fixtures/money` are also run by the TypeScript core.
 
 The HTTP contract is documented in [`docs/shared-api.md`](../docs/shared-api.md).

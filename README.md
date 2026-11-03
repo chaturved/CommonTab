@@ -45,16 +45,9 @@ The app defaults to `http://localhost:8000` for local development. A simulator o
 
 ## Run the API
 
-From the repository root:
+The API needs a Postgres database. See [backend/README.md](backend/README.md) for setup. In short, from `backend/`: copy `.env.example` to `.env`, set `DATABASE_URL`, run `alembic upgrade head`, then `uvicorn app.main:create_app --factory --reload`.
 
-```sh
-python3 -m venv backend/.venv
-backend/.venv/bin/python -m pip install -e './backend[test]'
-SPLITTIP_METRICS_TOKEN=replace-with-a-long-secret \
-  backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --reload
-```
-
-Check that the API is running at `http://localhost:8000/health`. The default SQLite file is `backend/data/splittip.sqlite3`; set `SPLITTIP_DB_PATH` to use another location. The same server must be reachable by every device. HTTPS is required outside localhost.
+Check that the API is running at `http://localhost:8000/healthz`. HTTPS is required outside localhost.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -62,7 +55,7 @@ Check that the API is running at `http://localhost:8000/health`. The default SQL
 | `GET /v1/groups`, `POST /v1/groups` | List or create shared groups |
 | `POST /v1/groups/{id}/invitations`, `POST /v1/invitations/accept` | Invite an email and join a group |
 | `PUT /v1/groups/{id}/expenses/{expenseId}` | Create or edit an expense with server-computed allocations |
-| `POST /v1/groups/{id}/settlements` | Record a balance settlement |
+| `POST /v1/groups/{id}/settlements` | Record a balance settlement (idempotent by id) |
 | `PUT`, `GET`, `DELETE /v1/groups/{id}/expenses/{expenseId}/receipt` | Manage a private shared receipt |
 | `POST /v1/sessions` | Create a seven-day shared bill and return an invite token |
 | `GET /v1/sessions/{id}` | Load a bill using its bearer token |
@@ -109,7 +102,7 @@ xcodebuild -project legacy/ios/CommonTab.xcodeproj -scheme CommonTab \
 
 The 34 Swift package tests cover money and itemized calculations, receipt parsing, local archive migration and rollback, groups and settlements, and API client requests. The 11 API tests cover authentication, group and invitation permissions, split and settlement validation, receipt access and size limits, persistence across app restarts, temporary bill sessions, and metrics. The 11 iOS UI tests cover the top-level navigation, calculator, settings, itemized bills, local expense creation, editing and deletion, group settlement, receipt scanner gating, and the shared-expense entry screen. UI tests use isolated local storage so one run cannot change another.
 
-CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, and uploads the Xcode result bundle if UI tests fail. The full Xcode suite passed on an iPhone 17 Pro simulator with iOS 26.3. Physical-device camera, accessibility, and distribution validation remain. The API has no hosted deployment or real user metrics. The SQLite setup targets one service instance. Before exposing it publicly, add HTTPS termination, rate limiting, monitoring, and backups. Accounts are email and password based; there is no email delivery or password reset yet. Shared expenses require an online connection.
+CI runs Swift, API, and iOS UI tests, builds the app for a generic simulator, and uploads the Xcode result bundle if UI tests fail. The full Xcode suite passed on an iPhone 17 Pro simulator with iOS 26.3. Physical-device camera, accessibility, and distribution validation remain. The API has no hosted deployment or real user metrics. The API stores data in Postgres and has in-memory rate limiting for one instance. Before exposing it publicly, add HTTPS termination, monitoring, and backups. Accounts are email and password based; there is no email delivery or password reset yet. Shared expenses require an online connection.
 
 ## License
 
@@ -117,4 +110,4 @@ Copyright 2026 Chaturved Lakkaraju. All rights reserved. This project is proprie
 
 ## Rename compatibility
 
-The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_DB_PATH`, `SPLITTIP_METRICS_TOKEN`, and the default `splittip.sqlite3` database name.
+The iOS bundle identifier, Keychain service names, and on-device expense archive path retain their SplitTip values so an installed app can continue reading existing data. The API also retains `SPLITTIP_METRICS_TOKEN`.

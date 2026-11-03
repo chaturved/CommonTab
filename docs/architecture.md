@@ -45,6 +45,6 @@ Local groups use named members without accounts. They remain separate from share
 
 ## Operational limits
 
-SQLite supports a single API instance for development or a small self-hosted deployment. The current code does not include email delivery, password reset, offline shared writes, push notifications, a production database migration system, or hosted monitoring. A public service needs HTTPS termination, rate limiting, backups, and operational monitoring. These limits are documented so the app does not imply that local data is automatically synced.
+The API uses Postgres with Alembic migrations and in-memory rate limiting, which suits one API instance. The current code does not include email delivery, password reset, push notifications, or hosted monitoring. A public service needs HTTPS termination, backups, and operational monitoring. These limits are documented so the app does not imply that local data is automatically synced.
 
 The HTTP contract can support a future React Native client or a shared-group browser client without sharing Swift source code. The current browser app does not use the API.
