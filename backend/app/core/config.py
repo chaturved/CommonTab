@@ -33,6 +33,9 @@ def normalize_database_url(url: str) -> str:
 class Settings:
     database_url: str
     metrics_token: str | None = None
+    rate_limit_auth_per_minute: int = 10  # sign-up and sign-in, per IP
+    rate_limit_per_minute: int = 600  # everything else, per session
+    trust_proxy: bool = False  # read the client IP from X-Forwarded-For (only behind a proxy you control)
 
 
 def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE) -> Settings:
@@ -40,4 +43,11 @@ def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE
     url = env.get('DATABASE_URL', '').strip()
     if not url:
         raise RuntimeError('DATABASE_URL is not set. Copy backend/.env.example to backend/.env and fill it in.')
-    return Settings(database_url=normalize_database_url(url), metrics_token=env.get('SPLITTIP_METRICS_TOKEN') or None)
+    defaults = Settings(database_url='')
+    return Settings(
+        database_url=normalize_database_url(url),
+        metrics_token=env.get('SPLITTIP_METRICS_TOKEN') or None,
+        rate_limit_auth_per_minute=int(env.get('RATE_LIMIT_AUTH_PER_MINUTE', defaults.rate_limit_auth_per_minute)),
+        rate_limit_per_minute=int(env.get('RATE_LIMIT_PER_MINUTE', defaults.rate_limit_per_minute)),
+        trust_proxy=env.get('TRUST_PROXY', '').lower() in ('1', 'true', 'yes'),
+    )
