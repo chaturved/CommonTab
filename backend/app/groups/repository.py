@@ -41,10 +41,14 @@ class GroupRepository:
         return [row.group_id for row in rows]
 
     def insert_group(self, db: Connection, group_id: UUID, name: str, currency: str, owner: UUID,
-                     created_at: datetime) -> None:
-        db.execute(text('''INSERT INTO expense_groups (id, name, currency_code, owner_id, created_at, version)
-                           VALUES (:id, :name, :currency, :owner, :created_at, 1)'''),
-                   {'id': group_id, 'name': name, 'currency': currency, 'owner': owner, 'created_at': created_at})
+                     created_at: datetime) -> bool:
+        """False when a group with this id already exists."""
+        result = db.execute(text('''INSERT INTO expense_groups (id, name, currency_code, owner_id, created_at, version)
+                                    VALUES (:id, :name, :currency, :owner, :created_at, 1)
+                                    ON CONFLICT (id) DO NOTHING'''),
+                            {'id': group_id, 'name': name, 'currency': currency, 'owner': owner,
+                             'created_at': created_at})
+        return result.rowcount == 1
 
     def insert_member(self, db: Connection, member_id: UUID, group_id: UUID, user_id: UUID | None, name: str,
                       created_at: datetime) -> bool:

@@ -23,8 +23,11 @@ def router_for(service: GroupService, accounts: AccountService) -> APIRouter:
         return service.groups(user(authorization))
 
     @router.post('/groups', status_code=201)
-    def create_group(input: GroupInput, authorization: str | None = Header(default=None)):
-        return service.create_group(user(authorization), input)
+    def create_group(input: GroupInput, response: Response, authorization: str | None = Header(default=None)):
+        group, created = service.create_group(user(authorization), input)
+        if not created:
+            response.status_code = 200  # the same request was already applied
+        return group
 
     @router.get('/groups/{group_id}')
     def group(group_id: UUID, authorization: str | None = Header(default=None)):

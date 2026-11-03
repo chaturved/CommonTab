@@ -6,9 +6,35 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator, constr
 
 
+class NewMember(BaseModel):
+    id: UUID
+    name: str = Field(min_length=1, max_length=80)
+
+
 class GroupInput(BaseModel):
+    # A client-chosen id makes creating a group repeatable: the same request again returns the same group.
+    id: UUID | None = None
     name: str = Field(min_length=1, max_length=120)
     currency_code: Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR"] = Field(alias="currencyCode")
+    # Optional people to start with (used when uploading a group that already exists on a phone).
+    # `meMemberID` says which of them is the signed-in account. Without `members`, the creator is the only member.
+    members: list[NewMember] | None = Field(default=None, min_length=1, max_length=50)
+    me_member_id: UUID | None = Field(default=None, alias="meMemberID")
+
+    @model_validator(mode="after")
+    def validate_members(self) -> GroupInput:
+        if self.members is None:
+            if self.me_member_id is not None:
+                raise ValueError("meMemberID needs members")
+            return self
+        ids = [member.id for member in self.members]
+        if len(set(ids)) != len(ids):
+            raise ValueError("Member ids must be unique")
+        if self.me_member_id not in ids:
+            raise ValueError("meMemberID must be one of the members")
+        if any(not member.name.strip() for member in self.members):
+            raise ValueError("Member names are required")
+        return self
 
 
 class InvitationInput(BaseModel):

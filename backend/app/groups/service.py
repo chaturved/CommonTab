@@ -63,16 +63,40 @@ class GroupService:
             return [self.snapshot(db, gid, uid) for gid in self.repository.group_ids_for_user(db, uid)]
 
     # --- groups, invitations ------------------------------------------------
-    def create_group(self, user_id: str, input: GroupInput) -> dict:
-        if not input.name.strip():
+    def create_group(self, user_id: str, input: GroupInput) -> tuple[dict, bool]:
+        """
+        Create a group; returns (snapshot, created). With a client `id` the call is repeatable: the same
+        request again returns the existing group (created=False); the same id with a different body, or
+        an id that is someone else's, is a conflict.
+        """
+        name = input.name.strip()
+        if not name:
             fail(422, 'Group name is required')
-        group_id = uuid4()
+        group_id = input.id or uuid4()
         uid = UUID(user_id)
         now = datetime.now(timezone.utc)
         with self.db.transaction() as db:
-            self.repository.insert_group(db, group_id, input.name.strip(), input.currency_code, uid, now)
-            self.repository.insert_member(db, uuid4(), group_id, uid, self.accounts.name_of(db, uid), now)
-            return self.snapshot(db, group_id, uid)
+            if not self.repository.insert_group(db, group_id, name, input.currency_code, uid, now):
+                return self.replay_group(db, group_id, uid, name, input), False
+            if input.members is None:
+                people = [(uuid4(), uid, self.accounts.name_of(db, uid))]
+            else:
+                people = [(m.id, uid if m.id == input.me_member_id else None, m.name.strip()) for m in input.members]
+            for member_id, member_user, member_name in people:
+                if not self.repository.insert_member(db, member_id, group_id, member_user, member_name, now):
+                    fail(409, 'Member ID already in use', 'id_conflict')
+            return self.snapshot(db, group_id, uid), True
+
+    def replay_group(self, db: Connection, group_id: UUID, uid: UUID, name: str, input: GroupInput) -> dict:
+        group = self.repository.group(db, group_id)
+        me = self.repository.member_of(db, group_id, uid)
+        if me is None or group.name != name or group.currency_code != input.currency_code:
+            fail(409, 'Group ID already in use', 'id_conflict')
+        if input.members is not None:
+            existing = {m.id: m.name for m in self.repository.members(db, group_id)}
+            if me.id != input.me_member_id or any(existing.get(m.id) != m.name.strip() for m in input.members):
+                fail(409, 'Group ID already in use', 'id_conflict')
+        return self.snapshot(db, group_id, uid)
 
     def rename_group(self, group_id: str, user_id: str, name: str) -> dict:
         if not name.strip():
