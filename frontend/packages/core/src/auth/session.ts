@@ -1,4 +1,4 @@
-import type { Api, Session } from '../api';
+import { ApiError, type Api, type Session } from '../api';
 
 /** Where the access token lives: Keychain/Keystore on mobile, memory or a cookie on web. Never localStorage. */
 export interface TokenStore {
@@ -27,6 +27,20 @@ export class AuthSession {
 
   async register(email: string, name: string, password: string): Promise<SignedInUser> {
     return this.accept(await this.api.register({ email, name, password }));
+  }
+
+  async restore(cached: SignedInUser | null): Promise<SignedInUser | null> {
+    try {
+      this.user = await this.api.me();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        await this.tokens.clear();
+        this.user = null;
+      } else {
+        this.user = cached;
+      }
+    }
+    return this.user;
   }
 
   async signOut(): Promise<void> {

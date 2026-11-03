@@ -13,6 +13,8 @@ const sameContent = (a: WireExpense, b: ExpenseInput, allocations: WireExpense['
   a.notes === b.notes && a.amountMinor === b.amountMinor && a.payerID === b.payerID && a.method === b.method &&
   JSON.stringify(a.allocations) === JSON.stringify(allocations) && JSON.stringify(a.values) === JSON.stringify(b.values);
 
+const notSimulated = async (): Promise<never> => { throw new Error('not simulated by the fake server'); };
+
 export class FakeServer {
   groups = new Map<string, Group>();
   private users = new Map<string, { id: string; email: string; name: string; password: string }>();
@@ -72,6 +74,15 @@ export class FakeServer {
         return this.issue(user.id, user.email, user.name);
       },
       logout: async () => { this.tokens.delete(getToken() ?? ''); },
+      me: async () => {
+        const user = [...this.users.values()].find((u) => this.tokens.get(getToken() ?? '') === u.id);
+        if (!user) throw new ApiError(401, 'Not signed in');
+        return { id: user.id, email: user.email, name: user.name };
+      },
+      requestPasswordReset: notSimulated,
+      confirmPasswordReset: notSimulated,
+      createInviteCode: notSimulated,
+      joinWithCode: notSimulated,
       healthy: async () => {
         if (this.offline) throw new ApiError(0, 'offline');
         return !this.unhealthy;

@@ -93,6 +93,36 @@ describe('AuthSession', () => {
     expect(session.user).toBeNull();
   });
 
+  describe('restore', () => {
+    const cached = { id: 'u', email: 'cached@example.com', name: 'Cached' };
+
+    test('a rejected token signs the user out', async () => {
+      const server = new FakeServer(new TestClock());
+      const tokens = new MemoryTokenStore();
+      await tokens.set('stale');
+      const session = new AuthSession(server.api(() => 'stale'), tokens);
+      expect(await session.restore(cached)).toBeNull();
+      expect(await tokens.get()).toBeNull();
+    });
+
+    test('offline keeps the cached user and the token', async () => {
+      const tokens = new MemoryTokenStore();
+      await tokens.set('t');
+      const offline = new AuthSession({ me: async () => { throw new ApiError(0, 'offline'); } } as never, tokens);
+      expect(await offline.restore(cached)).toEqual(cached);
+      expect(await tokens.get()).toBe('t');
+    });
+
+    test('a valid token returns the server profile', async () => {
+      const server = new FakeServer(new TestClock());
+      const issued = server.signUp('Ada');
+      const tokens = new MemoryTokenStore();
+      await tokens.set(issued.accessToken);
+      const session = new AuthSession(server.api(() => issued.accessToken), tokens);
+      expect(await session.restore(null)).toMatchObject({ email: 'ada@example.com' });
+    });
+  });
+
   test('a wrong password is a 401 and stores nothing', async () => {
     const server = new FakeServer(new TestClock());
     server.signUp('Ada');
@@ -100,5 +130,39 @@ describe('AuthSession', () => {
     const session = new AuthSession(server.api(() => null), tokens);
     await expect(session.signIn('ada@example.com', 'nope')).rejects.toMatchObject({ status: 401 });
     expect(await tokens.get()).toBeNull();
+  });
+});
+
+describe('HttpApi in cookie mode', () => {
+  const cookieClient = (replies: Reply[]) => {
+    const calls: { url: string; method: string; headers: Record<string, string>; credentials?: string }[] = [];
+    const fetch: FetchLike = async (url, init) => {
+      calls.push({ url, ...init });
+      const reply = replies.shift()! as Exclude<Reply, Error>;
+      return { status: reply.status, headers: { get: () => null }, text: async () => (reply.body === undefined ? '' : JSON.stringify(reply.body)) };
+    };
+    return { calls, api: new HttpApi({ baseUrl: 'https://api.test', fetch, getToken: () => null, cookies: { clientHeader: 'web' } }) };
+  };
+
+  test('sends credentials always and the client header on writes only', async () => {
+    const { api, calls } = cookieClient([{ status: 200, body: [] }, { status: 204 }]);
+    await api.listGroups();
+    await api.deleteExpense('g', 'e');
+    expect(calls.map((c) => c.credentials)).toEqual(['include', 'include']);
+    expect(calls[0]!.headers['X-CommonTab-Client']).toBeUndefined();
+    expect(calls[1]!.headers['X-CommonTab-Client']).toBe('web');
+    expect(calls[1]!.headers['Authorization']).toBeUndefined();
+  });
+
+  test('password reset, invite code, join and me hit their routes', async () => {
+    const { api, calls } = cookieClient([{ status: 202, body: {} }, { status: 204 }, { status: 201, body: { code: 'ABCD-2345' } }, { status: 200, body: {} }, { status: 200, body: {} }]);
+    await api.requestPasswordReset('a@b.c');
+    await api.confirmPasswordReset({ email: 'a@b.c', code: 'ABCD-2345', newPassword: 'x'.repeat(15) });
+    await api.createInviteCode('g', 'm');
+    await api.joinWithCode('ABCD-2345');
+    await api.me();
+    expect(calls.map((c) => `${c.method} ${c.url.replace('https://api.test/v1', '')}`)).toEqual([
+      'POST /auth/password-reset', 'POST /auth/password-reset/confirm', 'POST /groups/g/invite-code', 'POST /invitations/join', 'GET /me',
+    ]);
   });
 });
