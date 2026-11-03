@@ -36,8 +36,17 @@ def create_app(database: Database | None = None, lifetime_seconds: int = 7 * 24 
     app.include_router(bill_session_routes(sessions))
     app.include_router(analytics_routes(analytics))
 
-    @app.get('/health')
-    def health() -> dict[str, str]:
-        return {'status': 'ok'}
+    @app.get('/healthz')
+    @app.get('/health')  # older name, same behavior
+    def health() -> JSONResponse:
+        """
+        Lets the app tell "server down" from "no connection": 200 when the API can reach its database,
+        503 otherwise. Reveals nothing else.
+        """
+        try:
+            database.ping()
+        except Exception:
+            return JSONResponse(status_code=503, content={'status': 'unavailable'})
+        return JSONResponse(content={'status': 'ok'})
 
     return app
