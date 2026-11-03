@@ -226,6 +226,8 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Approved plan:** rates go through the backend (cached there), not from the apps; the app keeps the last rate per pair for offline.
 - **Commit 1 (server):** migration `0009` (`currency_code`, `original_minor`, `rate_micros`, all or none); the server checks `amountMinor` = converted original (`fixtures/money/convert.json`, shared with core `convertMinorUnits`). Applied to Supabase.
 - **Commit 2 (rates):** `GET /v1/rates?base=&quote=` from Frankfurter, cached an hour per pair on the server, stale if the source is down (`app/integrations/rates.py`, `app/services/rates.py`). Backend unit tests 385.
+- **Commit 3 (app):** Add and Edit expense have a currency chip next to the amount. Picking another currency asks the server for the rate (`quoteRate`, falling back to the last rate saved on the device for that pair), shows the Rate row with Edit, "Counts as" in the group currency, and the offline note from the design. With no rate at all you type one. The split uses the converted amount. The detail shows "€120.00 at 1 EUR = 1.1196 USD"; CSV export has Original amount and Original currency columns. Core tests 367.
+- **Not built:** foreign-currency payments; changing a group's currency; the rate is not refreshed when editing an existing expense (the saved rate is kept; tap Edit to change it); Activity rows show the group-currency amount only.
 
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

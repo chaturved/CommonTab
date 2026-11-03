@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import {
   addDifferenceTo, applyItemized, balanceChangeNote, balanceChanges, CATEGORIES, displayName, evaluateForm, evenPercents, formatCurrency,
-  formFromExpense, longDate, newExpenseForm, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant, type ExpenseForm,
-  type FormMethod, type ItemizedResult, type LocalExpense,
+  formatRate, formFromExpense, longDate, newExpenseForm, quoteRate, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant, type ExpenseForm,
+  type FormMethod, type ItemizedResult, type LocalExpense, type RateResult,
 } from '@commontab/core';
 import { Avatar, Banner, Button, CheckRow, FieldGroup, FieldRow, ListRow, SegmentedControl, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '../app-context';
+import { CurrencySelect } from './CurrencySelect';
 import { DesktopDialog } from './DesktopDialog';
+import { ForeignRate } from './ForeignRate';
 import { ItemizedEditor } from './ItemizedEditor';
 import { PickerRow } from './PickerRow';
 import type { GroupData } from '../data';
@@ -49,7 +51,50 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const [itemResult, setItemResult] = useState<ItemizedResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const entry = form.currencyCode ?? currency;
+  const foreign = entry !== currency;
+  const keptRate = mode === 'edit' && expense?.currencyCode === entry;
+  const [quote, setQuote] = useState<RateResult | null>(null);
+  const [quoting, setQuoting] = useState(false);
   const evaluated = useMemo(() => evaluateForm(form, currency), [form, currency]);
+  useEffect(() => {
+    setQuote(null);
+    if (!foreign || keptRate) return;
+    let live = true;
+    setQuoting(true);
+    void quoteRate(services.api, services.storage, entry, currency).then((result) => {
+      if (!live) return;
+      setQuote(result);
+      setQuoting(false);
+      if (result) setForm((f) => (f.currencyCode === entry && f.rateText === '' ? { ...f, rateText: formatRate(result.rateMicros) } : f));
+    });
+    return () => {
+      live = false;
+    };
+  }, [entry, currency, foreign, keptRate, services]);
+  const pickCurrency = (code: string) => patch({ currencyCode: code === currency ? null : code, rateText: '' });
+  const rateBlock = foreign ? (
+    <ForeignRate
+      entry={entry}
+      currency={currency}
+      rateText={form.rateText}
+      onRateText={(rateText) => patch({ rateText })}
+      quote={quote}
+      loading={quoting}
+      kept={keptRate}
+      countsAs={evaluated.amountMinor !== null ? formatCurrency(evaluated.amountMinor, currency) : null}
+      error={evaluated.errors.rate && form.rateText !== '' ? evaluated.errors.rate : undefined}
+    />
+  ) : null;
+  const currencyChip = (
+    <CurrencySelect value={entry} onChange={pickCurrency}>
+      {(open) => (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Currency, ${entry}. Change`} onPress={open} className="min-h-touch justify-center rounded-pill bg-tint px-3 active:opacity-80">
+          <Text variant="body-small" tone="accent" className="font-bold">{entry} ▾</Text>
+        </Pressable>
+      )}
+    </CurrencySelect>
+  );
   const memberIds = group.members.map((m) => m.id);
   const people = group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID);
   const nameOf = (id: string) => {
@@ -298,11 +343,13 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           <View className="flex-1 gap-1.5">
             <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
             <View className={fieldBox} style={{ borderColor: colors['field-border'] }}>
-              <Text variant="body" tone="muted">{symbolOf(currency)}</Text>
+              <Text variant="body" tone="muted">{symbolOf(entry)}</Text>
               <TextInput accessibilityLabel="Amount" value={form.amountText} onChangeText={(text) => patch({ amountText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} autoFocus={mode === 'add'} className="min-h-[44px] min-w-0 flex-1 pl-2 text-body font-semibold text-fg" style={{ outlineStyle: 'none' } as never} />
+              {currencyChip}
             </View>
           </View>
         </View>
+        {rateBlock}
         <View className="flex-row gap-3">
           <View className="flex-1"><PickerRow label="Paid by" value={nameOf(form.payerID)} onPress={() => setSheet('payer')} /></View>
           <View className="flex-1"><PickerRow label="Date" value={evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`)} onPress={() => setSheet('date')} /></View>
@@ -331,7 +378,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       <View className="gap-1 rounded-card bg-card px-4 py-3">
         <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
         <View className="flex-row items-center gap-2">
-          <Text variant="large-title" tone="muted" className="text-[34px]">{symbolOf(currency)}</Text>
+          <Text variant="large-title" tone="muted" className="text-[34px]">{symbolOf(entry)}</Text>
           <TextInput
             accessibilityLabel="Amount"
             value={form.amountText}
@@ -343,9 +390,12 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
             className="min-h-[48px] min-w-0 flex-1 text-[34px] font-extrabold text-fg"
             style={{ outlineStyle: 'none' } as never}
           />
+          {currencyChip}
         </View>
         {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
       </View>
+
+      {rateBlock}
 
       <FieldGroup>
         <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />

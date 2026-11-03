@@ -15,17 +15,21 @@ export function allocationsFor(content: ExpenseContent) {
   });
 }
 
+export function foreignOf(e: { currencyCode?: string | null; originalMinor?: number | null; rateMicros?: number | null }) {
+  return e.currencyCode ? { currencyCode: e.currencyCode, originalMinor: e.originalMinor ?? null, rateMicros: e.rateMicros ?? null } : {};
+}
+
 export function contentOf(record: WireExpense, editedAt: string = record.updatedAt): LocalContent {
   return {
     id: record.id, groupID: record.groupID, merchant: record.merchant, occurredAt: record.occurredAt,
     category: record.category, notes: record.notes, amountMinor: record.amountMinor, payerID: record.payerID,
     method: record.method, participants: record.allocations.map((a) => a.memberID), values: record.values,
-    allocations: record.allocations, editedAt,
+    allocations: record.allocations, editedAt, ...foreignOf(record),
   };
 }
 
 export function sameContent(a: WireExpense, b: WireExpense): boolean {
-  const pick = (e: WireExpense) => JSON.stringify([e.merchant, e.occurredAt, e.category, e.notes, e.amountMinor, e.payerID, e.method, e.allocations, e.values, e.deletedAt]);
+  const pick = (e: WireExpense) => JSON.stringify([e.merchant, e.occurredAt, e.category, e.notes, e.amountMinor, e.payerID, e.method, e.allocations, e.values, e.deletedAt, e.currencyCode ?? null, e.originalMinor ?? null, e.rateMicros ?? null]);
   return pick(a) === pick(b);
 }
 
@@ -52,6 +56,6 @@ export function groupFromSnapshot(snapshot: GroupSnapshot, local?: LocalGroup): 
 export function toContent(c: ExpenseContent): ExpenseContent {
   return {
     id: c.id, merchant: c.merchant, occurredAt: c.occurredAt, category: c.category, notes: c.notes,
-    amountMinor: c.amountMinor, payerID: c.payerID, method: c.method, participants: c.participants, values: c.values,
+    amountMinor: c.amountMinor, payerID: c.payerID, method: c.method, participants: c.participants, values: c.values, ...foreignOf(c),
   };
 }

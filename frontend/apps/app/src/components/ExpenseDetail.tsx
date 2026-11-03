@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { categoryLabel, expenseChanges, expenseHistory, expenseRow, formatCurrency, longDate, type LocalExpense } from '@commontab/core';
+import { categoryLabel, expenseChanges, expenseHistory, expenseRow, formatCurrency, longDate, rateSentence, type LocalExpense } from '@commontab/core';
 import { Avatar, Banner, Button, Hero, Sheet, Text } from '@commontab/ui';
 import { useApp } from '../app-context';
 import { useActivityEvents, type GroupData } from '../data';
@@ -23,14 +23,18 @@ export function ExpenseBody({ expense, data }: { expense: LocalExpense; data: Gr
   const nameOf = useNames(data);
   const { events } = useActivityEvents();
   const lines = expenseHistory(events, expense.id, group);
+  const original = expense.currencyCode && expense.originalMinor && expense.rateMicros
+    ? `${formatCurrency(expense.originalMinor, expense.currencyCode)} at ${rateSentence(expense.currencyCode, currency, expense.rateMicros)}`
+    : null;
   const kicker = row.position.kind === 'lent' ? `YOU LENT ${formatCurrency(row.position.minorUnits, currency)}` : row.position.kind === 'owe' ? `YOU OWE ${formatCurrency(row.position.minorUnits, currency)}` : "YOU'RE NOT INVOLVED";
   return (
     <View className="gap-1">
-      <Hero accessible accessibilityLabel={`${kicker.toLowerCase()}. ${expense.merchant}, ${formatCurrency(expense.amountMinor, currency)}. ${group.name}, ${categoryLabel(expense.category)}, ${longDate(expense.occurredAt)}`} padding={20}>
+      <Hero accessible accessibilityLabel={`${kicker.toLowerCase()}. ${expense.merchant}, ${formatCurrency(expense.amountMinor, currency)}${original ? `, from ${original}` : ''}. ${group.name}, ${categoryLabel(expense.category)}, ${longDate(expense.occurredAt)}`} padding={20}>
         <View className="gap-1" importantForAccessibility="no-hide-descendants">
           <Text variant="label" tone="mint">{kicker}</Text>
           <Text variant="section" tone="white">{expense.merchant}</Text>
           <Text variant="large-title" tone="white" className="text-[34px] leading-10">{formatCurrency(expense.amountMinor, currency)}</Text>
+          {original ? <Text variant="caption" tone="hero-muted" className="text-[13px]">{original}</Text> : null}
           <Text variant="caption" tone="hero-muted" className="text-[13px]">{group.name} · {categoryLabel(expense.category)} · {longDate(expense.occurredAt)}</Text>
         </View>
       </Hero>

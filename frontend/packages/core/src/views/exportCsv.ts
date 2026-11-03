@@ -2,7 +2,7 @@ import { formatMinorUnits } from '../money/money';
 import type { LocalExpense, LocalGroup, LocalSettlement } from '../storage/types';
 import { displayName } from './groups';
 
-const COLUMNS = ['Group', 'Type', 'Date', 'Description', 'Category', 'Paid by', 'Paid to', 'Amount', 'Currency', 'Your share', 'Notes'] as const;
+const COLUMNS = ['Group', 'Type', 'Date', 'Description', 'Category', 'Paid by', 'Paid to', 'Amount', 'Currency', 'Your share', 'Notes', 'Original amount', 'Original currency'] as const;
 
 export interface ExportGroup {
   group: LocalGroup;
@@ -28,12 +28,13 @@ export function expensesToCsv(groups: readonly ExportGroup[]): string {
       lines.push([
         group.name, 'Expense', e.occurredAt.slice(0, 10), e.merchant, e.category, nameOf(e.payerID), '',
         formatMinorUnits(e.amountMinor, group.currencyCode), group.currencyCode, formatMinorUnits(share, group.currencyCode), e.notes,
+        ...(e.currencyCode && e.originalMinor ? [formatMinorUnits(e.originalMinor, e.currencyCode), e.currencyCode] : ['', '']),
       ].map(cell).join(','));
     }
     for (const s of [...settlements].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))) {
       lines.push([
         group.name, 'Payment', s.createdAt.slice(0, 10), '', '', nameOf(s.fromID), nameOf(s.toID),
-        formatMinorUnits(s.amountMinor, group.currencyCode), group.currencyCode, '', '',
+        formatMinorUnits(s.amountMinor, group.currencyCode), group.currencyCode, '', '', '', '',
       ].map(cell).join(','));
     }
   }

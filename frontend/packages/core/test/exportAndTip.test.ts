@@ -16,12 +16,17 @@ describe('expensesToCsv', () => {
     const payment: LocalSettlement = { id: 's', groupID: 'g', fromID: 'sam', toID: 'me', amountMinor: 5000, createdAt: '2026-11-02T10:00:00Z', syncState: 'synced' };
     const csv = expensesToCsv([{ group, expenses: [expense({ id: 'b', merchant: 'Brunch', occurredAt: '2026-10-29T10:00:00Z', payerID: 'sam', amountMinor: 5400 }), expense({})], settlements: [payment] }]);
     expect(csv.split('\r\n')).toEqual([
-      'Group,Type,Date,Description,Category,Paid by,Paid to,Amount,Currency,Your share,Notes',
-      '"Austin, ""Trip""",Expense,2026-10-29,Brunch,dining,Sam,,54.00,USD,81.75,',
-      '"Austin, ""Trip""",Expense,2026-10-30,Dinner,dining,You,,163.50,USD,81.75,',
-      '"Austin, ""Trip""",Payment,2026-11-02,,,Sam,You,50.00,USD,,',
+      'Group,Type,Date,Description,Category,Paid by,Paid to,Amount,Currency,Your share,Notes,Original amount,Original currency',
+      '"Austin, ""Trip""",Expense,2026-10-29,Brunch,dining,Sam,,54.00,USD,81.75,,,',
+      '"Austin, ""Trip""",Expense,2026-10-30,Dinner,dining,You,,163.50,USD,81.75,,,',
+      '"Austin, ""Trip""",Payment,2026-11-02,,,Sam,You,50.00,USD,,,,',
       '',
     ]);
+  });
+
+  test('a foreign-currency expense lists the original amount and currency', () => {
+    const csv = expensesToCsv([{ group, expenses: [expense({ amountMinor: 12960, currencyCode: 'EUR', originalMinor: 12000, rateMicros: 1_080_000 })], settlements: [] }]);
+    expect(csv.split('\r\n')[1]).toMatch(/,129\.60,USD,81\.75,,120\.00,EUR$/);
   });
 
   test('deleted expenses are left out', () => {

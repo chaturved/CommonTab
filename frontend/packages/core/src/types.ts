@@ -31,6 +31,9 @@ export interface ExpenseInput {
   participants: string[];
   values: string[];
   version: number | null;
+  currencyCode?: string | null;
+  originalMinor?: number | null;
+  rateMicros?: number | null;
 }
 
 export type ExpenseContent = Omit<ExpenseInput, 'version'>;
@@ -48,6 +51,9 @@ export interface WireExpense {
   allocations: Allocation[];
   values: string[];
   version: number;
+  currencyCode?: string | null;
+  originalMinor?: number | null;
+  rateMicros?: number | null;
   hasReceipt: boolean;
   updatedAt: string;
   deletedAt: string | null;
@@ -82,6 +88,13 @@ export interface GroupSnapshot {
   settlements: WireSettlement[];
   balances: { memberID: string; minorUnits: number }[];
   archived?: boolean;
+}
+
+export interface RateQuote {
+  base: string;
+  quote: string;
+  rateMicros: number;
+  date: string;
 }
 
 export interface GroupStub {

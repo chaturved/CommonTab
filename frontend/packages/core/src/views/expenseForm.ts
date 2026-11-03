@@ -1,5 +1,7 @@
+import { convertMinorUnits } from '../money/convert';
 import { formatCurrency } from '../money/format';
 import { formatMinorUnits, parseMinorUnits } from '../money/money';
+import { formatRate, parseRate } from '../money/rate';
 import { allocate, splitEqual, type Allocation } from '../splitter';
 import { commonScale, parseDecimal } from '../splitter/decimal';
 import type { ExpenseDraft } from '../sync/actions';
@@ -29,6 +31,8 @@ export interface ExpenseForm {
   date: string;
   category: string;
   notes: string;
+  currencyCode: string | null;
+  rateText: string;
   method: FormMethod;
   participants: string[];
   amounts: Record<string, string>;
@@ -43,7 +47,8 @@ export interface SplitIssue {
 
 export interface FormEvaluation {
   amountMinor: number | null;
-  errors: { merchant?: string; amount?: string; participants?: string; date?: string };
+  originalMinor: number | null;
+  errors: { merchant?: string; amount?: string; rate?: string; participants?: string; date?: string };
   shares: Allocation[];
   split: SplitIssue | null;
   draft: ExpenseDraft | null;
@@ -59,7 +64,7 @@ export function localDate(nowMs: number): string {
 export function newExpenseForm(group: LocalGroup, nowMs: number): ExpenseForm {
   return {
     merchant: '', amountText: '', payerID: group.meMemberID, date: localDate(nowMs), category: 'dining', notes: '',
-    method: 'equal', participants: group.members.filter((m) => !m.removedAt).map((m) => m.id), amounts: {}, percents: {},
+    currencyCode: null, rateText: '', method: 'equal', participants: group.members.filter((m) => !m.removedAt).map((m) => m.id), amounts: {}, percents: {},
   };
 }
 
@@ -72,9 +77,12 @@ export function formFromExpense(expense: LocalExpense, currencyCode: string): Ex
     if (method === 'exact') amounts[id] = formatMinorUnits(Number(expense.values[i] ?? 0), currencyCode);
     if (method === 'percent') percents[id] = expense.values[i] ?? '';
   });
+  const foreign = expense.currencyCode && expense.originalMinor && expense.rateMicros ? expense : null;
   return {
-    merchant: expense.merchant, amountText: formatMinorUnits(expense.amountMinor, currencyCode), payerID: expense.payerID,
-    date: expense.occurredAt.slice(0, 10), category: expense.category, notes: expense.notes, method, participants, amounts, percents,
+    merchant: expense.merchant, amountText: foreign ? formatMinorUnits(foreign.originalMinor as number, foreign.currencyCode as string) : formatMinorUnits(expense.amountMinor, currencyCode),
+    payerID: expense.payerID, date: expense.occurredAt.slice(0, 10), category: expense.category, notes: expense.notes,
+    currencyCode: foreign ? (foreign.currencyCode as string) : null, rateText: foreign ? formatRate(foreign.rateMicros as number) : '',
+    method, participants, amounts, percents,
   };
 }
 
@@ -107,9 +115,21 @@ function showPercent(total: bigint, scale: number): string {
 export function evaluateForm(form: ExpenseForm, currencyCode: string): FormEvaluation {
   const errors: FormEvaluation['errors'] = {};
   if (form.merchant.trim() === '') errors.merchant = 'Add a description';
-  const parsed = form.amountText.trim() === '' ? null : tryParse(form.amountText, currencyCode);
-  const amountMinor = parsed !== null && parsed > 0 ? parsed : null;
-  if (amountMinor === null) errors.amount = 'Enter an amount';
+  const foreign = form.currencyCode && form.currencyCode !== currencyCode ? form.currencyCode : null;
+  const parsed = form.amountText.trim() === '' ? null : tryParse(form.amountText, foreign ?? currencyCode);
+  const originalMinor = parsed !== null && parsed > 0 ? parsed : null;
+  const rateMicros = foreign ? parseRate(form.rateText) : null;
+  let converted: number | null = null;
+  if (originalMinor === null) errors.amount = 'Enter an amount';
+  if (foreign && rateMicros === null) errors.rate = 'Enter a rate';
+  if (foreign && originalMinor !== null && rateMicros !== null) {
+    try {
+      converted = convertMinorUnits(originalMinor, foreign, currencyCode, rateMicros);
+    } catch {
+      errors.amount = 'That amount is too small to convert';
+    }
+  }
+  const amountMinor = foreign ? converted : originalMinor;
   if (form.participants.length === 0) errors.participants = 'Pick at least one person';
   if (!validDate(form.date)) errors.date = 'Use the format YYYY-MM-DD';
 
@@ -150,9 +170,10 @@ export function evaluateForm(form: ExpenseForm, currencyCode: string): FormEvalu
     ? {
         merchant: form.merchant.trim(), occurredAt: `${form.date}T12:00:00.000Z`, category: form.category, notes: form.notes.trim(),
         amountMinor, payerID: form.payerID, method: form.method === 'percent' ? 'percentage' : form.method, participants: form.participants, values,
+        ...(foreign ? { currencyCode: foreign, originalMinor, rateMicros } : {}),
       }
     : null;
-  return { amountMinor, errors, shares, split, draft };
+  return { amountMinor, originalMinor, errors, shares, split, draft };
 }
 
 export function splitIssueMessage(issue: SplitIssue, currencyCode: string, amountMinor: number, shares: readonly Allocation[]): string {

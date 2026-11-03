@@ -2,7 +2,7 @@ import { enqueue } from '../outbox/outbox';
 import type { OutboxContext } from '../outbox/outbox';
 import type { LocalExpense, LocalGroup, LocalSettlement, Storage, Store } from '../storage/types';
 import type { ExpenseContent, Member } from '../types';
-import { allocationsFor, contentOf, iso, toContent, withHistory } from './records';
+import { allocationsFor, contentOf, foreignOf, iso, toContent, withHistory } from './records';
 
 export interface ActionDeps extends OutboxContext {
   storage: Storage;
@@ -103,7 +103,7 @@ export class Actions {
         id, groupID: groupId, merchant: content.merchant, occurredAt: content.occurredAt, category: content.category,
         notes: content.notes, amountMinor: content.amountMinor, payerID: content.payerID, method: content.method,
         allocations, values: content.values, version: existing?.version ?? 0, hasReceipt: existing?.hasReceipt ?? false,
-        updatedAt: this.nowIso(), deletedAt: null, syncState: 'pending', history: existing?.history ?? [],
+        updatedAt: this.nowIso(), deletedAt: null, syncState: 'pending', history: existing?.history ?? [], ...foreignOf(content),
       };
       await tx.putExpense(record);
       if (!group.localOnly) {
@@ -162,7 +162,8 @@ export class Actions {
       const restored: LocalExpense = {
         ...record, merchant: mine.merchant, occurredAt: mine.occurredAt, category: mine.category, notes: mine.notes,
         amountMinor: mine.amountMinor, payerID: mine.payerID, method: mine.method, allocations: mine.allocations,
-        values: mine.values, deletedAt: null, updatedAt: at, syncState: 'pending', conflict: undefined,
+        values: mine.values, currencyCode: mine.currencyCode ?? null, originalMinor: mine.originalMinor ?? null, rateMicros: mine.rateMicros ?? null,
+        deletedAt: null, updatedAt: at, syncState: 'pending', conflict: undefined,
         history: withHistory(record, { at, reason: 'overwritten_by_you', record: { ...record } }),
       };
       await tx.putExpense(restored);

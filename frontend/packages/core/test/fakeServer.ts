@@ -11,6 +11,7 @@ interface Group {
 const sameContent = (a: WireExpense, b: ExpenseInput, allocations: WireExpense['allocations']) =>
   a.deletedAt === null && a.merchant === b.merchant && a.occurredAt === b.occurredAt && a.category === b.category &&
   a.notes === b.notes && a.amountMinor === b.amountMinor && a.payerID === b.payerID && a.method === b.method &&
+  (a.currencyCode ?? null) === (b.currencyCode ?? null) && (a.originalMinor ?? null) === (b.originalMinor ?? null) && (a.rateMicros ?? null) === (b.rateMicros ?? null) &&
   JSON.stringify(a.allocations) === JSON.stringify(allocations) && JSON.stringify(a.values) === JSON.stringify(b.values);
 
 const notSimulated = async (): Promise<never> => { throw new Error('not simulated by the fake server'); };
@@ -23,6 +24,7 @@ export class FakeServer {
 
   offline = false;
   activityLog: ActivityEvent[] = [];
+  rates = new Map<string, number>();
   closed = new Map<string, { status: 'removed' | 'deleted'; since: string }>();
   unhealthy = false;
   dropResponses = 0;
@@ -82,6 +84,11 @@ export class FakeServer {
         return { id: user.id, email: user.email, name: user.name };
       },
       activity: async (since) => ({ events: this.activityLog.filter((e) => e.seq > since), next: this.activityLog.at(-1)?.seq ?? since }),
+      rate: async (base, quote) => {
+        const rateMicros = this.rates.get(`${base}:${quote}`);
+        if (this.offline || rateMicros === undefined) throw new ApiError(this.offline ? 0 : 502, 'rates unavailable');
+        return { base, quote, rateMicros, date: '2026-11-02' };
+      },
       renameMe: notSimulated,
       changePassword: notSimulated,
       deleteAccount: notSimulated,
@@ -174,7 +181,7 @@ export class FakeServer {
       const record: WireExpense = {
         id: input.id, groupID: groupId, merchant: input.merchant, occurredAt: input.occurredAt, category: input.category, notes: input.notes,
         amountMinor: input.amountMinor, payerID: input.payerID, method: input.method, allocations, values: input.values, version,
-        hasReceipt: false, updatedAt: this.now(), deletedAt: null,
+        currencyCode: input.currencyCode ?? null, originalMinor: input.originalMinor ?? null, rateMicros: input.rateMicros ?? null, hasReceipt: false, updatedAt: this.now(), deletedAt: null,
       };
       group.expenses.set(record.id, record);
       group.version++;
