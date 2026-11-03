@@ -25,7 +25,7 @@ export default function JoinWithCode() {
         </View>
       }
     >
-      <View className="flex-row items-center pt-1"><BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} /></View>
+      <View className="flex-row items-center pt-1"><BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))} /></View>
       <View className="items-center gap-2 px-4">
         <View className="h-16 w-16 items-center justify-center rounded-pill bg-tint">
           <Icon icon={UserPlus} size={34} strokeWidth={1.8} tone="accent" />

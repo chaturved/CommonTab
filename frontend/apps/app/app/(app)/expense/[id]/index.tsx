@@ -13,7 +13,7 @@ export default function ExpenseScreen() {
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);
   const desktop = useIsDesktop();
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/home'));
 
   if (desktop && data) return <Redirect href={{ pathname: '/group/[id]', params: { id: data.group.id, expense: id } }} />;
 

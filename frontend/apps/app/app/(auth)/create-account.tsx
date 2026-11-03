@@ -35,7 +35,7 @@ export default function CreateAccount() {
     >
       {desktop ? null : (
         <View className="flex-row items-center justify-between pt-1">
-          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))} />
         </View>
       )}
       <View className={desktop ? 'gap-1.5' : 'gap-1.5 px-2 pt-2'}>

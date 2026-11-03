@@ -25,7 +25,7 @@ export default function GroupDetail() {
 
   const header = (
     <View className="min-h-touch flex-row items-center justify-between gap-3">
-      <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
       <View className="min-w-0 flex-1 items-center gap-1">
         <Text variant="screen-title" accessibilityRole="header" numberOfLines={1}>{data?.group.name ?? ''}</Text>
         <SyncStatusChip />
@@ -61,7 +61,7 @@ export default function GroupDetail() {
   const { group, expenses, settlements, summary } = data;
   const closedHeader = summary.closed ? (
     <View className="min-h-touch flex-row items-center justify-between gap-3">
-      <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
       <Text variant="screen-title" accessibilityRole="header" numberOfLines={1} className="min-w-0 flex-1 text-center">{group.name}</Text>
       <View className="w-11" />
     </View>

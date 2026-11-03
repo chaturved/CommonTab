@@ -6,7 +6,7 @@ import { TabBar } from '@commontab/ui';
 import { useIsDesktop } from '../../../src/layout';
 
 const TABS = [
-  { key: 'index', label: 'Home', icon: House, href: '/' },
+  { key: 'home', label: 'Home', icon: House, href: '/home' },
   { key: 'groups', label: 'Groups', icon: Users, href: '/groups' },
   { key: 'activity', label: 'Activity', icon: Activity, href: '/activity' },
   { key: 'account', label: 'Account', icon: CircleUser, href: '/account' },
@@ -24,7 +24,7 @@ export default function TabsLayout() {
           <View className="w-full max-w-[480px]">
             <TabBar
               tabs={TABS}
-              activeKey={state.routes[state.index]?.name ?? 'index'}
+              activeKey={state.routes[state.index]?.name ?? 'home'}
               onSelect={(key) => router.navigate(TABS.find((t) => t.key === key)!.href)}
               onAdd={() => router.push('/add-expense')}
             />

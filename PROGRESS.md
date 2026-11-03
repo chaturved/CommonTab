@@ -229,6 +229,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Commit 3 (app):** Add and Edit expense have a currency chip next to the amount. Picking another currency asks the server for the rate (`quoteRate`, falling back to the last rate saved on the device for that pair), shows the Rate row with Edit, "Counts as" in the group currency, and the offline note from the design. With no rate at all you type one. The split uses the converted amount. The detail shows "€120.00 at 1 EUR = 1.1196 USD"; CSV export has Original amount and Original currency columns. Core tests 367.
 - **Not built:** foreign-currency payments; changing a group's currency; the rate is not refreshed when editing an existing expense (the saved rate is kept; tap Edit to change it); Activity rows show the group-currency amount only.
 
+## Step 7 part 1: routes for a landing page — done
+- **Decision:** the landing page is built in the Expo app (not static HTML) and is the web root `/`; Home moves to `/home` and the intro screen to `/welcome`. `website/` goes once the landing page is ported.
+- **Now:** `/home` is Home (tabs, sidebar and back fallbacks point at it); `/welcome` is the old Welcome (desktop web still goes on to `/sign-in`); `/` is a temporary redirect: signed in to `/home`, signed out to `/welcome`. Signing in lands on `/home`, signing out on `/welcome`.
+- **Next:** the landing page at `/` on web (shared hero with Welcome, marketing sections below), then the static export and retiring `website/`. Native `/` will stay a redirect.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

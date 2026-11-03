@@ -11,7 +11,7 @@ import { useSyncStatus } from '../useSyncStatus';
 import { Wordmark } from './Logo';
 
 const NAV = [
-  { label: 'Home', icon: House, href: '/', match: (p: string) => p === '/' },
+  { label: 'Home', icon: House, href: '/home', match: (p: string) => p === '/home' },
   { label: 'Groups', icon: Users, href: '/groups', match: (p: string) => p === '/groups' || p.startsWith('/group/') || p === '/create-group' },
   { label: 'Activity', icon: Activity, href: '/activity', match: (p: string) => p === '/activity' },
   { label: 'Account', icon: CircleUser, href: '/account', match: (p: string) => p === '/account' },

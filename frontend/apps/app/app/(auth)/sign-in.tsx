@@ -36,7 +36,7 @@ export default function SignIn() {
         </View>
       ) : (
         <View className="flex-row items-center justify-between pt-1">
-          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))} />
         </View>
       )}
       {desktop ? null : <Hero>
