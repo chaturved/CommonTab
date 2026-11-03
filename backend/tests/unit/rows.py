@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 
+from app.schemas.groups import ExpenseInput, SettlementInput
+
 NOW = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc)
 
 
@@ -33,3 +35,15 @@ def invitation_row(**changes) -> SimpleNamespace:
     return SimpleNamespace(**{
         'token_hash': 'h', 'group_id': uuid4(), 'email': 'cy@example.com', 'expires_at': datetime(2999, 1, 1, tzinfo=timezone.utc),
         'accepted_at': None, 'member_id': None, **changes})
+
+
+def expense_input(repos, **changes) -> ExpenseInput:
+    """A valid expense paid by the signed-in member and shared with `repos.other`."""
+    body = {'id': str(uuid4()), 'merchant': 'Dinner', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 1001,
+            'payerID': str(repos.me.id), 'method': 'equal', 'participants': [str(repos.me.id), str(repos.other)]}
+    return ExpenseInput.model_validate({**body, **changes})
+
+
+def payment(repos, amount, frm=None, to=None, id=None) -> SettlementInput:
+    return SettlementInput.model_validate({'id': str(id or uuid4()), 'fromID': str(frm or repos.bob),
+                                           'toID': str(to or repos.ada), 'amountMinor': amount})

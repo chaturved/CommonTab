@@ -9,15 +9,19 @@ from app.services.invitations import InvitationService
 from rows import invitation_row, member_row, user_row
 
 
-@pytest.fixture
-def service(repos) -> InvitationService:
-    repos.cy = user_row(name='Cy', email='cy@example.com')
-    repos.users.user_by_id.return_value = repos.cy
-    repos.members.is_member_email.return_value = False
-    return InvitationService(repos.invitations, repos.members, repos.groups, repos.users, repos.guard, repos.snapshots)
+class InvitationServiceCase:
+    """Shared setup for the tests below; not collected itself (its name does not start with Test)."""
+
+    @pytest.fixture
+    def service(self, repos) -> InvitationService:
+        repos.cy = user_row(name='Cy', email='cy@example.com')
+        repos.users.user_by_id.return_value = repos.cy
+        repos.members.is_member_email.return_value = False
+        return InvitationService(repos.invitations, repos.members, repos.groups, repos.users, repos.guard,
+                                 repos.snapshots)
 
 
-class TestInvite:
+class TestInvite(InvitationServiceCase):
     def invite(self, service, repos, email='cy@example.com', member_id=None):
         return service.invite(str(repos.group_id), str(repos.user_id), email, member_id)
 
@@ -54,7 +58,7 @@ class TestInvite:
         assert caught.value.status == 422
 
 
-class TestAcceptInvite:
+class TestAcceptInvite(InvitationServiceCase):
     def accept(self, service, repos, token='code'):
         return service.accept_invite(str(repos.cy.id), token)
 
