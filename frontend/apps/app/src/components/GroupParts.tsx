@@ -35,7 +35,32 @@ export function BalancesList({ data, onSettle }: { data: GroupData; onSettle?: (
   );
 }
 
-export function MembersList({ data }: { data: GroupData }) {
+export function NetBalancesList({ data }: { data: GroupData }) {
+  const { group, summary } = data;
+  const currency = summary.currencyCode;
+  return (
+    <Card className="overflow-hidden">
+      {group.members.map((member, i) => {
+        const balance = summary.balances.find((b) => b.memberID === member.id)?.minorUnits ?? 0;
+        const you = member.id === group.meMemberID;
+        const amount = formatCurrency(Math.abs(balance), currency);
+        const words = balance > 0 ? (you ? 'gets back' : 'is owed') : balance < 0 ? (you ? 'owe' : 'owes') : 'settled up';
+        return (
+          <View key={member.id} accessible accessibilityLabel={`${you ? 'You' : member.name} ${words}${balance === 0 ? '' : ` ${amount}`}`} className={`h-[68px] flex-row items-center gap-3.5 px-5 ${i < group.members.length - 1 ? 'border-b border-divider' : ''}`}>
+            <Avatar name={member.name} id={member.id} size="md" />
+            <View className="flex-1">
+              <Text variant="body" className="text-base font-semibold">{you ? 'You' : member.name}</Text>
+              <Text variant="caption" tone="muted" className="text-[13px]">{words}</Text>
+            </View>
+            {balance === 0 ? null : <Text variant="button" tone={balance > 0 ? 'accent' : 'owe'} className="text-[17px]">{amount}</Text>}
+          </View>
+        );
+      })}
+    </Card>
+  );
+}
+
+export function MembersList({ data, contact }: { data: GroupData; contact?: boolean }) {
   const { group, summary } = data;
   return (
     <Card className="overflow-hidden">
@@ -45,6 +70,17 @@ export function MembersList({ data }: { data: GroupData }) {
         const owner = member.id === group.ownerID;
         const amount = formatCurrency(Math.abs(balance), group.currencyCode);
         const words = balance > 0 ? `Owed ${amount}` : balance < 0 ? `Owes ${amount}` : 'Settled up';
+        if (contact) {
+          return (
+            <View key={member.id} accessible accessibilityLabel={`${you ? 'You' : member.name}${owner ? ', owner' : ''}, ${member.email ?? 'no account yet'}`} className={`h-[68px] flex-row items-center gap-3.5 px-5 ${i < group.members.length - 1 ? 'border-b border-divider' : ''}`}>
+              <Avatar name={member.name} id={member.id} size="md" />
+              <View className="flex-1">
+                <Text variant="body" className="text-base font-semibold">{you ? 'You' : member.name}{owner ? ' · owner' : ''}</Text>
+                <Text variant="caption" tone="muted" className="text-[13px]">{member.email ?? (member.userID ? 'Has an account' : 'No account yet')}</Text>
+              </View>
+            </View>
+          );
+        }
         return (
           <View key={member.id} accessible accessibilityLabel={`${you ? 'You' : member.name}${owner ? ', owner' : ''}, ${words}`} className={`min-h-row-tall flex-row items-center gap-3.5 px-4 py-2 ${i < group.members.length - 1 ? 'border-b border-divider' : ''}`}>
             <Avatar name={member.name} id={member.id} size="md" />

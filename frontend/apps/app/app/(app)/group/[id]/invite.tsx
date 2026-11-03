@@ -6,6 +6,7 @@ import { describeAuthFailure, type InviteCode } from '@commontab/core';
 import { Banner, Button, Card, Text } from '@commontab/ui';
 import { useApp } from '../../../../src/app-context';
 import { FormPage } from '../../../../src/components/FormPage';
+import { useIsDesktop } from '../../../../src/layout';
 import { useGroup } from '../../../../src/data';
 
 const cache = new Map<string, InviteCode>();
@@ -14,6 +15,7 @@ const daysLeft = (expiresAt: string) => Math.max(1, Math.ceil((Date.parse(expire
 
 export default function Invite() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const { services } = useApp();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data } = useGroup(id);
@@ -62,12 +64,16 @@ export default function Invite() {
   };
 
   return (
-    <FormPage title="Invite people" trailing="done" onClose={() => router.back()}>
+    <FormPage title="Invite people" width={500} trailing="done" onClose={() => router.back()}>
       <View className="w-full max-w-[560px] gap-4 self-center">
-        <View className="gap-1 px-2 pt-2">
-          <Text variant="large-title" accessibilityRole="header">Add friends to {data?.group.name ?? 'this group'}</Text>
-          <Text variant="body-small" tone="muted" className="leading-[21px]">Send them this code. They enter it in CommonTab under Join with a code.</Text>
-        </View>
+        {desktop ? (
+          <Text tone="muted">Share this code. Anyone with it can join {data?.group.name ?? 'this group'}.</Text>
+        ) : (
+          <View className="gap-1 px-2 pt-2">
+            <Text variant="large-title" accessibilityRole="header">Add friends to {data?.group.name ?? 'this group'}</Text>
+            <Text variant="body-small" tone="muted" className="leading-[21px]">Send them this code. They enter it in CommonTab under Join with a code.</Text>
+          </View>
+        )}
         {data && !synced ? <Banner tone="warning" message="This group hasn't synced yet. Connect to the internet and wait for it to sync, then come back for a code." /> : null}
         {problem ? <Banner tone="error" message={problem} /> : null}
         <Card className="items-center gap-2 px-6 py-8">

@@ -6,7 +6,7 @@ import { Button, Card, Icon, Text } from '@commontab/ui';
 import { Plus } from 'lucide-react-native';
 import type { GroupData } from '../data';
 import { useSyncStatus } from '../useSyncStatus';
-import { BalancesList, HistoryList, MembersList } from './GroupParts';
+import { HistoryList, MembersList, NetBalancesList } from './GroupParts';
 import { ConnectionBanner } from './ConnectionBanner';
 import { ExpenseDetailContent } from './ExpenseDetail';
 import { ExpenseRow } from './ExpenseRow';
@@ -28,7 +28,7 @@ export function GroupDesktop({ data }: { data: GroupData }) {
   const selected = live.find((e) => e.id === (selectedId ?? rows[0]?.id));
   const offline = status !== null && status.connectivity === 'offline';
   const standing = summary.myBalance > 0 ? `You're owed ${formatCurrency(summary.myBalance, currency)}` : summary.myBalance < 0 ? `You owe ${formatCurrency(-summary.myBalance, currency)}` : 'All settled up';
-  const subtitle = offline && status?.lastSyncedAt
+  const subtitle = tab === 'Balances' ? 'Who owes who' : tab === 'Members' ? `${summary.memberCount} ${summary.memberCount === 1 ? 'member' : 'members'}` : offline && status?.lastSyncedAt
     ? `Showing saved data from ${new Date(status.lastSyncedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
     : `${summary.memberCount} ${summary.memberCount === 1 ? 'member' : 'members'} · ${currency} · ${standing}`;
 
@@ -40,7 +40,7 @@ export function GroupDesktop({ data }: { data: GroupData }) {
         actions={
           <>
             <Button label="Invite" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/invite', params: { id: group.id } })} />
-            {summary.counterparts.length > 0 ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/settle', params: { id: group.id } })} /> : null}
+            {summary.status === 'needsSettling' ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/settle', params: { id: group.id } })} /> : null}
             <Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
           </>
         }
@@ -78,8 +78,8 @@ export function GroupDesktop({ data }: { data: GroupData }) {
           </View>
         )
       ) : null}
-      {tab === 'Balances' ? <BalancesList data={data} onSettle={(memberId) => router.push({ pathname: '/group/[id]/settle', params: { id: group.id, with: memberId } })} /> : null}
-      {tab === 'Members' ? <MembersList data={data} /> : null}
+      {tab === 'Balances' ? <NetBalancesList data={data} /> : null}
+      {tab === 'Members' ? <MembersList data={data} contact /> : null}
       {tab === 'History' ? <HistoryList data={data} /> : null}
     </>
   );

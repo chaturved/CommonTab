@@ -169,7 +169,7 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Split by item:** a fourth split option in Add and Edit. Items, who had each, tax and tip; shares are exact to the cent. "Use this split" fills the form with an Exact split and the receipt total, so no new wire format was needed.
 - **Core (tests):** `expensesToCsv`, `tipSplit`, `evaluateItemized` and `applyItemized`. ui: `setAppearance` / `useAppearance`.
 - **Checked in a browser** (390px, API on Supabase): dark mode and its persistence, CSV contents (including the payment), calculator numbers, by-item split (Ramen $18 for you, Sake $24 shared by Riya and Sam gives $42.00 with 18 / 12 / 12), clear data and re-download.
-- **Not built:** the **Simplify debts toggle** (the app always shows the simplified payments; a "without simplifying" view would need a pairwise calculation: gap), notification settings (v1.1 push), the design's date row on settle up, receipt scan (v1.1).
+- **Not built:** notification settings (v1.1 push), the design's date row on settle up, receipt scan (v1.1).
 
 ## Step 6w (follow-up): desktop for the secondary pages — done
 - **Why:** 6c to 6e were checked mostly at phone size; the pages added after the web designs were still phone screens in a narrow column on desktop.
@@ -179,6 +179,17 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Sheets** (pickers, confirmations) now centre on wide screens instead of spanning the window.
 - **Checked in a browser** at 1280px and 390px: Account, Add expense, Create group, Invite, Calculator at desktop; Create group and Add expense at phone size (unchanged). Not re-checked at desktop in this pass: Settle up and Join dialogs, the Edit dialog, and the Members and expense redirects (same components as the checked ones).
 - **Not dimmed:** the dialog's dim layer covers the content area, not the sidebar (the canvas dims everything).
+
+## Step 6w (updated web designs) — done
+- **Source:** the new Web* pages in the design canvas: WebBalances, WebCalculator, WebCreateAccount, WebCreateGroup, WebCurrency, WebInvite, WebJoinGroup, WebMembers, WebSettleUp. (WebNotifSettings, WebRecurring and WebScanReview are v1.1 and not built.)
+- **Currency picker (WebCurrency):** a 300px popover under the field with a search box, code, name and a check on the selected one, in Settings (Account) and Create group; a searchable sheet on phones. 31 currencies. **Fixes the clipped currency sheet** on tall windows: every sheet now has a maximum height and scrolls.
+- **Group tabs:** Balances shows each person's net ("You gets back $99.00", "Sam owes $44.50"); Members shows name, "· owner" and the email (or "No account yet"). Subtitles follow the tab ("Who owes who", "4 members"). "Settle up" shows whenever the group has anything to settle.
+- **Calculator (WebCalculator):** white input card (bill, tip 15 / 18 / 20 / Custom, people) beside a dark result card (tip, total, each person pays) with "Add as expense" and "Reset". $163.50 at 18% for three is $29.43 tip, $192.93, $64.31 each, as in the design.
+- **Create account (WebCreateAccount):** split screen, "Free. Works offline.", "Already have an account? Sign in".
+- **Create group (WebCreateGroup):** "Create group", "Group name", currency dropdown, "ADD PEOPLE", "+ Add another person", × to close. Dialogs get a × everywhere.
+- **Invite (WebInvite) and Join (WebJoinGroup):** 500px and 460px dialogs; join shows one box per character of the code. **Differences from the canvas, on purpose:** our codes are 8 characters (`ABCD-2345`), not 6, because that is what the server issues; and there is no copyable link (`commontab.app/join/CODE`) because the web app has no such route yet. Two small follow-ups.
+- **Settle up (WebSettleUp):** a **Simplify debts** switch and the list of payments ("SIMPLIFIED · 2 PAYMENTS", or "WITHOUT SIMPLIFYING · N PAYMENTS" using each pair's direct debts), pick one and "Record a payment" opens the amount step. Payments between other people are listed but greyed ("Only they can record this one"), because the server only lets a participant record a payment. New core `directPayments` with tests. **Simplify toggle is no longer a gap.** Recording a direct (non-simplified) payment is still limited by the server's rule (the most the payer owes and the payee is owed overall), and says so if you go over.
+- **Checked in a browser at 1280px:** currency popover with search, Balances, Members, Settle up (both toggle states and the amount step), Join, Calculator, Create group, Create account; phone: currency sheet. Not re-checked: Invite at 500px, the Edit dialog.
 
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.

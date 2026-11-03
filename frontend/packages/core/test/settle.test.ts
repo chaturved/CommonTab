@@ -1,4 +1,4 @@
-import { checkSettlement, directionWith, halfOf, settleLimit, type LocalGroup } from '../src';
+import { checkSettlement, directionWith, directPayments, halfOf, settleLimit, type LocalGroup } from '../src';
 
 const group: LocalGroup = {
   id: 'g', name: 'Austin Trip', currencyCode: 'USD', ownerID: 'me', meMemberID: 'me', version: 1,
@@ -57,5 +57,44 @@ describe('checkSettlement', () => {
   test('half rounds down so two halves never exceed the balance', () => {
     expect(halfOf(5450)).toBe(2725);
     expect(halfOf(5451)).toBe(2725);
+  });
+});
+
+describe('directPayments', () => {
+  const alloc = (...pairs: [string, number][]) => pairs.map(([memberID, minorUnits]) => ({ memberID, minorUnits }));
+
+  test('everyone owes the person who paid, with no simplifying', () => {
+    const payments = directPayments({
+      members: ['me', 'sam', 'riya'],
+      expenses: [{ payerID: 'me', allocations: alloc(['me', 5450], ['sam', 5450], ['riya', 5450]) }],
+      settlements: [],
+    });
+    expect(payments).toEqual([{ fromID: 'sam', toID: 'me', minorUnits: 5450 }, { fromID: 'riya', toID: 'me', minorUnits: 5450 }]);
+  });
+
+  test('a chain stays a chain: A owes B and B owes C is two payments, where simplifying would make one', () => {
+    const payments = directPayments({
+      members: ['a', 'b', 'c'],
+      expenses: [
+        { payerID: 'b', allocations: alloc(['a', 1000], ['b', 0]) },
+        { payerID: 'c', allocations: alloc(['b', 1000], ['c', 0]) },
+      ],
+      settlements: [],
+    });
+    expect(payments).toEqual([{ fromID: 'a', toID: 'b', minorUnits: 1000 }, { fromID: 'b', toID: 'c', minorUnits: 1000 }]);
+  });
+
+  test('what two people owe each other cancels, and payments already made are taken off', () => {
+    const payments = directPayments({
+      members: ['a', 'b'],
+      expenses: [{ payerID: 'a', allocations: alloc(['b', 3000]) }, { payerID: 'b', allocations: alloc(['a', 1000]) }],
+      settlements: [{ fromID: 'b', toID: 'a', amountMinor: 500 }],
+    });
+    expect(payments).toEqual([{ fromID: 'b', toID: 'a', minorUnits: 1500 }]);
+  });
+
+  test('deleted expenses are ignored, and settled up gives nothing', () => {
+    expect(directPayments({ members: ['a', 'b'], expenses: [{ payerID: 'a', allocations: alloc(['b', 3000]), deletedAt: 'x' }], settlements: [] })).toEqual([]);
+    expect(directPayments({ members: ['a', 'b'], expenses: [{ payerID: 'a', allocations: alloc(['b', 3000]) }], settlements: [{ fromID: 'b', toID: 'a', amountMinor: 3000 }] })).toEqual([]);
   });
 });

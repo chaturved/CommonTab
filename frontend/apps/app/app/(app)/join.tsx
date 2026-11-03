@@ -5,10 +5,13 @@ import { View } from 'react-native';
 import { ApiError } from '@commontab/core';
 import { Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
+import { CodeBoxes } from '../../src/components/CodeBoxes';
 import { FormPage } from '../../src/components/FormPage';
+import { useIsDesktop } from '../../src/layout';
 
 export default function JoinGroup() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const { services } = useApp();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -32,20 +35,28 @@ export default function JoinGroup() {
   };
 
   return (
-    <FormPage title="Join group" onClose={() => router.back()} primary={{ label: 'Join group', onPress: join, disabled: code.trim().length === 0, loading: busy }}>
-        <View className="items-center gap-2 px-4 py-4">
-          <View className="h-16 w-16 items-center justify-center rounded-pill bg-tint">
-            <Icon icon={UserPlus} size={34} strokeWidth={1.8} tone="accent" />
+    <FormPage title="Join group" desktopTitle="Join with a code" width={460} onClose={() => router.back()} primary={{ label: 'Join group', onPress: join, disabled: code.trim().length === 0, loading: busy }}>
+        {desktop ? (
+          <Text tone="muted">Enter the 8-character code from the invite.</Text>
+        ) : (
+          <View className="items-center gap-2 px-4 py-4">
+            <View className="h-16 w-16 items-center justify-center rounded-pill bg-tint">
+              <Icon icon={UserPlus} size={34} strokeWidth={1.8} tone="accent" />
+            </View>
+            <Text variant="section" accessibilityRole="header">Got an invitation?</Text>
+            <Text tone="muted" className="text-center leading-[22px]">Enter the code a friend sent you. You will be added right away and can see the group on all your devices.</Text>
           </View>
-          <Text variant="section" accessibilityRole="header">Got an invitation?</Text>
-          <Text tone="muted" className="text-center leading-[22px]">Enter the code a friend sent you. You will be added right away and can see the group on all your devices.</Text>
-        </View>
+        )}
         {problem ? <Banner tone="error" message={problem} /> : null}
-        <FieldLayoutProvider layout="stacked">
-          <FieldGroup>
-            <FieldRow label="Invitation code" value={code} onChangeText={setCode} placeholder="Paste code" autoCapitalize="characters" autoCorrect={false} autoFocus onSubmitEditing={() => code.trim() && void join()} />
-          </FieldGroup>
-        </FieldLayoutProvider>
+        {desktop ? (
+          <CodeBoxes value={code} onChange={setCode} onSubmit={() => code.trim() && void join()} />
+        ) : (
+          <FieldLayoutProvider layout="stacked">
+            <FieldGroup>
+              <FieldRow label="Invitation code" value={code} onChangeText={setCode} placeholder="Paste code" autoCapitalize="characters" autoCorrect={false} autoFocus onSubmitEditing={() => code.trim() && void join()} />
+            </FieldGroup>
+          </FieldLayoutProvider>
+        )}
           </FormPage>
   );
 }

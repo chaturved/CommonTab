@@ -50,3 +50,35 @@ export function checkSettlement(input: { amountText: string; direction: Directio
 export function halfOf(limit: number): number {
   return Math.floor(limit / 2);
 }
+
+export interface Payment {
+  fromID: string;
+  toID: string;
+  minorUnits: number;
+}
+
+interface PairInput {
+  members: readonly string[];
+  expenses: readonly { payerID: string; allocations: readonly { memberID: string; minorUnits: number }[]; deletedAt?: string | null }[];
+  settlements: readonly { fromID: string; toID: string; amountMinor: number }[];
+}
+
+export function directPayments({ members, expenses, settlements }: PairInput): Payment[] {
+  const owes = new Map<string, number>();
+  const key = (from: string, to: string) => `${from}>${to}`;
+  const add = (from: string, to: string, units: number) => owes.set(key(from, to), (owes.get(key(from, to)) ?? 0) + units);
+  for (const e of expenses) {
+    if (e.deletedAt) continue;
+    for (const a of e.allocations) if (a.memberID !== e.payerID) add(a.memberID, e.payerID, a.minorUnits);
+  }
+  for (const s of settlements) add(s.fromID, s.toID, -s.amountMinor);
+  const payments: Payment[] = [];
+  members.forEach((a, i) => {
+    for (const b of members.slice(i + 1)) {
+      const net = (owes.get(key(a, b)) ?? 0) - (owes.get(key(b, a)) ?? 0);
+      if (net > 0) payments.push({ fromID: a, toID: b, minorUnits: net });
+      else if (net < 0) payments.push({ fromID: b, toID: a, minorUnits: -net });
+    }
+  });
+  return payments.sort((x, y) => y.minorUnits - x.minorUnits);
+}

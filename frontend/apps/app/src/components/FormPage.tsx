@@ -7,6 +7,8 @@ import { Screen } from './Screen';
 
 export interface FormPageProps {
   title: string;
+  desktopTitle?: string;
+  width?: number;
   onClose: () => void;
   leading?: 'back' | 'cancel';
   closeLabel?: string;
@@ -15,11 +17,11 @@ export interface FormPageProps {
   children: ReactNode;
 }
 
-export function FormPage({ title, onClose, leading = 'cancel', trailing, closeLabel = 'Cancel', primary, children }: FormPageProps) {
+export function FormPage({ title, desktopTitle, width, onClose, leading = 'cancel', trailing, closeLabel = 'Cancel', primary, children }: FormPageProps) {
   const desktop = useIsDesktop();
   if (desktop) {
     return (
-      <DesktopDialog title={title} onClose={onClose} secondaryLabel={trailing === 'done' ? 'Done' : closeLabel} primary={primary}>
+      <DesktopDialog title={desktopTitle ?? title} width={width} onClose={onClose} secondaryLabel={trailing === 'done' ? 'Done' : closeLabel} primary={primary}>
         {children}
       </DesktopDialog>
     );

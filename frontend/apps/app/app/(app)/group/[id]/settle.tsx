@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
-import { checkSettlement, directionWith, displayName, formatCurrency, formatMinorUnits, halfOf } from '@commontab/core';
+import { checkSettlement, directPayments, directionWith, displayName, formatCurrency, formatMinorUnits, halfOf, simplifyDebts, type Payment } from '@commontab/core';
 import { Avatar, Banner, Button, FieldGroup, Hero, Icon, ListRow, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '../../../../src/app-context';
 import { FormPage } from '../../../../src/components/FormPage';
+import { SwitchRow } from '../../../../src/components/SwitchRow';
+import { useIsDesktop } from '../../../../src/layout';
 import { useGroup } from '../../../../src/data';
 
 const decimalOnly = (text: string) => {
@@ -16,6 +18,7 @@ const decimalOnly = (text: string) => {
 
 export default function Settle() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const colors = useThemeColors();
   const { services } = useApp();
   const { id, with: withParam } = useLocalSearchParams<{ id: string; with?: string }>();
@@ -24,6 +27,9 @@ export default function Settle() {
   const [amountText, setAmountText] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [simplify, setSimplify] = useState(true);
+  const [step, setStep] = useState<'choose' | 'amount'>(withParam || !desktop ? 'amount' : 'choose');
+  const [chosen, setChosen] = useState(0);
   const [problem, setProblem] = useState<string | null>(null);
 
   const group = data?.group;
@@ -38,6 +44,21 @@ export default function Settle() {
     return member ? displayName(member, group!.meMemberID) : 'Someone';
   };
   const realName = (memberId: string) => group?.members.find((m) => m.id === memberId)?.name ?? '?';
+
+  const payments: Payment[] = !data ? [] : simplify ? simplifyDebts(balances).map((t) => ({ fromID: t.fromID, toID: t.toID, minorUnits: t.minorUnits })) : directPayments({ members: data.group.members.map((m) => m.id), expenses: data.expenses, settlements: data.settlements });
+  const involvesMe = (p: Payment) => group !== undefined && (p.fromID === group.meMemberID || p.toID === group.meMemberID);
+  const phrase = (p: Payment) => {
+    const from = nameOf(p.fromID);
+    const to = nameOf(p.toID);
+    return `${from} ${from === 'You' ? 'pay' : 'pays'} ${to === 'You' ? 'you' : to}`;
+  };
+  const choose = () => {
+    const payment = payments[chosen];
+    if (!payment || !involvesMe(payment) || !group) return;
+    setOtherId(payment.fromID === group.meMemberID ? payment.toID : payment.fromID);
+    setAmountText(null);
+    setStep('amount');
+  };
 
   const record = async () => {
     if (!group || !direction || !check.ok) return;
@@ -54,7 +75,39 @@ export default function Settle() {
   };
 
   return (
-    <FormPage title="Settle up" leading="back" onClose={() => router.back()} primary={data ? { label: 'Record payment', onPress: record, disabled: !check.ok, loading: busy } : undefined}>
+    <FormPage
+      title="Settle up"
+      leading="back"
+      onClose={() => router.back()}
+      primary={data ? (step === 'choose' ? { label: 'Record a payment', onPress: choose, disabled: !payments[chosen] || !involvesMe(payments[chosen]!) } : { label: 'Record payment', onPress: record, disabled: !check.ok, loading: busy }) : undefined}
+    >
+      {data && step === 'choose' ? (
+        <View className="gap-4">
+          <SwitchRow title="Simplify debts" detail="Fewest payments to settle everyone" value={simplify} onChange={(next) => { setSimplify(next); setChosen(0); }} />
+          <Text variant="label" tone="muted">{simplify ? 'Simplified' : 'Without simplifying'} · {payments.length} {payments.length === 1 ? 'payment' : 'payments'}</Text>
+          {payments.length === 0 ? (
+            <Banner tone="info" message="Everyone is even. There is nothing to settle." />
+          ) : (
+            <View className="overflow-hidden rounded-2xl border-[1.5px] bg-card px-4" style={{ borderColor: colors.mint }}>
+              {payments.map((p, i) => {
+                const mine = involvesMe(p);
+                const selected = i === chosen;
+                return (
+                  <Pressable key={`${p.fromID}-${p.toID}`} accessibilityRole="radio" accessibilityState={{ selected, disabled: !mine }} accessibilityLabel={`${phrase(p)} ${formatCurrency(p.minorUnits, group!.currencyCode)}${mine ? '' : '. Only they can record this payment'}`} onPress={() => mine && setChosen(i)} className={`min-h-[56px] flex-row items-center gap-3 ${i < payments.length - 1 ? 'border-b border-divider' : ''} ${mine ? '' : 'opacity-60'}`}>
+                    <Avatar name={realName(p.fromID)} id={p.fromID} />
+                    <View className="flex-1">
+                      <Text variant="body" className="font-semibold">{phrase(p)}</Text>
+                      {mine ? null : <Text variant="caption" tone="muted" className="text-xs">Only they can record this one</Text>}
+                    </View>
+                    <Text variant="button" className={selected && mine ? 'text-accent' : ''}>{formatCurrency(p.minorUnits, group!.currencyCode)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      ) : null}
+      {step === 'choose' ? null : <>
       {!data ? (
         ready ? (
           <View className="items-center gap-2 px-6 py-10">
@@ -129,6 +182,7 @@ export default function Settle() {
           ))}
         </View>
       </Sheet>
+      </>}
     </FormPage>
   );
 }

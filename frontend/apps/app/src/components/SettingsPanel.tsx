@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import Constants from 'expo-constants';
-import { ChevronRight } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { expensesToCsv } from '@commontab/core';
-import { Button, Card, Icon, ListRow, SegmentedControl, Sheet, Text, setAppearance, useAppearance, type AppearanceMode } from '@commontab/ui';
+import { Button, Card, ListRow, SegmentedControl, Sheet, Text, setAppearance, useAppearance, type AppearanceMode } from '@commontab/ui';
 import { useApp } from '../app-context';
-import { CURRENCIES } from '../currencies';
+import { CurrencySelect } from './CurrencySelect';
 import { useGroups } from '../data';
 import { deliverCsv } from '../exportFile';
 import { useSyncStatus } from '../useSyncStatus';
@@ -17,7 +16,6 @@ export function SettingsPanel({ showVersion }: { showVersion?: boolean }) {
   const status = useSyncStatus();
   const appearance = useAppearance();
   const [currency, setCurrency] = useState<string>('USD');
-  const [picking, setPicking] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [busy, setBusy] = useState(false);
   const unsynced = (status?.waiting ?? 0) + (status?.failed ?? 0) + (status?.conflicts ?? 0);
@@ -33,7 +31,6 @@ export function SettingsPanel({ showVersion }: { showVersion?: boolean }) {
 
   const chooseCurrency = (code: string) => {
     setCurrency(code);
-    setPicking(false);
     void services.setPref('currency', code);
   };
 
@@ -57,16 +54,19 @@ export function SettingsPanel({ showVersion }: { showVersion?: boolean }) {
           onChange={(key) => chooseAppearance(key as AppearanceMode)}
         />
       </Card>
-      <Card className="overflow-hidden">
-        <Pressable accessibilityRole="button" accessibilityLabel={`Default currency, ${currency}`} onPress={() => setPicking(true)} className="min-h-row-tall flex-row items-center gap-3 px-4 py-3 active:opacity-80">
-          <View className="flex-1">
-            <Text variant="body" className="font-semibold">Default currency</Text>
-            <Text variant="caption" tone="muted" className="text-[13px]">Used for new groups</Text>
-          </View>
-          <Text variant="body-small" tone="muted">{currency}</Text>
-          <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" />
-        </Pressable>
-      </Card>
+      <CurrencySelect value={currency} onChange={chooseCurrency}>
+        {(open) => (
+          <Card className="overflow-hidden">
+            <Pressable accessibilityRole="button" accessibilityLabel={`Default currency, ${currency}`} onPress={open} className="min-h-row-tall flex-row items-center gap-3 px-4 py-3 active:opacity-80">
+              <View className="flex-1">
+                <Text variant="body" className="font-semibold">Default currency</Text>
+                <Text variant="caption" tone="muted" className="text-[13px]">Used for new groups</Text>
+              </View>
+              <Text variant="body-small" tone="muted">{currency} ▾</Text>
+            </Pressable>
+          </Card>
+        )}
+      </CurrencySelect>
 
       <Eyebrow>YOUR DATA</Eyebrow>
       <Card className="overflow-hidden">
@@ -78,13 +78,6 @@ export function SettingsPanel({ showVersion }: { showVersion?: boolean }) {
       </Text>
       {showVersion ? <Text variant="caption" tone="muted" className="pt-2 text-center">CommonTab {Constants.expoConfig?.version ?? ''}</Text> : null}
 
-      <Sheet visible={picking} onClose={() => setPicking(false)} title="Default currency">
-        <View className="overflow-hidden rounded-2xl bg-background">
-          {CURRENCIES.map((c, i) => (
-            <ListRow key={c.code} title={`${c.code} · ${c.name}`} divider={i < CURRENCIES.length - 1} accessibilityLabel={`${c.code} ${c.name}${c.code === currency ? ', selected' : ''}`} onPress={() => chooseCurrency(c.code)} />
-          ))}
-        </View>
-      </Sheet>
       <Sheet visible={clearing} onClose={() => setClearing(false)} title={unsynced > 0 ? 'Clear data with unsynced changes?' : 'Clear data on this device?'}>
         <Text variant="body-small" tone="fg-soft" className="leading-[22px]">
           {unsynced > 0
