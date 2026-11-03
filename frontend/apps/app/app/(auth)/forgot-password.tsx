@@ -6,7 +6,7 @@ import { BackButton, Button, FieldGroup, FieldRow, Text } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
 import { FailureBanner } from '../../src/auth/FailureBanner';
 import { useSubmit } from '../../src/auth/useSubmit';
-import { Screen } from '../../src/components/Screen';
+import { AuthScreen } from '../../src/components/AuthScreen';
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <Screen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Send code'} loading={busy} disabled={!ready} onPress={send} />}>
+    <AuthScreen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Send code'} loading={busy} disabled={!ready} onPress={send} />}>
       <View className="flex-row items-center justify-between pt-1">
         <BackButton />
       </View>
@@ -37,6 +37,6 @@ export default function ForgotPassword() {
       <FieldGroup>
         <FieldRow label="Email" value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" autoCorrect={false} last onSubmitEditing={() => ready && send()} />
       </FieldGroup>
-    </Screen>
+    </AuthScreen>
   );
 }

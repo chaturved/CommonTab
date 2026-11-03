@@ -12,6 +12,8 @@ import { SectionHeader } from '../../../src/components/Section';
 import { Screen } from '../../../src/components/Screen';
 import { SyncStatusChip } from '../../../src/components/SyncStatusChip';
 import { useGroups } from '../../../src/data';
+import { PageHeader } from '../../../src/components/PageHeader';
+import { useIsDesktop } from '../../../src/layout';
 import { useSyncStatus } from '../../../src/useSyncStatus';
 
 const STEPS = [
@@ -20,10 +22,16 @@ const STEPS = [
   ['Settle up', 'Record payments to clear balances'],
 ] as const;
 
+const greeting = () => {
+  const hour = new Date().getHours();
+  return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+};
+
 const clock = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
 export default function Home() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const { user } = useApp();
   const { ready, groups } = useGroups();
   const status = useSyncStatus();
@@ -36,10 +44,14 @@ export default function Home() {
 
   return (
     <Screen wide tabs>
-      <View className="min-h-touch flex-row items-center justify-between px-1">
-        <Text variant="large-title" accessibilityRole="header">CommonTab</Text>
-        <SyncStatusChip />
-      </View>
+      {desktop ? (
+        <PageHeader title="Home" subtitle={`${greeting()}, ${user?.name.split(' ')[0] ?? ''}`} />
+      ) : (
+        <View className="min-h-touch flex-row items-center justify-between px-1">
+          <Text variant="large-title" accessibilityRole="header">CommonTab</Text>
+          <SyncStatusChip />
+        </View>
+      )}
       <ConnectionBanner />
       {ready && groups.length === 0 ? (
         <>
@@ -80,25 +92,29 @@ export default function Home() {
               caption={offline && status?.lastSyncedAt ? `As of ${clock(status.lastSyncedAt)} · may not include changes from others` : undefined}
             />
           ))}
-          <SectionHeader
-            title="Groups"
-            action={<Button label="Create group" variant="ghost" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="accent" />} onPress={() => router.push('/create-group')} />}
-          />
-          <View className="gap-2.5">
-            {sortForList(groups.map((g) => g.summary)).map((s) => groups.find((g) => g.group.id === s.id)!).map((g) => (
-              <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.group.id } })} />
-            ))}
-          </View>
-          {recent.length > 0 ? (
-            <>
-              <SectionHeader title="Recent expenses" />
-              <Card className="overflow-hidden">
-                {recent.map(({ row, currencyCode }, i) => (
-                  <ExpenseRow key={row.id} row={row} currencyCode={currencyCode} subtitle="home" divider={i < recent.length - 1} />
+          <View className={desktop ? 'flex-row items-start gap-[22px]' : 'gap-4'}>
+            <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
+              <SectionHeader
+                title="Groups"
+                action={<Button label="Create group" variant="ghost" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="accent" />} onPress={() => router.push('/create-group')} />}
+              />
+              <View className="gap-2.5">
+                {sortForList(groups.map((g) => g.summary)).map((s) => groups.find((g) => g.group.id === s.id)!).map((g) => (
+                  <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.group.id } })} />
                 ))}
-              </Card>
-            </>
-          ) : null}
+              </View>
+            </View>
+            {recent.length > 0 ? (
+              <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
+                <SectionHeader title="Recent expenses" />
+                <Card className="overflow-hidden">
+                  {recent.map(({ row, currencyCode }, i) => (
+                    <ExpenseRow key={row.id} row={row} currencyCode={currencyCode} subtitle="home" divider={i < recent.length - 1} />
+                  ))}
+                </Card>
+              </View>
+            ) : null}
+          </View>
         </>
       ) : null}
     </Screen>

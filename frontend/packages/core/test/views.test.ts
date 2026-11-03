@@ -1,4 +1,4 @@
-import { expenseRow, overallTotals, positionIn, shortDate, sortForList, summarizeGroup, type LocalExpense, type LocalGroup, type LocalSettlement } from '../src';
+import { expenseRow, longDate, overallTotals, positionIn, shortDate, sortForList, summarizeGroup, type LocalExpense, type LocalGroup, type LocalSettlement } from '../src';
 
 const group = (over: Partial<LocalGroup> = {}): LocalGroup => ({
   id: 'g', name: 'Austin Trip', currencyCode: 'USD', ownerID: 'me', meMemberID: 'me', version: 1,
@@ -100,5 +100,6 @@ describe('expense rows', () => {
 
   test('dates are the UTC day', () => {
     expect(shortDate('2026-11-01T23:59:00Z')).toBe('Nov 1');
+    expect(longDate('2026-10-30T18:00:00Z')).toBe('Oct 30, 2026');
   });
 });

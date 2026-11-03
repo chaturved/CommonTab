@@ -3,6 +3,7 @@ import { Activity, CircleUser, House, Users } from 'lucide-react-native';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabBar } from '@commontab/ui';
+import { useIsDesktop } from '../../../src/layout';
 
 const TABS = [
   { key: 'index', label: 'Home', icon: House, href: '/' },
@@ -14,10 +15,11 @@ const TABS = [
 export default function TabsLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const desktop = useIsDesktop();
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={({ state }) => (
+      tabBar={({ state }) => desktop ? null : (
         <View pointerEvents="box-none" className="absolute inset-x-0 bottom-0 items-center px-4" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
           <View className="w-full max-w-[480px]">
             <TabBar

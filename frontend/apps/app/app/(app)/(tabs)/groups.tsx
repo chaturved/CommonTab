@@ -9,10 +9,13 @@ import { GroupCard } from '../../../src/components/GroupCard';
 import { Eyebrow } from '../../../src/components/Section';
 import { Screen } from '../../../src/components/Screen';
 import { useGroups } from '../../../src/data';
+import { PageHeader } from '../../../src/components/PageHeader';
+import { useIsDesktop } from '../../../src/layout';
 import { useSyncStatus } from '../../../src/useSyncStatus';
 
 export default function Groups() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const { ready, groups } = useGroups();
   const status = useSyncStatus();
   const offline = status !== null && status.connectivity === 'offline';
@@ -20,6 +23,43 @@ export default function Groups() {
   const active = sortForList(groups.map((g) => g.summary)).filter((s) => s.status !== 'settled');
   const settled = sortForList(groups.map((g) => g.summary)).filter((s) => s.status === 'settled');
   const shown = (tab === 'active' ? active : settled).map((s) => groups.find((g) => g.group.id === s.id)!);
+
+  const open = (id: string) => router.push({ pathname: '/group/[id]', params: { id } });
+
+  if (desktop) {
+    const settledGroups = settled.map((s) => groups.find((g) => g.group.id === s.id)!);
+    const activeGroups = active.map((s) => groups.find((g) => g.group.id === s.id)!);
+    return (
+      <Screen wide>
+        <PageHeader
+          title="Groups"
+          subtitle={`${active.length} active, ${settled.length} settled`}
+          actions={<Button label="Create group" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/create-group')} />}
+        />
+        <ConnectionBanner />
+        {ready && groups.length === 0 ? (
+          <View className="items-center gap-3 px-6 py-10">
+            <Text variant="section" className="text-center">No groups yet</Text>
+            <Text tone="muted" className="text-center">Create a group to start splitting costs.</Text>
+          </View>
+        ) : null}
+        {activeGroups.length > 0 ? <Eyebrow>NEEDS SETTLING</Eyebrow> : null}
+        <View className="flex-row flex-wrap gap-4">
+          {activeGroups.map((g) => (
+            <View key={g.group.id} className="min-w-[320px] flex-1 basis-[45%]">
+              <GroupCard data={g} detail offline={offline} onPress={() => open(g.group.id)} />
+            </View>
+          ))}
+        </View>
+        {settledGroups.length > 0 ? <Eyebrow>SETTLED</Eyebrow> : null}
+        <View className="gap-2.5">
+          {settledGroups.map((g) => (
+            <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => open(g.group.id)} />
+          ))}
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen wide tabs>
@@ -47,7 +87,7 @@ export default function Groups() {
       {shown.length > 0 ? <Eyebrow>{tab === 'active' ? 'NEEDS SETTLING' : 'SETTLED'}</Eyebrow> : null}
       <View className="gap-2.5">
         {shown.map((g) => (
-          <GroupCard key={g.group.id} data={g} detail offline={offline} onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.group.id } })} />
+          <GroupCard key={g.group.id} data={g} detail offline={offline} onPress={() => open(g.group.id)} />
         ))}
       </View>
     </Screen>

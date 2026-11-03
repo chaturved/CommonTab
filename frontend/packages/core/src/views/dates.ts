@@ -4,3 +4,7 @@ export function shortDate(isoDate: string): string {
   const date = new Date(isoDate);
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}`;
 }
+
+export function longDate(isoDate: string): string {
+  return `${shortDate(isoDate)}, ${new Date(isoDate).getUTCFullYear()}`;
+}

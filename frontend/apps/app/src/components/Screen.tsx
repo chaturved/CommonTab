@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cx } from '@commontab/ui';
+import { useIsDesktop } from '../layout';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -12,6 +13,17 @@ export interface ScreenProps {
 }
 
 export function Screen({ children, footer, wide, tabs, className }: ScreenProps) {
+  const desktop = useIsDesktop();
+  if (desktop && wide) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScrollView className="flex-1" contentContainerClassName={cx('w-full max-w-[1120px] gap-[22px] self-center px-10 py-7', className)} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+        {footer ? <View className="px-10 pb-6 pt-2">{footer}</View> : null}
+      </View>
+    );
+  }
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

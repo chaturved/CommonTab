@@ -1,9 +1,10 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Circle, Defs } from 'react-native-svg';
 import { Button, Text, colors } from '@commontab/ui';
+import { useIsDesktop } from '../../src/layout';
 
 function Logo() {
   return (
@@ -22,6 +23,8 @@ function Logo() {
 
 export default function Welcome() {
   const router = useRouter();
+  const desktop = useIsDesktop();
+  if (desktop) return <Redirect href="/sign-in" />;
   return (
     <LinearGradient colors={[colors.light['hero-from'], colors.light['hero-to']]} start={{ x: 0.1, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ flex: 1 }}>
       <SafeAreaView className="flex-1">

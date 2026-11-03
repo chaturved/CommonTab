@@ -6,7 +6,7 @@ import { BackButton, Banner, Button, FieldGroup, FieldRow, PasswordMeter, Text }
 import { useApp } from '../../src/app-context';
 import { FailureBanner } from '../../src/auth/FailureBanner';
 import { useSubmit } from '../../src/auth/useSubmit';
-import { Screen } from '../../src/components/Screen';
+import { AuthScreen } from '../../src/components/AuthScreen';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <Screen footer={<Button label="Set new password" loading={confirm.busy} disabled={!ready} onPress={save} />}>
+    <AuthScreen footer={<Button label="Set new password" loading={confirm.busy} disabled={!ready} onPress={save} />}>
       <View className="flex-row items-center justify-between pt-1">
         <BackButton />
       </View>
@@ -53,6 +53,6 @@ export default function ResetPassword() {
       <View className="items-center">
         <Button label="Send a new code" variant="ghost" size="small" loading={resend.busy} onPress={sendAgain} />
       </View>
-    </Screen>
+    </AuthScreen>
   );
 }

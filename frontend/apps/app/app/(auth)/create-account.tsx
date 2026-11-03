@@ -6,7 +6,7 @@ import { BackButton, Button, FieldGroup, FieldRow, PasswordMeter, Text } from '@
 import { useApp } from '../../src/app-context';
 import { FailureBanner } from '../../src/auth/FailureBanner';
 import { useSubmit } from '../../src/auth/useSubmit';
-import { Screen } from '../../src/components/Screen';
+import { AuthScreen } from '../../src/components/AuthScreen';
 
 export default function CreateAccount() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function CreateAccount() {
   const submit = () => run(() => register(email.trim(), name.trim(), password));
 
   return (
-    <Screen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Create account'} loading={busy} disabled={!ready} onPress={submit} />}>
+    <AuthScreen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Create account'} loading={busy} disabled={!ready} onPress={submit} />}>
       <View className="flex-row items-center justify-between pt-1">
         <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       </View>
@@ -40,6 +40,6 @@ export default function CreateAccount() {
         <PasswordMeter length={progress.length} required={MIN_PASSWORD_LENGTH} />
         <Text variant="body-small" tone="muted" className="text-[13px] leading-[18px]">A short sentence works well, like three random words.</Text>
       </View>
-    </Screen>
+    </AuthScreen>
   );
 }

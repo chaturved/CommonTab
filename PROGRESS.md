@@ -140,6 +140,17 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Left for later steps:** Add expense and the "+" (opens a placeholder, 6d), Settle up, invite and join by code, Leave and Delete group, Archive (6e and the gap list). "Needs settling" also lists brand-new groups with no balance yet.
 - Fixed on the way: Tailwind did not scan `apps/app/src`, hiding classes only used there.
 
+## Step 6w: web layout — done
+- **Reference:** the Web* pages in the design canvas (WebHome, WebGroups, WebGroup, WebAddExpense, WebActivity, WebAccount, WebOffline, WebSignIn). From 1024px wide the app switches to the desktop layout; phones and narrow windows keep the tab bar.
+- **Built:** the sidebar shell (logo, Add expense, Home, Groups, Activity, Account, a list of groups with a dot for owed / owe / settled, your profile with the sync state), page headers, Home (wide balance hero, Groups beside Recent expenses), Groups (two-up cards with "who owes you" chips, Settled below), Group detail (Expenses, Balances, Members and History tabs; an expense list with a detail panel showing the split and its history), the offline banner with "N waiting" and "Showing saved data from …", the split-screen sign-in with stacked fields (also used by Create account and the two reset screens, which is my extension of the design; Welcome redirects to sign-in on desktop).
+- **Sign-out warning added** (it was planned for 6e and is SPEC): if changes are unsynced, a sheet asks first and says they will be lost.
+- **Not built from the web designs yet:** the Add expense dialog and the panel's Edit and Delete (6d); Invite, Settle up and Join with a code (6e); the Activity feed (needs a changes feed on the server, 6f); Account items beyond profile, sync status and sign out (change name and password, delete account, export CSV, default currency, notifications, tools: 6e and 6f). The Balances, Members and History tabs are not drawn in the canvas; I used the same style as the phone screens. History lists payments, deleted expenses and edits made elsewhere (we do not store who made a change, so there are no "Sam added" lines yet).
+- **Checked in a browser at 1280px** (API on Supabase) against the canvas: sign-in, Home, Groups, Group detail with the panel, Account, offline. The 390px layout was re-checked and is unchanged. iOS and Android bundles build.
+- ui: `FieldRow` and `FieldGroup` have a stacked layout (`FieldLayoutProvider`), `Hero` takes a padding, new token `field-border`.
+
+### Plan from here
+6d expenses (phone and web together) → 6e settle up, invite and join by code, settings → 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

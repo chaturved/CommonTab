@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { BackButton, FieldGroup, FieldRow, PasswordMeter, SegmentedControl } from '../src';
+import { BackButton, FieldGroup, FieldLayoutProvider, FieldRow, PasswordMeter, SegmentedControl } from '../src';
 
 describe('FieldRow', () => {
   test('the input is found by its label and reports typing', async () => {
@@ -64,5 +64,19 @@ describe('SegmentedControl', () => {
     expect(screen.getByRole('tab', { name: 'Settled · 1' }).props.accessibilityState).toMatchObject({ selected: false });
     await fireEvent.press(screen.getByRole('tab', { name: 'Settled · 1' }));
     expect(onChange).toHaveBeenCalledWith('settled');
+  });
+});
+
+describe('stacked fields', () => {
+  test('the label sits above a bordered input and the input is still found by its label', async () => {
+    await render(
+      <FieldLayoutProvider layout="stacked">
+        <FieldGroup>
+          <FieldRow label="Email" testID="email" />
+        </FieldGroup>
+      </FieldLayoutProvider>,
+    );
+    expect(screen.getByLabelText('Email')).toBeTruthy();
+    expect(String(screen.getByTestId('email').props.className)).toContain('h-12');
   });
 });
