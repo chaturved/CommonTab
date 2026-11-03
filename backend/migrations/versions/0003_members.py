@@ -29,7 +29,6 @@ def upgrade() -> None:
     )
     op.create_index('members_group', 'members', ['group_id'])
     op.create_index('members_user', 'members', ['user_id'])
-    # An account is at most one member of a group; people without an account are not limited.
     op.create_index('members_group_user', 'members', ['group_id', 'user_id'], unique=True,
                     postgresql_where=sa.text('user_id IS NOT NULL'))
 
@@ -39,7 +38,6 @@ def upgrade() -> None:
         FROM group_members gm JOIN users u ON u.id = gm.user_id
     ''')
 
-    # Re-point references from accounts to members (the foreign keys must go first).
     op.drop_constraint('expenses_payer_id_fkey', 'expenses', type_='foreignkey')
     op.drop_constraint('settlements_from_id_fkey', 'settlements', type_='foreignkey')
     op.drop_constraint('settlements_to_id_fkey', 'settlements', type_='foreignkey')

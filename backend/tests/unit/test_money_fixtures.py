@@ -1,7 +1,3 @@
-"""Run the shared money fixtures (fixtures/money) against the server's split rules.
-
-The TypeScript core runs the same files, so the app and the server cannot disagree on a cent.
-"""
 import json
 from pathlib import Path
 

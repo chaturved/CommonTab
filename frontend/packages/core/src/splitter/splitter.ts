@@ -11,11 +11,8 @@ export interface Allocation {
 
 export interface AllocateInput {
   method: SplitMethod;
-  /** Expense total in minor units. */
   amount: number;
-  /** Member ids in display order; the first members receive any leftover cent. */
   participants: readonly string[];
-  /** exact: integer minor units as text. percent: decimal percentages as text. Same order as participants. */
   values?: readonly string[];
 }
 
@@ -27,7 +24,6 @@ function checkParticipants(participants: readonly string[]) {
   }
 }
 
-/** Split an expense across participants. The shares always add up to `amount` exactly. */
 export function allocate({ method, amount, participants, values = [] }: AllocateInput): Allocation[] {
   checkParticipants(participants);
   assertMinorUnits(amount);

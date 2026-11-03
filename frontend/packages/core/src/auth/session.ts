@@ -16,7 +16,6 @@ export class MemoryTokenStore implements TokenStore {
 
 export interface SignedInUser { id: string; email: string; name: string }
 
-/** Signing in and out. The sync engine only needs the token store; this keeps the user for the UI. */
 export class AuthSession {
   user: SignedInUser | null = null;
 
@@ -30,7 +29,6 @@ export class AuthSession {
     return this.accept(await this.api.register({ email, name, password }));
   }
 
-  /** The caller checks the outbox first; signing out with waiting changes asks the person. */
   async signOut(): Promise<void> {
     try { await this.api.logout(); } catch { /* the token is dropped locally either way */ }
     await this.tokens.clear();

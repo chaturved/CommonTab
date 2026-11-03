@@ -9,8 +9,6 @@ from app.core.db import DbConnection
 
 
 class GroupRepository:
-    """SQL only. Groups: lookup, creation, rename and the version that changes with every write."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
@@ -25,7 +23,6 @@ class GroupRepository:
 
     def insert_group(self, group_id: UUID, name: str, currency: str, owner: UUID,
                      created_at: datetime) -> bool:
-        """False when a group with this id already exists."""
         result = self.connection.execute(text('''INSERT INTO expense_groups (id, name, currency_code, owner_id, created_at, version)
                                     VALUES (:id, :name, :currency, :owner, :created_at, 1)
                                     ON CONFLICT (id) DO NOTHING'''),

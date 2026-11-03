@@ -11,7 +11,6 @@ export function initials(name: string): string {
   return (first + last).toUpperCase();
 }
 
-/** Stable palette slot for a member, so a person keeps their color on every screen. */
 export function avatarColorIndex(key: string): number {
   let hash = 0;
   for (const char of key) hash = (hash * 31 + char.codePointAt(0)!) >>> 0;
@@ -20,7 +19,6 @@ export function avatarColorIndex(key: string): number {
 
 export interface AvatarProps {
   name: string;
-  /** Stable member id; falls back to the name for choosing a color. */
   id?: string;
   size?: 'sm' | 'md';
   className?: string;
@@ -28,7 +26,6 @@ export interface AvatarProps {
 
 export function Avatar({ name, id, size = 'sm', className }: AvatarProps) {
   const swatch = avatarColors[avatarColorIndex(id ?? name)]!;
-  // Design: 28px disc plus a 2px ring in the card color (so overlapped avatars read as separate), 32 in total.
   const box = size === 'sm' ? 'h-8 w-8' : 'h-11 w-11';
   return (
     <View
@@ -47,7 +44,6 @@ export function Avatar({ name, id, size = 'sm', className }: AvatarProps) {
 
 export interface AvatarStackProps {
   members: readonly { id: string; name: string }[];
-  /** Avatars shown before "+N". */
   max?: number;
   className?: string;
 }

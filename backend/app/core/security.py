@@ -7,7 +7,6 @@ from argon2 import PasswordHasher
 
 
 def hash_token(token: str) -> str:
-    """Only the hash of an access token, invitation code or session token is ever stored."""
     return hashlib.sha256(token.encode()).hexdigest()
 
 

@@ -24,11 +24,6 @@ class SettlementService:
         self.snapshots = snapshots
 
     def settle(self, group_id: str, user_id: str, input: SettlementInput) -> tuple[dict, bool]:
-        """
-        Record a payment. Returns (settlement, created). It is validated against the balances at the
-        moment it is applied, never against a group version, and repeating the same request (same id,
-        same payload) returns the stored settlement instead of an error, so a retry cannot fail or duplicate.
-        """
         gid, uid = UUID(group_id), UUID(user_id)
         me = self.guard.require(gid, uid)
         # Serialize writers on this group so two payments cannot both pass the balance check.

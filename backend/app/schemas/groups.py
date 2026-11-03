@@ -12,12 +12,9 @@ class NewMember(BaseModel):
 
 
 class GroupInput(BaseModel):
-    # A client-chosen id makes creating a group repeatable: the same request again returns the same group.
     id: UUID | None = None
     name: str = Field(min_length=1, max_length=120)
     currency_code: Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "INR"] = Field(alias="currencyCode")
-    # Optional people to start with (used when uploading a group that already exists on a phone).
-    # `meMemberID` says which of them is the signed-in account. Without `members`, the creator is the only member.
     members: list[NewMember] | None = Field(default=None, min_length=1, max_length=50)
     me_member_id: UUID | None = Field(default=None, alias="meMemberID")
 
@@ -39,7 +36,6 @@ class GroupInput(BaseModel):
 
 class InvitationInput(BaseModel):
     email: str = Field(min_length=3, max_length=254)
-    # An existing person without an account: accepting the invitation links them to the account.
     member_id: UUID | None = Field(default=None, alias="memberID")
 
 
@@ -85,14 +81,11 @@ class RenameGroupInput(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
 
-
-
 class AcceptInvitation(BaseModel):
     inviteToken: str
 
 
 class InviteCodeInput(BaseModel):
-    # An existing person without an account: joining with this code links that person to the account (once).
     member_id: UUID | None = Field(default=None, alias="memberID")
 
 

@@ -7,13 +7,6 @@ export interface Transfer {
   minorUnits: number;
 }
 
-/**
- * Settle everyone with few payments. Greedy: the member who owes the most pays the member
- * who is owed the most, as much as covers one of them, and repeat. Ties go to the member
- * listed first. Results are deterministic, so every device shows the same payments.
- * This is not guaranteed to be the true minimum (that is NP-hard in general); it never
- * needs more than (people with a balance - 1) payments. Everyone ends with the same net balance.
- */
 export function simplifyDebts(balances: readonly Balance[]): Transfer[] {
   if (balances.reduce((sum, b) => sum + b.minorUnits, 0) !== 0 || balances.some((b) => !Number.isSafeInteger(b.minorUnits))) {
     throw new CoreError('invalid_ledger', 'Balances must add up to zero');
@@ -35,7 +28,6 @@ export function simplifyDebts(balances: readonly Balance[]): Transfer[] {
     transfers.push({ fromID: debtor.id, toID: creditor.id, minorUnits });
     debtor.left -= minorUnits;
     creditor.left -= minorUnits;
-    // Re-sort only the party that still has a balance; the other is done.
     if (debtor.left === 0) debtors.shift();
     if (creditor.left === 0) creditors.shift();
     debtors.sort((a, b) => b.left - a.left || a.order - b.order);

@@ -39,7 +39,7 @@ class TestGroupCreate:
         create(api, ada, id=gid)
         assert create(api, ada, id=gid, name='Other').status_code == 409
         assert create(api, ada, id=gid, currencyCode='EUR').status_code == 409
-        theirs = create(api, bob, id=gid)  # Bob must not learn anything about Ada's group
+        theirs = create(api, bob, id=gid)
         assert theirs.status_code == 409 and theirs.json()['code'] == 'id_conflict'
         assert count(api, bob) == 0
 
@@ -59,14 +59,14 @@ class TestGroupCreate:
         assert group['meMemberID'] == group['ownerID'] == me
         by_id = {m['id']: m for m in group['members']}
         assert set(by_id) == {me, sam, riya}
-        assert by_id[me]['userID'] == ada['user']['id'] and by_id[me]['name'] == 'Chaturved'  # name as on the phone
+        assert by_id[me]['userID'] == ada['user']['id'] and by_id[me]['name'] == 'Chaturved'
         assert by_id[sam]['userID'] is None and by_id[riya]['email'] is None
 
     def test_uploaded_people_can_be_used_in_expenses_straight_away(self, database):
         api, ada = setup(database)
         me, sam = str(uuid4()), str(uuid4())
         group = create(api, ada, members=[{'id': me, 'name': 'Me'}, {'id': sam, 'name': 'Sam'}], meMemberID=me).json()
-        record = expense(group, sam, [me, sam], amount=5000)  # client-supplied expense uuid is kept
+        record = expense(group, sam, [me, sam], amount=5000)
         saved = api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record)
         assert saved.status_code == 200 and saved.json()['id'] == record['id']
         balances = {b['memberID']: b['minorUnits'] for b in api.get(f"/v1/groups/{group['id']}", headers=headers(ada)).json()['balances']}
@@ -86,11 +86,11 @@ class TestGroupCreate:
         api, ada = setup(database)
         me, sam = str(uuid4()), str(uuid4())
         people = [{'id': me, 'name': 'Me'}, {'id': sam, 'name': 'Sam'}]
-        assert create(api, ada, members=people).status_code == 422  # which one am I?
-        assert create(api, ada, members=people, meMemberID=str(uuid4())).status_code == 422  # not one of them
-        assert create(api, ada, meMemberID=me).status_code == 422  # a me without people
+        assert create(api, ada, members=people).status_code == 422
+        assert create(api, ada, members=people, meMemberID=str(uuid4())).status_code == 422
+        assert create(api, ada, meMemberID=me).status_code == 422
         assert create(api, ada, members=[], meMemberID=me).status_code == 422
-        assert create(api, ada, members=[people[0], people[0]], meMemberID=me).status_code == 422  # duplicate ids
+        assert create(api, ada, members=[people[0], people[0]], meMemberID=me).status_code == 422
         assert create(api, ada, members=[{'id': me, 'name': '  '}], meMemberID=me).status_code == 422
         many = [{'id': str(uuid4()), 'name': f'P{i}'} for i in range(51)]
         assert create(api, ada, members=many, meMemberID=many[0]['id']).status_code == 422
@@ -103,4 +103,4 @@ class TestGroupCreate:
         mine = str(uuid4())
         clash = create(api, ada, members=[{'id': mine, 'name': 'Me'}, {'id': sam, 'name': 'Sam'}], meMemberID=mine)
         assert clash.status_code == 409 and clash.json()['code'] == 'id_conflict'
-        assert count(api, ada) == 1  # no half-made group
+        assert count(api, ada) == 1

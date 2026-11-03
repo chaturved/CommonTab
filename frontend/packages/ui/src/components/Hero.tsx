@@ -8,10 +8,6 @@ export interface HeroProps extends ViewProps {
   className?: string;
 }
 
-/**
- * Dark teal gradient card for the balance summary. The hero colors are the same in light and dark
- * (DESIGN.md), so the gradient does not depend on the color scheme.
- */
 export function Hero({ children, className, style, ...props }: HeroProps) {
   return (
     <View className={className} style={[{ borderRadius: radius.hero, overflow: 'hidden' }, style]} {...props}>

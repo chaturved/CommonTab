@@ -11,13 +11,11 @@ from fastapi import Request
 from app.core.config import SESSION_COOKIE, Settings, get_settings
 
 AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions', '/v1/invitations/join', '/v1/auth/password-reset',
-              '/v1/auth/password-reset/confirm'}  # guessable secrets: strict, per IP
+              '/v1/auth/password-reset/confirm'}
 EXEMPT_PATHS = {'/healthz', '/health'}
 
 
 class SlidingWindow:
-    """Allow `limit` hits per `window` seconds for each key. In memory: right for one API instance."""
-
     def __init__(self, limit: int, window: float = 60.0, clock: Callable[[], float] = time.monotonic):
         self.limit = limit
         self.window = window
@@ -26,10 +24,9 @@ class SlidingWindow:
         self.calls = 0
 
     def check(self, key: str) -> float:
-        """Returns 0 when the request is allowed, otherwise the seconds to wait before retrying."""
         now = self.clock()
         self.calls += 1
-        if self.calls % 1000 == 0:  # forget keys that have gone quiet
+        if self.calls % 1000 == 0:
             self.hits = {k: q for k, q in self.hits.items() if q and q[-1] > now - self.window}
         queue = self.hits.setdefault(key, deque())
         while queue and queue[0] <= now - self.window:
@@ -49,19 +46,12 @@ def client_ip(request: Request, trust_proxy: bool) -> str:
 
 
 class RateLimiters:
-    """
-    Sign-up and sign-in are limited per IP (password guessing). Everything else is limited per
-    signed-in session, so people sharing a mobile-carrier IP do not block each other. The limits
-    leave room for a device flushing a queue of offline changes.
-    """
-
     def __init__(self, settings: Settings, clock: Callable[[], float] = time.monotonic):
         self.trust_proxy = settings.trust_proxy
         self.auth = SlidingWindow(settings.rate_limit_auth_per_minute, clock=clock)
         self.api = SlidingWindow(settings.rate_limit_per_minute, clock=clock)
 
     def check(self, request: Request) -> float:
-        """0 when the request is allowed, otherwise the seconds to wait."""
         path = request.url.path
         if path in EXEMPT_PATHS or request.method == 'OPTIONS':
             return 0.0

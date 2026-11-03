@@ -25,7 +25,7 @@ class TestGroupService:
         self.members = MagicMock(spec_set=MemberRepository)
         self.users = MagicMock(spec_set=UserRepository)
         self.snapshots = MagicMock(spec_set=SnapshotBuilder)
-        self.me = member_row(name='Ada')  # the signed-in member
+        self.me = member_row(name='Ada')
         self.group_id, self.user_id = self.me.group_id, self.me.user_id
         self.members.member_of.return_value = self.me
         self.users.user_by_id.return_value = user_row(name='Ada')
@@ -35,7 +35,6 @@ class TestGroupService:
         self.service = GroupService(self.groups, self.members, self.users, MembershipGuard(self.members),
                                     self.snapshots)
 
-    # --- create
 
     def test_creating_a_group_adds_the_creator_as_its_only_member(self):
         snapshot, created = self.service.create_group(str(self.user_id), group_input())
@@ -70,7 +69,6 @@ class TestGroupService:
 
         assert (caught.value.status, caught.value.code) == (409, 'id_conflict')
 
-    # --- repeating a create
 
     def test_repeating_the_same_create_returns_the_group_without_creating_it_again(self):
         self.groups.insert_group.return_value = False
@@ -100,7 +98,6 @@ class TestGroupService:
 
         assert caught.value.code == 'id_conflict'
 
-    # --- read and rename
 
     def test_listing_builds_a_snapshot_per_group(self):
         self.groups.group_ids_for_user.return_value = [uuid4(), uuid4()]
@@ -129,7 +126,6 @@ class TestGroupService:
 
         assert caught.value.status == 422
 
-    # --- people
 
     def test_adding_a_person_inserts_them_and_bumps_the_group(self):
         self.members.member.side_effect = [None, member_row(name='Sam')]

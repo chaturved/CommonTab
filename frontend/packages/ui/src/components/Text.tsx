@@ -12,8 +12,6 @@ export type TextVariant =
   | 'label'
   | 'caption';
 
-// Full class names so Tailwind can see them. One color class per Text: Tailwind's CSS order,
-// not class order, decides conflicts, so color is chosen through `tone`, never stacked.
 const TONE = {
   fg: 'text-fg',
   'fg-soft': 'text-fg-soft',
@@ -36,7 +34,6 @@ export type TextTone = keyof typeof TONE;
 export interface TextProps extends RNTextProps {
   variant?: TextVariant;
   tone?: TextTone;
-  /** Layout and spacing only; use `tone` for color. */
   className?: string;
 }
 
@@ -56,7 +53,6 @@ export function Text({ variant = 'body', tone = 'fg', className, style, ...props
   return (
     <RNText
       className={cx(VARIANT[variant], TONE[tone], className)}
-      // DESIGN.md: labels are 13/700 caps with 0.08em tracking
       style={variant === 'label' ? [{ letterSpacing: 13 * 0.08 }, style] : style}
       {...props}
     />

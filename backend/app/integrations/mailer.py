@@ -17,7 +17,6 @@ class Mailer(Protocol):
 
 
 def reset_message(code: str) -> tuple[str, str, str]:
-    """(subject, plain text, html) of the password reset email."""
     subject = 'Your CommonTab reset code'
     text = (f'Your CommonTab password reset code is {code}.\n\nIt works for one hour. If you did not ask to reset '
             'your password, you can ignore this email: nothing changes.')
@@ -28,8 +27,6 @@ def reset_message(code: str) -> tuple[str, str, str]:
 
 
 class ResendMailer:
-    """Sends through Resend's HTTP API."""
-
     def __init__(self, api_key: str, sender: str, client: httpx.Client | None = None):
         self.api_key = api_key
         self.sender = sender
@@ -43,8 +40,6 @@ class ResendMailer:
 
 
 class ConsoleMailer:
-    """For development without a Resend key: the code goes to the log instead of an inbox."""
-
     def send_password_reset(self, to: str, code: str) -> None:
         log.warning('RESEND_API_KEY is not set, so no email was sent. Password reset code for %s: %s', to, code)
 
@@ -58,7 +53,6 @@ def get_mailer() -> Mailer:
 
 
 def send_reset_quietly(mailer: Mailer, to: str, code: str) -> None:
-    """Runs after the response: the answer to "forgot password" is the same whether or not the email went out."""
     try:
         mailer.send_password_reset(to, code)
     except Exception:  # noqa: BLE001 - a mail outage must not become a 500 that tells whether the account exists

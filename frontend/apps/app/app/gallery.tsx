@@ -14,7 +14,6 @@ const TABS = [
 
 const people = (names: string[]) => names.map((name) => ({ id: name, name }));
 
-/** Every base component in one place, for visual checks in light, dark and large text. Not shipped in the product navigation. */
 export default function Gallery() {
   const [tab, setTab] = useState('home');
   const [sheet, setSheet] = useState(false);

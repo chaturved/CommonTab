@@ -9,14 +9,11 @@ from app.core.db import DbConnection
 
 
 class UserRepository:
-    """SQL only. Rules live in AccountService."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def insert_user(self, user_id: UUID, email: str, name: str, password_hash: str,
                     created_at: datetime) -> bool:
-        """Returns False when the email is already registered."""
         result = self.connection.execute(text('''
             INSERT INTO users (id, email, name, password_hash, created_at)
             VALUES (:id, :email, :name, :hash, :created_at) ON CONFLICT (email) DO NOTHING
@@ -44,7 +41,6 @@ class UserRepository:
         self.connection.execute(text('UPDATE users SET password_hash=:h WHERE id=:id'), {'h': password_hash, 'id': user_id})
 
     def delete_tokens_for_user(self, user_id: UUID) -> None:
-        """Signs the account out everywhere."""
         self.connection.execute(text('DELETE FROM auth_tokens WHERE user_id=:u'), {'u': user_id})
 
     def rename(self, user_id: UUID, name: str) -> None:

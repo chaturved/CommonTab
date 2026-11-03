@@ -16,4 +16,5 @@ Read before building: `docs/design/SPEC.md` (scope and acceptance criteria), `do
 - `packages/core` has no React, React Native or Node imports; storage, network, clock, and UUIDs are injected.
 - Every change saves locally, then goes through the outbox; UI never waits on the network.
 - Match the design files (copy, states, colors). Use NativeWind with tokens from `packages/ui`. Rows use min-height, controls have accessibility labels, money is labeled not just colored.
+- No code comments or docstrings unless crucial: a hidden reason, an invariant, or a security or data-loss warning (for example why a handler returns instead of raising). Names and tests explain the rest. Tool directives (`noqa`, `@type`, `eslint-disable`) and migration docstrings stay. Do not add comments.
 - Work in small PRs, tests green. Ask before changing the data model or the API contract.

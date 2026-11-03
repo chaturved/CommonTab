@@ -23,12 +23,11 @@ class TestSessionCookieRoute:
         self.accounts.me.return_value = {'id': USER_ID}
         self.accounts.rename_me.return_value = {'id': USER_ID}
         overrides[AccountService] = lambda: self.accounts
-        del overrides[current_user]  # these tests exercise the real sign-in check
+        del overrides[current_user]
 
     def set_cookie(self, response) -> str:
         return response.headers['set-cookie']
 
-    # --- the cookie is set next to the token in the body
 
     @pytest.mark.parametrize('path, body', [('/v1/accounts', SIGN_UP), ('/v1/auth/sessions', {'email': 'a@b.co', 'password': 'pw'})])
     def test_signing_up_or_in_sets_an_httponly_cookie_and_still_returns_the_token(self, path, body):
@@ -48,7 +47,6 @@ class TestSessionCookieRoute:
 
         assert 'Secure' not in cookie and 'HttpOnly' in cookie
 
-    # --- signing out
 
     def test_signing_out_clears_the_cookie(self):
         response = self.client.delete('/v1/auth/sessions', headers={'Authorization': 'Bearer tok'})
@@ -57,7 +55,6 @@ class TestSessionCookieRoute:
         assert f'{SESSION_COOKIE}=""' in self.set_cookie(response) and 'Max-Age=0' in self.set_cookie(response)
         self.accounts.logout.assert_called_once_with('tok')
 
-    # --- using the cookie
 
     def test_a_cookie_alone_signs_a_read_in(self):
         self.client.cookies.set(SESSION_COOKIE, 'cookie-token')
@@ -89,7 +86,6 @@ class TestSessionCookieRoute:
         assert self.client.delete('/v1/auth/sessions').status_code == 403
         self.accounts.logout.assert_not_called()
 
-    # --- bearer keeps working
 
     def test_a_bearer_write_needs_no_client_header(self):
         response = self.client.patch('/v1/me', json={'name': 'Ada L'}, headers={'Authorization': 'Bearer tok'})

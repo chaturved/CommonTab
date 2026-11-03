@@ -30,7 +30,6 @@ class TestAccountService:
     def account_input(self, **changes) -> AccountInput:
         return AccountInput.model_validate({'email': 'Ada@Example.com', 'name': ' Ada ', 'password': PASSWORD, **changes})
 
-    # --- sign up
 
     def test_signing_up_stores_a_trimmed_name_a_lowercase_email_and_only_the_password_hash(self):
         self.service.register(self.account_input())
@@ -66,7 +65,6 @@ class TestAccountService:
 
         assert caught.value.status == 422
 
-    # --- sign in
 
     def test_signing_in_stores_only_the_hash_of_the_token(self):
         session = self.service.login('ADA@example.com', PASSWORD)
@@ -94,7 +92,6 @@ class TestAccountService:
         assert (caught.value.status, caught.value.message) == (401, 'Invalid credentials')
         self.passwords.verify.assert_not_called()
 
-    # --- sessions
 
     def test_a_valid_token_authenticates_its_account(self):
         expires = datetime.now(timezone.utc) + timedelta(days=1)
@@ -125,7 +122,6 @@ class TestAccountService:
 
         self.users.delete_token.assert_called_once_with(hash_token('secret'))
 
-    # --- profile
 
     def test_renaming_trims_the_name(self):
         self.service.rename_me(str(self.ada.id), '  Ada L  ')

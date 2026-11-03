@@ -8,8 +8,6 @@ from app.core.db import DbConnection
 
 
 class ReceiptRepository:
-    """SQL only. Receipt images, kept apart so listing expenses never loads their bytes."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 

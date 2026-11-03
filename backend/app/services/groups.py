@@ -15,8 +15,6 @@ from app.services.snapshots import SnapshotBuilder, member_payload
 
 
 class GroupService:
-    """Groups and the people in them."""
-
     def __init__(self, groups: GroupRepository = Depends(GroupRepository),
                  members: MemberRepository = Depends(MemberRepository), users: UserRepository = Depends(UserRepository),
                  guard: MembershipGuard = Depends(MembershipGuard),
@@ -37,11 +35,6 @@ class GroupService:
         return [self.snapshots.build(gid, uid) for gid in self.groups.group_ids_for_user(uid)]
 
     def create_group(self, user_id: str, input: GroupInput) -> tuple[dict, bool]:
-        """
-        Create a group; returns (snapshot, created). With a client `id` the call is repeatable: the same
-        request again returns the existing group (created=False); the same id with a different body, or
-        an id that is someone else's, is a conflict.
-        """
         name = input.name.strip()
         if not name:
             fail(422, 'Group name is required')
@@ -79,10 +72,6 @@ class GroupService:
         return self.snapshots.build(gid, UUID(user_id))
 
     def put_member(self, group_id: str, member_id: str, user_id: str, name: str) -> dict:
-        """
-        Add a person to the group or rename one (the client chooses the id, so repeating a request is safe).
-        A new person has no account until an invitation links one. Names need not be unique; last write wins.
-        """
         name = name.strip()
         if not name:
             fail(422, 'Name is required')

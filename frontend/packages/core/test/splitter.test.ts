@@ -50,7 +50,6 @@ describe('allocate: rules the shared fixtures cannot express', () => {
 });
 
 describe('property: shares always add up', () => {
-  // Small deterministic generator so failures reproduce.
   let seed = 12345;
   const next = (n: number) => {
     seed = (seed * 1103515245 + 12345) % 2 ** 31;
@@ -72,7 +71,6 @@ describe('property: shares always add up', () => {
     for (let i = 0; i < 500; i++) {
       const count = 2 + next(8);
       const amount = 1 + next(10_000_000);
-      // random percentages in hundredths that total exactly 100.00
       const cuts = Array.from({ length: count - 1 }, () => next(10001)).sort((a, b) => a - b);
       const parts = [...cuts, 10000].map((cut, k) => cut - (k === 0 ? 0 : (cuts[k - 1] as number)));
       const values = parts.map((p) => `${Math.floor(p / 100)}.${String(p % 100).padStart(2, '0')}`);

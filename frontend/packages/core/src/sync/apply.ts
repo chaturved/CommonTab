@@ -25,7 +25,6 @@ export async function applySnapshot(tx: Store, snapshot: GroupSnapshot, nowMs: n
     if (!existing) { await tx.putExpense(syncedExpense(wire)); continue; }
     if (existing.syncState !== 'synced' || wire.version < existing.version) continue;
     const changed = wire.version > existing.version && !sameContent(existing, wire);
-    // Someone else's edit replaced what this device had: keep the old version so nothing vanishes silently.
     const history = changed ? withHistory(existing, { at: iso(nowMs), reason: 'edited_elsewhere', record: existing }) : existing.history;
     await tx.putExpense(syncedExpense(wire, history));
   }

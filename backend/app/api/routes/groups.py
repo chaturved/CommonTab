@@ -19,7 +19,7 @@ def groups(user: CurrentUser, service: GroupsDep):
 def create_group(input: GroupInput, response: Response, user: CurrentUser, service: GroupsDep):
     group, created = service.create_group(user, input)
     if not created:
-        response.status_code = 200  # the same request was already applied
+        response.status_code = 200
     return group
 
 

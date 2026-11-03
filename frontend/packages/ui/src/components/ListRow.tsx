@@ -11,18 +11,13 @@ export interface ListRowProps {
   leading?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
-  /** Show a chevron for rows that open something. Defaults to true when `onPress` is set and there is no `trailing`. */
   chevron?: boolean;
-  /** Thin line under the row, for rows inside one Card. */
   divider?: boolean;
-  /** Taller rows (72) for group lists. */
   tall?: boolean;
-  /** Defaults to "title, subtitle". Include any money in words here when `trailing` is an amount. */
   accessibilityLabel?: string;
   className?: string;
 }
 
-/** Row with a minimum height, so large text makes it grow instead of clipping. */
 export function ListRow({ title, subtitle, leading, trailing, onPress, chevron, divider, tall, accessibilityLabel, className }: ListRowProps) {
   const showChevron = chevron ?? (Boolean(onPress) && !trailing);
   const body = (

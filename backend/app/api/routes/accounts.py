@@ -11,7 +11,6 @@ router = APIRouter(prefix='/v1')
 
 
 def set_session_cookie(response: Response, session: dict, settings: Settings) -> dict:
-    """Besides returning the token in the body, keep it in an httpOnly cookie for browsers (script cannot read it)."""
     response.set_cookie(SESSION_COOKIE, session['accessToken'], max_age=int(TOKEN_LIFETIME.total_seconds()),
                         httponly=True, secure=settings.cookie_secure, samesite='lax', path='/')
     return session

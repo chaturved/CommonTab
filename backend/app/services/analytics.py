@@ -5,7 +5,6 @@ from fastapi import Depends
 from app.repositories.analytics import AnalyticsRepository
 
 
-
 class AnalyticsService:
     def __init__(self, analytics: AnalyticsRepository = Depends(AnalyticsRepository)):
         self.analytics = analytics

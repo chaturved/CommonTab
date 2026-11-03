@@ -12,12 +12,10 @@ export type SyncState =
 
 export interface SyncChipProps {
   state: SyncState;
-  /** Opens the Sync screen. When omitted the chip is a read-only status. */
   onPress?: () => void;
   className?: string;
 }
 
-/** Visible text and screen-reader text for each state. Driven by the outbox, not by reachability. */
 export function syncText(state: SyncState): { text: string; spoken: string } {
   switch (state.kind) {
     case 'synced':
@@ -56,7 +54,6 @@ export function SyncChip({ state, onPress, className }: SyncChipProps) {
       </View>
     );
   }
-  // The chip is 32 high; the hit area is padded to the 44pt minimum.
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${spoken}. Open sync status`} onPress={onPress} hitSlop={6} className="min-h-touch justify-center">
       {chip}

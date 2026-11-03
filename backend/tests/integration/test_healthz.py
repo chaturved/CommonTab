@@ -17,4 +17,4 @@ class TestHealthz:
         broken = Database(create_db_engine('postgresql+psycopg://nobody:nothing@127.0.0.1:1/none'))
         response = client_for(broken).get('/healthz')
         assert response.status_code == 503
-        assert response.json() == {'status': 'unavailable'}  # no error details leaked
+        assert response.json() == {'status': 'unavailable'}

@@ -18,14 +18,12 @@ function cloneTables(t: Tables): Tables {
   };
 }
 
-/** Reference `Storage` for tests and for the web before IndexedDB. Values are copied in and out. */
 export class MemoryStorage implements Storage {
   private tables: Tables = {
     groups: new Map(), expenses: new Map(), settlements: new Map(), outbox: new Map(), meta: new Map(),
   };
   private queue: Promise<unknown> = Promise.resolve();
 
-  /** Transactions run one at a time; a thrown error rolls every write back. */
   transaction<T>(work: (tx: Store) => Promise<T>): Promise<T> {
     const run = async () => {
       const draft = cloneTables(this.tables);
@@ -61,7 +59,6 @@ export class MemoryStorage implements Storage {
     };
   }
 
-  // Reads outside a transaction see the last committed state.
   private get committed(): Store { return this.view(this.tables); }
   getGroup = (id: string) => this.committed.getGroup(id);
   putGroup = (g: LocalGroup) => this.transaction((tx) => tx.putGroup(g));

@@ -9,13 +9,10 @@ from app.core.db import DbConnection
 
 
 class MemberRepository:
-    """SQL only. The people in a group, with or without an account."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
     def member_of(self, group_id: UUID, user_id: UUID) -> Row | None:
-        """The member linked to this account in this group, if any."""
         return self.connection.execute(text('SELECT id, name FROM members WHERE group_id=:g AND user_id=:u'),
                           {'g': group_id, 'u': user_id}).fetchone()
 
@@ -30,7 +27,6 @@ class MemberRepository:
 
     def insert_member(self, member_id: UUID, group_id: UUID, user_id: UUID | None, name: str,
                       created_at: datetime) -> bool:
-        """False when the id is taken or the account is already a member of the group."""
         result = self.connection.execute(text('''INSERT INTO members (id, group_id, user_id, name, created_at)
                                     VALUES (:id, :g, :u, :name, :created_at) ON CONFLICT DO NOTHING'''),
                             {'id': member_id, 'g': group_id, 'u': user_id, 'name': name, 'created_at': created_at})

@@ -1,8 +1,3 @@
-"""
-Integration tests run against a real Postgres named by TEST_DATABASE_URL (a local one; never DATABASE_URL, so a
-test run cannot touch the production database). Each session creates a throwaway `test_<random>` schema,
-migrates it, and drops it at the end; nothing else in the database is touched.
-"""
 from __future__ import annotations
 
 import os
@@ -33,7 +28,7 @@ def test_schema(database_url):
     try:
         yield name
     finally:
-        assert name.startswith('test_')  # never drop anything that is not a test schema
+        assert name.startswith('test_')
         with admin.begin() as connection:
             connection.execute(text(f'DROP SCHEMA IF EXISTS "{name}" CASCADE'))
         admin.dispose()
@@ -50,7 +45,6 @@ def engine(database_url, test_schema):
 
 @pytest.fixture
 def database(engine) -> Database:
-    """The migrated test schema, emptied before each test."""
     with engine.begin() as connection:
         names = [row[0] for row in connection.execute(text(
             "SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename <> 'alembic_version'"))]

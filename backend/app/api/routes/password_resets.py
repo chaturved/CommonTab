@@ -14,7 +14,6 @@ router = APIRouter(prefix='/v1')
 @router.post('/auth/password-reset', status_code=202)
 def request_reset(input: PasswordResetRequest, background: BackgroundTasks, resets: PasswordResetsDep,
                   mailer: Mailer = Depends(get_mailer)):
-    """Always 202, whether or not the email has an account. The email is sent after the response, once it is saved."""
     pending = resets.request(input.email)
     if pending is not None:
         background.add_task(send_reset_quietly, mailer, pending.to, pending.code)

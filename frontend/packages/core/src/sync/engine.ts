@@ -18,13 +18,8 @@ export interface EngineDeps {
 const LAST_SYNCED = 'lastSyncedAt';
 const MAX_SENDS_PER_RUN = 500;
 
-/** Thrown inside a push to stop every group when the token is no longer accepted. */
 class SessionExpired extends Error {}
 
-/**
- * Push the outbox, then pull snapshots. Safe to run at any time and from several triggers (foreground,
- * connectivity change, a timer, "Retry"): overlapping calls share one run.
- */
 export class SyncEngine {
   private connectivity: Connectivity = 'online';
   private running: Promise<SyncResult> | null = null;
@@ -38,10 +33,8 @@ export class SyncEngine {
     return () => void this.listeners.delete(listener);
   }
 
-  /** Tell subscribers the store changed (`Actions` calls this after each local change). */
   notify = (): void => { for (const l of this.listeners) l(); };
 
-  /** Run again after sign-in. The queue was only paused; nothing was discarded. */
   resume(): void {
     if (this.connectivity === 'sessionExpired') this.connectivity = 'online';
     this.notify();
@@ -49,7 +42,7 @@ export class SyncEngine {
 
   sync(): Promise<SyncResult> {
     if (this.running) {
-      this.again = true; // something changed mid-run: go round once more so it is not left waiting
+      this.again = true;
       return this.running;
     }
     const run = (async () => {
@@ -88,7 +81,6 @@ export class SyncEngine {
     };
   }
 
-  // --- one run -------------------------------------------------------------
   private async once(): Promise<SyncResult> {
     if (this.connectivity === 'sessionExpired') return { skipped: 'sessionExpired', sent: 0, pulled: false };
     const outcome = { sent: 0, networkFailure: false };
@@ -112,7 +104,6 @@ export class SyncEngine {
     return { skipped: 'sessionExpired', sent, pulled: false };
   }
 
-  /** After a failure, ask `/healthz`: no answer is "offline", an unhealthy answer is "server down". */
   private async probe(): Promise<Connectivity> {
     try {
       return (await this.deps.api.healthy()) ? 'online' : 'serverDown';
@@ -123,7 +114,6 @@ export class SyncEngine {
 
   private async pushGroup(groupId: string, outcome: { sent: number; networkFailure: boolean }): Promise<void> {
     const { storage, clock } = this.deps;
-    // Bounded so two people editing the same expense at once can't keep this loop spinning.
     for (let sends = 0; sends < MAX_SENDS_PER_RUN; sends++) {
       const { entry } = nextForGroup(await storage.listOutbox(), groupId, clock.now());
       if (!entry) return;
@@ -132,7 +122,6 @@ export class SyncEngine {
     }
   }
 
-  /** Returns false when this group should stop for now (retry later, or the queue is paused). */
   private async send(entry: OutboxEntry, outcome: { sent: number; networkFailure: boolean }): Promise<boolean> {
     const { storage, clock } = this.deps;
     await storage.transaction(async (tx) => {
@@ -165,7 +154,6 @@ export class SyncEngine {
     this.notify();
   }
 
-  // --- sending one entry ---------------------------------------------------
   private async dispatch(entry: OutboxEntry): Promise<void> {
     const { api, storage } = this.deps;
     const p = entry.payload;
@@ -188,7 +176,6 @@ export class SyncEngine {
           const edited = await this.finish(tx, entry);
           const local = await tx.getExpense(entry.entityId);
           if (edited) {
-            // Edited again while this was in flight: the newer entry now builds on the version just stored.
             await tx.putOutbox({ ...edited, baseVersion: wire.version });
             if (local) await tx.putExpense({ ...local, version: wire.version, hasReceipt: wire.hasReceipt });
           } else await tx.putExpense(syncedExpense(wire, local?.history ?? []));
@@ -212,10 +199,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Remove the entry that was just acknowledged. If the person changed the same record while it was in
-   * flight, that newer entry is returned instead of being removed.
-   */
   private async finish(tx: Store, sent: OutboxEntry): Promise<OutboxEntry | null> {
     const entries = await tx.listOutbox();
     const current = entries.find((e) => e.entityId === sent.entityId && e.kind.split('.')[0] === sent.kind.split('.')[0]);
@@ -224,11 +207,10 @@ export class SyncEngine {
     return null;
   }
 
-  // --- refusals --------------------------------------------------------------
   private async handleRefusal(entry: OutboxEntry, error: ApiError): Promise<void> {
     await this.deps.storage.transaction(async (tx) => {
       const live = (await tx.listOutbox()).find((e) => e.opId === entry.opId);
-      if (!live) return; // edited or removed while in flight; the newer entry gets its own attempt
+      if (!live) return;
       if (entry.kind === 'expense.put' && error.status === 409 && error.code === 'version_conflict' && error.current) {
         await this.resolveVersionConflict(tx, live, error.current);
       } else {
@@ -238,7 +220,6 @@ export class SyncEngine {
     this.notify();
   }
 
-  /** The server refused for good (422, 404, id clash): keep what the person entered and say why. */
   private async park(tx: Store, entry: OutboxEntry, error: ApiError): Promise<void> {
     const reason: SyncError = { status: error.status, code: error.code, message: error.message, ...(error.maxAmountMinor !== undefined && { maxAmountMinor: error.maxAmountMinor }) };
     await tx.putOutbox({ ...entry, status: 'failed', lastError: error.message });
@@ -254,11 +235,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Newest edit wins. If this device's edit is newer, send it again on top of the server's version and
-   * remember what it replaced. If the other edit is newer (or it was a delete: delete wins), show the
-   * server's version, keep this edit aside, and let the person choose "Keep mine" or "Keep theirs".
-   */
   private async resolveVersionConflict(tx: Store, entry: OutboxEntry, theirs: WireExpense): Promise<void> {
     const local = await tx.getExpense(entry.entityId);
     if (!local) { await tx.deleteOutbox(entry.opId); return; }
@@ -273,7 +249,6 @@ export class SyncEngine {
     await tx.putExpense({ ...theirs, syncState: 'conflict', conflict: { mine: contentOf(local, iso(entry.editedAt)) }, history: local.history });
   }
 
-  // --- pull ------------------------------------------------------------------
   private async pull(): Promise<void> {
     const snapshots = await this.deps.api.listGroups();
     for (const snapshot of snapshots) {

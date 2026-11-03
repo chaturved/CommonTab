@@ -15,12 +15,6 @@ SCHEMA_NAME = re.compile(r'^[a-z_][a-z0-9_]{0,62}$')
 
 def create_db_engine(url: str, schema: str | None = None, pre_ping: bool = True, pool_size: int = 5,
                      max_overflow: int = 5) -> Engine:
-    """
-    Engine for the app or for tests. With `schema`, every connection works inside that schema
-    (tests use a throwaway one), set per connection so it also works through Supabase's pooler.
-    `pre_ping` checks a pooled connection before use (one extra round trip); tests turn it off and use small pools
-    (a hosted database caps how many connections all parallel test workers may hold together).
-    """
     engine = create_engine(url, pool_size=pool_size, max_overflow=max_overflow, pool_pre_ping=pre_ping,
                            connect_args={'connect_timeout': 15})
     if schema is not None:
@@ -37,8 +31,6 @@ def create_db_engine(url: str, schema: str | None = None, pre_ping: bool = True,
 
 
 class Database:
-    """Transaction boundary. Services open one transaction per request and hand the connection to repositories."""
-
     def __init__(self, engine: Engine):
         self.engine = engine
 
@@ -54,7 +46,6 @@ class Database:
 
 @lru_cache
 def get_database() -> Database:
-    """The one Database, created on first use. FastAPI dependency; tests override it."""
     return Database(create_db_engine(get_settings().database_url))
 
 
@@ -68,5 +59,4 @@ def get_db(database: Database = Depends(get_database)) -> Iterator[Connection]:
         yield connection
 
 
-# What every repository takes as its connection.
 DbConnection = Depends(get_db, scope='function')

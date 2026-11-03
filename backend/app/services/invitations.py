@@ -57,10 +57,6 @@ class InvitationService:
             fail(422, 'That person already has an account')
 
     def create_code(self, group_id: str, user_id: str, member_id: UUID | None = None) -> dict:
-        """
-        A short code any signed-in account can join with, for seven days. A code for the whole group can be used
-        by many people; a code for one person (`member_id`) links that person to the first account that uses it.
-        """
         gid = UUID(group_id)
         self.guard.require(gid, UUID(user_id))
         self._require_unlinked_person(gid, member_id)
@@ -71,7 +67,6 @@ class InvitationService:
                 'memberID': str(member_id) if member_id else None}
 
     def join_with_code(self, user_id: str, raw_code: str) -> dict:
-        """Join the group a code belongs to. Joining a group you are already in is not an error: you get the group."""
         uid = UUID(user_id)
         code = normalize_code(raw_code)
         if code is None:
@@ -87,7 +82,7 @@ class InvitationService:
                 if person.user_id is not None:
                     fail(409, 'That person was already linked to an account', 'id_conflict')
                 self.members.link_member(person.id, uid)
-                self.invitations.accept_invitation(token_hash, now)  # a code for one person works once
+                self.invitations.accept_invitation(token_hash, now)
             else:
                 self.members.insert_member(uuid4(), row.group_id, uid, self.users.user_by_id(uid).name, now)
             self.groups.bump_version(row.group_id)
@@ -100,7 +95,7 @@ class InvitationService:
         email = self.users.user_by_id(uid).email
         now = datetime.now(timezone.utc)
         if row is None or row.email is None or row.expires_at <= now or row.accepted_at is not None:
-            fail(404, 'Invitation missing or expired')  # (a code has no email: it goes through /invitations/join)
+            fail(404, 'Invitation missing or expired')
         if not hmac.compare_digest(row.email, email):
             fail(403, 'Invitation belongs to a different email')
         if self.members.member_of(row.group_id, uid) is not None:
@@ -109,7 +104,7 @@ class InvitationService:
             person = self.members.member(row.member_id, lock=True)
             if person.user_id is not None:
                 fail(409, 'That person was already linked to an account', 'id_conflict')
-            self.members.link_member(person.id, uid)  # past expenses become this account's
+            self.members.link_member(person.id, uid)
         else:
             self.members.insert_member(uuid4(), row.group_id, uid, self.users.user_by_id(uid).name, now)
         self.invitations.accept_invitation(token_hash, now)

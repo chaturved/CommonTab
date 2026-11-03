@@ -17,7 +17,6 @@ from rows import member_row, settlement_row
 class TestSettlementService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-        """Bob (the signed-in member) owes Ada 500."""
         self.members = MagicMock(spec_set=MemberRepository)
         self.groups = MagicMock(spec_set=GroupRepository)
         self.settlements = MagicMock(spec_set=SettlementRepository)
@@ -77,7 +76,7 @@ class TestSettlementService:
 
     def test_paying_in_the_wrong_direction_says_nothing_is_owed(self):
         with pytest.raises(APIError) as caught:
-            self.settle(self.payment(100, frm=self.ada, to=self.bob))  # Ada owes Bob nothing
+            self.settle(self.payment(100, frm=self.ada, to=self.bob))
         assert caught.value.status == 422 and caught.value.extra['maxAmountMinor'] == 0
 
     def test_a_member_who_is_not_in_the_group_cannot_be_paid(self):

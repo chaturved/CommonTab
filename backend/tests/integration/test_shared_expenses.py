@@ -40,7 +40,6 @@ class TestSharedExpenses:
                                                {'memberID': bid, 'minorUnits': 5000}]
         current = api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()
         assert {v['memberID']: v['minorUnits'] for v in current['balances']} == {aid: 5000, bid: -5000}
-        # Re-sending the identical create is a replay (200); a different body claiming to be new is a conflict.
         assert api.put(url, headers=headers(ada), json=payload).status_code == 200
         assert api.put(url, headers=headers(ada), json={**payload, 'amountMinor': 10000}).status_code == 409
         payload['version'] = 1
@@ -158,8 +157,6 @@ class TestSharedExpenses:
         assert api.post(endpoint, headers=headers(eve), json=settlement).status_code == 403
         assert api.post(endpoint, headers=headers(bob), json={**settlement, 'amountMinor': 501}).status_code == 422
         assert api.patch(f"/v1/groups/{group['id']}", headers=headers(ada), json={'name': 'Renamed'}).status_code == 200
-        # The group changed since the payment was made: that no longer matters.
         assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 201
-        assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 200  # replay
-        # ...and a new payment on top of a paid-up balance is an overpayment.
+        assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 200
         assert api.post(endpoint, headers=headers(bob), json={**settlement, 'id': str(uuid4())}).status_code == 422

@@ -12,7 +12,6 @@ TABLES = {'users', 'auth_tokens', 'expense_groups', 'members', 'invitations', 'e
 
 @pytest.fixture
 def scratch(database_url):
-    """A schema of its own, so migrating up and down cannot disturb the shared test schema."""
     name = f'test_{uuid4().hex[:12]}'
     admin = create_db_engine(database_url, pool_size=1, max_overflow=0)
     with admin.begin() as connection:
@@ -67,7 +66,6 @@ class TestMigrations:
         assert 'deleted_at' not in names()
 
     def test_0003_converts_existing_data_to_members_and_back(self, scratch):
-        """Seed rows the way 0002 stored them (account ids everywhere), migrate up, check, migrate down, check."""
         engine, schema = scratch
         ada, bob, group, expense, settlement = (uuid4() for _ in range(5))
         with engine.begin() as connection:
@@ -94,7 +92,7 @@ class TestMigrations:
             payer, allocations = connection.execute(text('SELECT payer_id, allocations FROM expenses')).one()
             assert payer == member[ada]
             assert allocations == [{'memberID': str(member[ada]), 'minorUnits': 501},
-                                   {'memberID': str(member[bob]), 'minorUnits': 500}]  # order preserved
+                                   {'memberID': str(member[bob]), 'minorUnits': 500}]
             paid = connection.execute(text('SELECT from_id, to_id FROM settlements')).one()
             assert (paid.from_id, paid.to_id) == (member[bob], member[ada])
 

@@ -10,14 +10,11 @@ from sqlalchemy.dialects.postgresql import JSONB
 from app.core.db import DbConnection
 
 
-# Everything but the receipt bytes, which only the receipt endpoint needs.
 EXPENSE_COLUMNS = ('id, group_id, merchant, occurred_at, category, notes, amount_minor, payer_id, method, '
                    'allocations, input_values, version, updated_at, deleted_at, (receipt IS NOT NULL) AS has_receipt')
 
 
 class ExpenseRepository:
-    """SQL only. Expenses and their tombstones. Receipt bytes are excluded from every query here."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
@@ -50,6 +47,5 @@ class ExpenseRepository:
         self.connection.execute(self._expense_update, values)
 
     def tombstone_expense(self, expense_id: UUID, now: datetime) -> None:
-        """Mark deleted and bump the version, so other devices see the delete and can still restore."""
         self.connection.execute(text('UPDATE expenses SET deleted_at=:now, updated_at=:now, version=version+1 WHERE id=:id'),
                    {'now': now, 'id': expense_id})

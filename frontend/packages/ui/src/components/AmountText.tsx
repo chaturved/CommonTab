@@ -4,15 +4,9 @@ import { cx } from '../theme';
 import { Text, TextTone } from './Text';
 
 export interface AmountTextProps {
-  /** Signed minor units. For `balance`: positive means you are owed, negative means you owe. */
   minorUnits: number;
   currency: string;
-  /**
-   * `balance` shows the direction in words ("you owe", "you're owed", "settled up") as well as color,
-   * so money is never conveyed by color alone. `plain` is an expense amount: no direction, neutral color.
-   */
   kind?: 'balance' | 'plain';
-  /** `stacked` puts the words above the amount (list rows); `inline` puts them before it. */
   layout?: 'stacked' | 'inline';
   className?: string;
 }

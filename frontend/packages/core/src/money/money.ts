@@ -1,7 +1,6 @@
 import { CoreError } from '../errors';
 import { fractionDigits } from './currency';
 
-/** Largest amount in major units, the same cap the SwiftUI app used. */
 export const MAX_MAJOR_UNITS = 1_000_000_000;
 
 export function digitsFor(currencyCode: string): number {
@@ -10,7 +9,6 @@ export function digitsFor(currencyCode: string): number {
   return digits;
 }
 
-/** True for a non-negative safe integer number of minor units. */
 export function isMinorUnits(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
@@ -19,11 +17,6 @@ export function assertMinorUnits(value: unknown, message = 'Amount must be whole
   if (!isMinorUnits(value)) throw new CoreError('invalid_amount', message);
 }
 
-/**
- * Parse a plain decimal string ("12", "12.5", "12.50") into minor units.
- * Rejects signs, exponents, separators and more precision than the currency has
- * (trailing zeros are fine). Never goes through a float.
- */
 export function parseMinorUnits(text: string, currencyCode: string): number {
   const digits = digitsFor(currencyCode);
   const match = /^(\d+)(?:\.(\d+))?$/.exec(text.trim());
@@ -41,7 +34,6 @@ export function parseMinorUnits(text: string, currencyCode: string): number {
   return Number(units);
 }
 
-/** Format minor units as a plain decimal string ("10.01"). Symbols and grouping belong to the UI. */
 export function formatMinorUnits(units: number, currencyCode: string): string {
   assertMinorUnits(units);
   const digits = digitsFor(currencyCode);
@@ -50,7 +42,6 @@ export function formatMinorUnits(units: number, currencyCode: string): string {
   return `${text.slice(0, -digits)}.${text.slice(-digits)}`;
 }
 
-/** Sum of minor units, checked to stay a safe integer. */
 export function sumMinorUnits(values: readonly number[]): number {
   let total = 0;
   for (const value of values) {
@@ -60,12 +51,6 @@ export function sumMinorUnits(values: readonly number[]): number {
   return total;
 }
 
-/**
- * Split `amount` in proportion to `weights` with largest-remainder rounding:
- * floor each share, then give leftover units to the largest fractional parts,
- * ties to the lower index. Shares always sum to `amount`.
- * Integer-only (bigint inside); weights must be non-negative with a positive total.
- */
 export function allocateProportionally(amount: bigint, weights: readonly bigint[]): bigint[] {
   const total = weights.reduce((a, b) => a + b, 0n);
   if (amount < 0n || weights.some((w) => w < 0n) || total <= 0n) {

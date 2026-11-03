@@ -1,4 +1,3 @@
-"""Shared helpers for the HTTP tests."""
 from dataclasses import replace
 from uuid import uuid4
 
@@ -11,7 +10,6 @@ from app.main import app
 
 
 def client_for(database, **settings) -> TestClient:
-    """The real app wired to the test database (and to Settings with the given changes) through dependency overrides."""
     configured = replace(Settings(database_url=''), **settings)
     app.dependency_overrides[get_database] = lambda: database
     app.dependency_overrides[get_settings] = lambda: configured
@@ -41,7 +39,6 @@ def create_group(client, account):
 
 
 def m(account, group):
-    """The account's member id in this group (members, not accounts, own expenses and payments)."""
     return account['members'][group['id']]
 
 

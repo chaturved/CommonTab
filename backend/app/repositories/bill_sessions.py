@@ -11,8 +11,6 @@ from app.core.db import DbConnection
 
 
 class BillSessionRepository:
-    """SQL only. Authorization, expiry and versioning rules live in BillSessionService."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 

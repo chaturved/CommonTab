@@ -33,8 +33,6 @@ def settlement_payload(row: Row) -> dict:
 
 
 class SnapshotBuilder:
-    """The complete picture of one group as the signed-in member sees it (what `GET /groups/{id}` returns)."""
-
     def __init__(self, groups: GroupRepository = Depends(GroupRepository),
                  members: MemberRepository = Depends(MemberRepository),
                  expenses: ExpenseRepository = Depends(ExpenseRepository),

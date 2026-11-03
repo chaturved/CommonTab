@@ -19,7 +19,6 @@ def alembic_config(connection: Connection | None = None) -> Config:
 
 
 def upgrade(connection: Connection, revision: str = 'head') -> None:
-    """Migrate the schema the connection points at. Production uses `alembic upgrade head` instead."""
     command.upgrade(alembic_config(connection), revision)
 
 

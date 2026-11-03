@@ -16,15 +16,11 @@ def snapshot(api, group, user):
     return api.get(f"/v1/groups/{group['id']}", headers=headers(user)).json()
 
 
-# --- people without an account ---------------------------------------------------
-
 def add_person(api, group, user, name='Sam', member_id=None):
     member_id = member_id or str(uuid4())
     response = api.put(f"/v1/groups/{group['id']}/members/{member_id}", headers=headers(user), json={'name': name})
     return member_id, response
 
-
-# --- linking a person to an account by invitation --------------------------------
 
 def invite(api, group, inviter, email, member_id=None):
     body = {'email': email, **({'memberID': member_id} if member_id else {})}
@@ -44,8 +40,8 @@ class TestMembers:
         ada_member = by_name['Ada']
         assert ada_member['userID'] == ada['user']['id']
         assert ada_member['email'] == 'ada@example.com'
-        assert ada_member['id'] != ada['user']['id']  # a member id, not the account id
-        assert snap['ownerID'] == ada_member['id']  # the owner is a member too
+        assert ada_member['id'] != ada['user']['id']
+        assert snap['ownerID'] == ada_member['id']
 
     def test_me_member_id_is_the_viewers_own_member(self, database):
         api, ada, bob, group = two_people(database)
@@ -71,7 +67,7 @@ class TestMembers:
         sam, response = add_person(api, group, ada)
         assert response.status_code == 200, response.text
         assert response.json() == {'id': sam, 'name': 'Sam', 'userID': None, 'email': None}
-        snap = snapshot(api, group, bob)  # visible to everyone in the group
+        snap = snapshot(api, group, bob)
         assert {'id': sam, 'name': 'Sam', 'userID': None, 'email': None} in snap['members']
         assert snap['version'] == before + 1
 
@@ -119,13 +115,12 @@ class TestMembers:
         api, ada, bob, group = two_people(database)
         sam, _ = add_person(api, group, ada)
         aid, bid = m(ada, group), m(bob, group)
-        record = expense(group, sam, [aid, bid, sam], amount=9000)  # Sam paid for everyone
+        record = expense(group, sam, [aid, bid, sam], amount=9000)
         assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record).status_code == 200
         balances = {b['memberID']: b['minorUnits'] for b in snapshot(api, group, ada)['balances']}
         assert balances == {sam: 6000, aid: -3000, bid: -3000}
         pay = {'id': str(uuid4()), 'fromID': aid, 'toID': sam, 'amountMinor': 3000}
         assert api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(ada), json=pay).status_code == 201
-        # Bob is not a party to a payment between Ada and Sam.
         other = {'id': str(uuid4()), 'fromID': aid, 'toID': sam, 'amountMinor': 1}
         assert api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(bob), json=other).status_code == 403
 
@@ -142,7 +137,7 @@ class TestMembers:
         ada = register(api, 'ada@example.com', 'Ada')
         group = create_group(api, ada)
         sam, _ = add_person(api, group, ada, 'Sam')
-        record = expense(group, sam, [m(ada, group), sam], amount=4000)  # Sam paid before having an account
+        record = expense(group, sam, [m(ada, group), sam], amount=4000)
         api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record)
 
         riya = register(api, 'riya@example.com', 'Riya')
@@ -152,11 +147,11 @@ class TestMembers:
         assert accepted.status_code == 200, accepted.text
 
         snap = accepted.json()
-        assert snap['meMemberID'] == sam  # Riya is Sam: no new member was created
+        assert snap['meMemberID'] == sam
         assert len(snap['members']) == 2
         person = [x for x in snap['members'] if x['id'] == sam][0]
         assert person['userID'] == riya['user']['id'] and person['email'] == 'riya@example.com'
-        assert {b['memberID']: b['minorUnits'] for b in snap['balances']}[sam] == 2000  # her history came with her
+        assert {b['memberID']: b['minorUnits'] for b in snap['balances']}[sam] == 2000
         assert api.get('/v1/groups', headers=headers(riya)).json()[0]['id'] == group['id']
 
     def test_an_invitation_without_a_person_still_adds_a_new_member(self, database):
@@ -193,7 +188,7 @@ class TestMembers:
         group = create_group(api, ada)
         sam, _ = add_person(api, group, ada, 'Sam')
         for_sam = invite(api, group, ada, 'bob@example.com', sam)
-        join(api, group, ada, bob)  # Bob joins through a different invitation first
+        join(api, group, ada, bob)
         late = accept(api, bob, for_sam)
         assert late.status_code == 409
         snap = snapshot(api, group, ada)

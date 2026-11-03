@@ -4,12 +4,9 @@ import type { Allocation } from '../splitter';
 
 export interface LedgerExpense {
   id: string;
-  /** Total in minor units. */
   amount: number;
   payerID: string;
-  /** Who owes what; must add up to `amount`. */
   allocations: readonly Allocation[];
-  /** Set on a tombstone. Deleted expenses never count towards balances. */
   deletedAt?: string | null;
 }
 
@@ -28,15 +25,9 @@ export interface LedgerInput {
 
 export interface Balance {
   memberID: string;
-  /** Positive: the member is owed money. Negative: the member owes money. */
   minorUnits: number;
 }
 
-/**
- * Net balance per member, in member order: paid minus owed, plus settlements sent,
- * minus settlements received. Always recomputed from the records, never stored.
- * The balances of a group sum to zero.
- */
 export function computeBalances({ members, expenses, settlements }: LedgerInput): Balance[] {
   const net = new Map<string, number>(members.map((id) => [id, 0]));
   if (net.size !== members.length) throw new CoreError('invalid_ledger', 'Duplicate member');

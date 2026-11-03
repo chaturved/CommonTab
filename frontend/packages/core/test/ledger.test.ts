@@ -75,7 +75,6 @@ describe('simplifyDebts properties', () => {
         net.set(t.fromID, (net.get(t.fromID) as number) + t.minorUnits);
         net.set(t.toID, (net.get(t.toID) as number) - t.minorUnits);
       }
-      // Paying `t` raises the payer's balance, so after all payments everyone is at zero.
       balances.forEach((b) => expect(b.minorUnits + (net.get(b.memberID) as number)).toBe(0));
       expect(transfers.length).toBeLessThanOrEqual(Math.max(0, balances.filter((b) => b.minorUnits !== 0).length - 1));
     }

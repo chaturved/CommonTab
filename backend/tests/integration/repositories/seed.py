@@ -1,4 +1,3 @@
-"""Rows the repository tests need around the one they are testing, inserted with plain SQL."""
 from __future__ import annotations
 
 from datetime import datetime, timezone

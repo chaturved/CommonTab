@@ -20,7 +20,7 @@ class TestSnapshotBuilder:
         self.settlements = MagicMock(spec_set=SettlementRepository)
         self.group_id, self.user_id = uuid4(), uuid4()
         self.ada = member_row(group_id=self.group_id, user_id=self.user_id, name='Ada')
-        self.sam = member_row(group_id=self.group_id, user_id=None, name='Sam')  # a person without an account
+        self.sam = member_row(group_id=self.group_id, user_id=None, name='Sam')
         self.groups.group.return_value = group_row(id=self.group_id, owner_id=self.user_id, version=4)
         self.members.members.return_value = [self.ada, self.sam]
         self.expenses.expenses.return_value = []

@@ -73,7 +73,7 @@ describe('coalescing', () => {
   test('deleting an expense that may have reached the server still sends the delete', async () => {
     const { storage, add } = setup();
     const entry = await add('g', 'e1', put('e1'));
-    await storage.putOutbox({ ...entry!, lastAttemptAt: 1 }); // a send started; the response may have been lost
+    await storage.putOutbox({ ...entry!, lastAttemptAt: 1 });
     await add('g', 'e1', { kind: 'expense.delete' });
     expect((await storage.listOutbox()).map((e) => e.kind)).toEqual(['expense.delete']);
   });

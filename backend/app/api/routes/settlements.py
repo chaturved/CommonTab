@@ -14,5 +14,5 @@ router = APIRouter(prefix='/v1')
 def settle(group_id: UUID, input: SettlementInput, response: Response, user: CurrentUser, service: SettlementsDep):
     settlement, created = service.settle(str(group_id), user, input)
     if not created:
-        response.status_code = 200  # the same request was already applied
+        response.status_code = 200
     return settlement

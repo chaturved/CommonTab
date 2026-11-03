@@ -8,8 +8,6 @@ from app.core.errors import fail
 
 
 class ReceiptImageProcessor:
-    """Receipts are stored as a normalized JPEG: decoded, size-capped, without camera metadata."""
-
     def normalize(self, data: bytes, mime: str) -> bytes:
         try:
             with Image.open(BytesIO(data)) as image:

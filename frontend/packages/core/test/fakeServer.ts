@@ -13,28 +13,17 @@ const sameContent = (a: WireExpense, b: ExpenseInput, allocations: WireExpense['
   a.notes === b.notes && a.amountMinor === b.amountMinor && a.payerID === b.payerID && a.method === b.method &&
   JSON.stringify(a.allocations) === JSON.stringify(allocations) && JSON.stringify(a.values) === JSON.stringify(b.values);
 
-/**
- * An in-memory server that follows `docs/shared-api.md`: tombstones, the `409` body with the current record,
- * idempotent writes keyed by client ids, settlements checked against balances when applied.
- * Tests drive failures through `offline`, `unhealthy`, `dropResponses`, `failNext` and `expire`.
- */
 export class FakeServer {
   groups = new Map<string, Group>();
   private users = new Map<string, { id: string; email: string; name: string; password: string }>();
   private tokens = new Map<string, string>();
   private counter = 0;
 
-  /** Requests fail before reaching the server, as with no connection. */
   offline = false;
-  /** `/healthz` answers 503. */
   unhealthy = false;
-  /** The next n writes are applied, then the response is lost. */
   dropResponses = 0;
-  /** Answer the next call with this status instead of handling it. */
   failNext: { status: number; code?: string; extra?: Record<string, unknown> }[] = [];
-  /** Runs once after the next write is applied and before its response is delivered (a person acting mid-request). */
   afterNextWrite: (() => Promise<void>) | null = null;
-  /** Every call that reached the server, in order. */
   log: string[] = [];
 
   constructor(private readonly clock: Clock) {}
@@ -55,7 +44,6 @@ export class FakeServer {
 
   expire(token: string) { this.tokens.delete(token); }
 
-  /** An `Api` for one signed-in device. */
   api(getToken: () => string | null): Api {
     const guard = async <T>(label: string, write: boolean, work: (userId: string) => T): Promise<T> => {
       if (this.offline) throw new ApiError(0, 'offline');
@@ -97,7 +85,6 @@ export class FakeServer {
     };
   }
 
-  // --- the contract ----------------------------------------------------------
   private me(group: Group, userId: string) { return group.members.find((m) => m.userID === userId); }
 
   private require(userId: string, groupId: string): Group {
@@ -170,7 +157,7 @@ export class FakeServer {
     if (sameContent(stored, input, allocations)) return { ...stored };
     const conflict = () => new ApiError(409, 'Version conflict', 'version_conflict', { current: { ...stored } });
     if (stored.deletedAt) {
-      if (input.version === stored.version) return write(stored.version + 1); // restore
+      if (input.version === stored.version) return write(stored.version + 1);
       throw conflict();
     }
     if (input.version !== stored.version) throw conflict();

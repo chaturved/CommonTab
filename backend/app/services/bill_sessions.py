@@ -32,7 +32,6 @@ class BillSessionService:
 
     @staticmethod
     def _json(bill: Bill) -> dict:
-        # Decimals travel as strings, exactly as the client sent them.
         return json.loads(bill.model_dump_json(by_alias=True))
 
     def create(self, bill: Bill) -> dict:

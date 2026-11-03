@@ -1,7 +1,6 @@
 const plugin = require('tailwindcss/plugin');
 const tokens = require('./src/tokens.json');
 
-// Colors are CSS variables so `bg-card` follows light/dark without a `dark:` on every class.
 const cssVars = (scheme) =>
   Object.fromEntries(Object.entries(tokens.colors[scheme]).map(([name, value]) => [`--c-${name}`, value]));
 

@@ -34,7 +34,6 @@ class TestReceiptService:
     def put(self, data=JPEG, mime='image/jpeg'):
         return self.service.put_receipt(str(self.group_id), str(self.expense_id), str(self.user_id), data, mime)
 
-    # --- upload
 
     def test_a_valid_jpeg_is_normalized_stored_and_bumps_the_group(self):
         assert self.put() == {'hasReceipt': True}
@@ -77,7 +76,6 @@ class TestReceiptService:
         assert caught.value.status == 404
         self.groups.bump_version.assert_not_called()
 
-    # --- read and delete
 
     def test_reading_returns_the_bytes_and_type(self):
         self.receipts.receipt.return_value = MagicMock(receipt=memoryview(b'jpeg'), receipt_type='image/jpeg')

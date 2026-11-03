@@ -1,4 +1,3 @@
-"""Rows as the repositories return them (SQLAlchemy `Row`s), built by hand for service tests."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -33,7 +32,6 @@ def invitation_row(**changes) -> SimpleNamespace:
     return SimpleNamespace(**{
         'token_hash': 'h', 'group_id': uuid4(), 'email': 'cy@example.com', 'expires_at': datetime(2999, 1, 1, tzinfo=timezone.utc),
         'accepted_at': None, 'member_id': None, **changes})
-
 
 
 def group_row(**changes) -> SimpleNamespace:

@@ -4,7 +4,7 @@ from helpers import client_for, register
 
 class TestCookieSession:
     def test_signing_up_logs_the_browser_in_without_any_header(self, database):
-        api = client_for(database, cookie_secure=False)  # the test client talks plain http
+        api = client_for(database, cookie_secure=False)
         register(api, 'ada@example.com', 'Ada')
 
         assert api.get('/v1/me').json()['email'] == 'ada@example.com'

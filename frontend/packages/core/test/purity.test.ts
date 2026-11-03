@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
-// core must stay platform-neutral: no React, React Native, Expo or Node imports in src/.
 const FORBIDDEN = /from\s+['"](react|react-native|expo[^'"]*|node:[^'"]*|fs|path|os|crypto|http|https|child_process)['"]/;
 
 function files(dir: string): string[] {

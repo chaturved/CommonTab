@@ -75,7 +75,7 @@ class TestRateLimitRoute:
         first = self.client.post('/v1/auth/sessions', json=body, headers={'X-Forwarded-For': '1.1.1.1'})
         other = self.client.post('/v1/auth/sessions', json=body, headers={'X-Forwarded-For': '2.2.2.2'})
 
-        assert (first.status_code, other.status_code) == (200, 429)  # ignored: both are the test client's address
+        assert (first.status_code, other.status_code) == (200, 429)
 
         self.limit(rate_limit_auth_per_minute=1, trust_proxy=True)
 

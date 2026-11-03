@@ -15,8 +15,8 @@ from app.repositories.password_resets import PasswordResetRepository
 from app.repositories.users import UserRepository
 
 RESET_LIFETIME = timedelta(hours=1)
-RESEND_INTERVAL = timedelta(seconds=60)  # at most one email a minute per account
-MAX_ATTEMPTS = 5  # wrong guesses before the code is burned
+RESEND_INTERVAL = timedelta(seconds=60)
+MAX_ATTEMPTS = 5
 
 
 @dataclass(frozen=True)
@@ -34,10 +34,6 @@ class PasswordResetService:
         self.passwords = passwords
 
     def request(self, email: str) -> ResetEmail | None:
-        """
-        Make a code for the account with this email, or nothing: unknown emails, and accounts asked about less
-        than a minute ago, get no email. The caller answers the same either way.
-        """
         user = self.users.user_by_email(normalize_email(email))
         if user is None:
             return None
@@ -51,10 +47,6 @@ class PasswordResetService:
         return ResetEmail(user.email, display_code(code))
 
     def confirm(self, email: str, code: str, new_password: str) -> bool:
-        """
-        Set a new password if the code is right. Returns False for every kind of failure (the caller answers 400):
-        it does not raise, because the request's transaction would roll back the count of wrong guesses.
-        """
         user = self.users.user_by_email(normalize_email(email))
         if user is None:
             return False
@@ -68,6 +60,6 @@ class PasswordResetService:
                 self.resets.mark_used(active.code_hash, now)
             return False
         self.users.set_password(user.id, self.passwords.hash(new_password))
-        self.users.delete_tokens_for_user(user.id)  # every device signs in again with the new password
+        self.users.delete_tokens_for_user(user.id)
         self.resets.mark_used(active.code_hash, now)
         return True

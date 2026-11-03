@@ -64,7 +64,7 @@ class TestExpenseRepository:
         row = self.repo.expense(values['id'])
         assert row.deleted_at == NOW + timedelta(minutes=5) and row.version == 2
         assert row.updated_at == NOW + timedelta(minutes=5)
-        assert [r.id for r in self.repo.expenses(self.group)] == [values['id']]  # still listed, for other devices
+        assert [r.id for r in self.repo.expenses(self.group)] == [values['id']]
 
     def test_a_locking_read_returns_the_same_row(self):
         values = self.values()

@@ -17,9 +17,9 @@ class TestRateLimiter:
         assert [window.check('a') for _ in range(3)] == [0.0, 0.0, 0.0]
         wait = window.check('a')
         assert 59 <= wait <= 60
-        assert window.check('b') == 0.0  # other keys are separate
+        assert window.check('b') == 0.0
         clock.now += 61
-        assert window.check('a') == 0.0  # the window moved on
+        assert window.check('a') == 0.0
 
     def test_settings_read_limits_from_the_environment(self, tmp_path):
         env = {'DATABASE_URL': 'postgresql://u:p@h/db', 'RATE_LIMIT_AUTH_PER_MINUTE': '3', 'RATE_LIMIT_PER_MINUTE': '50',

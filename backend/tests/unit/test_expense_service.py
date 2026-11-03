@@ -19,7 +19,7 @@ class TestExpenseService:
         self.members = MagicMock(spec_set=MemberRepository)
         self.groups = MagicMock(spec_set=GroupRepository)
         self.expenses = MagicMock(spec_set=ExpenseRepository)
-        self.me = member_row(name='Ada')  # the signed-in member
+        self.me = member_row(name='Ada')
         self.other = uuid4()
         self.group_id, self.user_id = self.me.group_id, self.me.user_id
         self.members.member_of.return_value = self.me
@@ -28,7 +28,6 @@ class TestExpenseService:
         self.service = ExpenseService(self.expenses, self.members, self.groups, MembershipGuard(self.members))
 
     def expense_input(self, **changes) -> ExpenseInput:
-        """A valid expense paid by the signed-in member and shared with one other member."""
         body = {'id': str(uuid4()), 'merchant': 'Dinner', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 1001,
                 'payerID': str(self.me.id), 'method': 'equal', 'participants': [str(self.me.id), str(self.other)]}
         return ExpenseInput.model_validate({**body, **changes})
@@ -39,7 +38,6 @@ class TestExpenseService:
     def delete(self, expense_id):
         self.service.delete_expense(str(self.group_id), str(expense_id), str(self.user_id))
 
-    # --- saving
     def test_creates_the_expense_with_cents_split_between_participants(self):
         body = self.expense_input()
         self.expenses.expense.side_effect = [None, expense_row(id=body.id, version=1)]
@@ -115,7 +113,6 @@ class TestExpenseService:
         assert caught.value.status == 422
 
 
-    # --- restoring a deleted expense
     def test_restoring_with_the_tombstones_version_clears_deleted_at(self):
         body = self.expense_input(version=2)
         self.expenses.expense.return_value = expense_row(id=body.id, group_id=self.group_id, version=2,
@@ -134,7 +131,6 @@ class TestExpenseService:
         self.expenses.update_expense.assert_not_called()
 
 
-    # --- deleting
     def test_deleting_leaves_a_tombstone_and_bumps_the_group(self):
         existing = expense_row(group_id=self.group_id)
         self.expenses.expense.return_value = existing

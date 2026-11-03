@@ -12,7 +12,6 @@ export interface TabItem {
 }
 
 export interface TabBarProps {
-  /** The four tabs, in order. The Add button sits in the middle, after the second tab. */
   tabs: readonly TabItem[];
   activeKey: string;
   onSelect: (key: string) => void;
@@ -21,7 +20,6 @@ export interface TabBarProps {
   className?: string;
 }
 
-/** Floating pill tab bar: Home, Groups, [+], Activity, Account. */
 export function TabBar({ tabs, activeKey, onSelect, onAdd, addLabel = 'Add expense', className }: TabBarProps) {
   const renderTab = (tab: TabItem) => {
     const selected = tab.key === activeKey;

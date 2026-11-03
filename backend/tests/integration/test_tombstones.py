@@ -33,7 +33,7 @@ class TestTombstones:
 
         assert api.delete(url, headers=headers(ada)).status_code == 204
 
-        after = snapshot(api, group, bob)  # another member's device
+        after = snapshot(api, group, bob)
         assert after['expenses'] == []
         assert balances(after) == {aid: 0, bid: 0}
         assert after['version'] == before['version'] + 1
@@ -41,7 +41,7 @@ class TestTombstones:
         assert tombstone['id'] == record['id']
         assert tombstone['version'] == 2
         assert tombstone['deletedAt'].endswith('Z')
-        assert tombstone['amountMinor'] == 10000  # history kept
+        assert tombstone['amountMinor'] == 10000
 
     def test_live_expenses_have_a_null_deleted_at(self, database):
         api, ada, bob, group, record, url = setup(database)
@@ -51,11 +51,11 @@ class TestTombstones:
 
     def test_delete_is_idempotent_and_ignores_the_version(self, database):
         api, ada, bob, group, record, url = setup(database)
-        assert api.delete(url + '?version=99', headers=headers(ada)).status_code == 204  # stale version: delete wins
+        assert api.delete(url + '?version=99', headers=headers(ada)).status_code == 204
         version = snapshot(api, group, ada)['version']
-        assert api.delete(url, headers=headers(ada)).status_code == 204  # a retry
+        assert api.delete(url, headers=headers(ada)).status_code == 204
         assert api.delete(url, headers=headers(bob)).status_code == 204
-        assert snapshot(api, group, ada)['version'] == version  # no extra changes
+        assert snapshot(api, group, ada)['version'] == version
         assert len(snapshot(api, group, ada)['deletedExpenses']) == 1
 
     def test_delete_of_an_unknown_expense_is_a_no_op_but_another_groups_expense_is_not_found(self, database):
@@ -68,20 +68,20 @@ class TestTombstones:
     def test_edit_after_delete_conflicts_and_returns_the_tombstone(self, database):
         api, ada, bob, group, record, url = setup(database)
         api.delete(url, headers=headers(ada))
-        edit = {**record, 'version': 1, 'amountMinor': 12000}  # Bob edited offline, based on version 1
+        edit = {**record, 'version': 1, 'amountMinor': 12000}
         response = api.put(url, headers=headers(bob), json=edit)
         assert response.status_code == 409
         body = response.json()
         assert body['code'] == 'version_conflict'
         assert body['current']['deletedAt'] is not None
         assert body['current']['version'] == 2
-        assert snapshot(api, group, bob)['expenses'] == []  # the delete won
+        assert snapshot(api, group, bob)['expenses'] == []
 
     def test_restore_puts_the_expense_back_on_top_of_the_tombstone(self, database):
         api, ada, bob, group, record, url = setup(database)
         aid, bid = m(ada, group), m(bob, group)
         api.delete(url, headers=headers(ada))
-        restore = {**record, 'version': 2, 'amountMinor': 12000}  # tombstone version, Bob's edited content
+        restore = {**record, 'version': 2, 'amountMinor': 12000}
         response = api.put(url, headers=headers(bob), json=restore)
         assert response.status_code == 200, response.text
         assert response.json()['deletedAt'] is None
@@ -94,7 +94,7 @@ class TestTombstones:
     def test_replaying_a_create_does_not_resurrect_a_deleted_expense(self, database):
         api, ada, bob, group, record, url = setup(database)
         api.delete(url, headers=headers(ada))
-        response = api.put(url, headers=headers(ada), json=record)  # the original create, re-sent late
+        response = api.put(url, headers=headers(ada), json=record)
         assert response.status_code == 409
         assert snapshot(api, group, ada)['expenses'] == []
 

@@ -10,11 +10,9 @@ export interface Device {
   storage: MemoryStorage;
   engine: SyncEngine;
   actions: Actions;
-  /** The access token this phone sends; null once signed out. */
   token: string | null;
 }
 
-/** Build a phone: its own storage, outbox and engine, sharing the test clock and the server. */
 export function device(server: FakeServer, clock: TestClock, name: string, session: Session = server.signUp(name), storage = new MemoryStorage()): Device {
   const d = { name, clock, storage, token: session.accessToken } as Device;
   const api = server.api(() => d.token);

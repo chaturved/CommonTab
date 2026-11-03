@@ -49,12 +49,10 @@ class ExpenseService:
             if existing.group_id != gid:
                 fail(409, 'Expense ID belongs to another group', 'id_conflict')
             if existing.deleted_at is not None:
-                # Deleted: only an explicit restore (based on the tombstone's own version) goes through.
                 if input.version != existing.version:
                     fail(409, 'Expense was deleted', 'version_conflict', current=expense_payload(existing))
                 self.expenses.update_expense({**values, 'version': existing.version + 1, 'deleted_at': None})
             elif self.same_content(existing, values):
-                # A retry after a lost response (or an identical edit): the write is already there.
                 return expense_payload(existing)
             else:
                 if input.version != existing.version:
@@ -77,15 +75,11 @@ class ExpenseService:
                 and row.input_values == values['input_values'])
 
     def delete_expense(self, group_id: str, expense_id: str, user_id: str) -> None:
-        """
-        Delete wins: it succeeds whatever version the caller last saw, and repeating it is a no-op.
-        The row stays as a tombstone so other devices learn about the delete (and can restore it).
-        """
         gid = UUID(group_id)
         self.guard.require(gid, UUID(user_id))
         existing = self.expenses.expense(UUID(expense_id), lock=True)
         if existing is None or existing.deleted_at is not None:
-            return  # nothing to delete: the end state is what the caller wanted
+            return
         if existing.group_id != gid:
             fail(404, 'Expense not found')
         self.expenses.tombstone_expense(existing.id, datetime.now(timezone.utc))

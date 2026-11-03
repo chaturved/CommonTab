@@ -35,7 +35,6 @@ class TestPasswordReset:
         return self.api.post('/v1/auth/sessions', json={'email': 'ada@example.com', 'password': password})
 
     def forget_the_last_request(self):
-        """Move the code's creation back so the one-a-minute limit does not apply."""
         with self.database.transaction() as connection:
             connection.execute(text("UPDATE password_resets SET created_at = created_at - interval '2 minutes'"))
 
@@ -47,7 +46,7 @@ class TestPasswordReset:
 
         assert self.sign_in(NEW).status_code == 200
         assert self.sign_in(OLD).status_code == 401
-        assert client_for(self.database).get('/v1/me', headers=headers(self.ada)).status_code == 401  # old token revoked
+        assert client_for(self.database).get('/v1/me', headers=headers(self.ada)).status_code == 401
 
     def test_a_code_works_once(self):
         self.ask()
@@ -86,8 +85,8 @@ class TestPasswordReset:
         wrong = [self.confirm('ZZZZ-ZZZZ').status_code for _ in range(MAX_ATTEMPTS)]
 
         assert wrong == [400] * MAX_ATTEMPTS
-        assert self.confirm(code).status_code == 400  # the guesses were counted, not rolled back
-        assert self.sign_in(OLD).status_code == 200  # the password never changed
+        assert self.confirm(code).status_code == 400
+        assert self.sign_in(OLD).status_code == 200
 
     def test_an_expired_code_is_refused(self):
         self.ask()

@@ -33,7 +33,6 @@ class TestPasswordResetService:
         self.resets.latest_created_at.return_value = None
         self.service = PasswordResetService(self.resets, self.users, self.passwords)
 
-    # --- asking for a code
 
     def test_a_code_is_stored_hashed_and_returned_for_the_email(self):
         pending = self.service.request(' Ada@Example.com ')
@@ -73,7 +72,6 @@ class TestPasswordResetService:
 
         assert caught.value.status == 422
 
-    # --- using a code
 
     def test_the_right_code_sets_the_password_signs_everyone_out_and_uses_the_code_up(self):
         self.resets.active.return_value = reset_row()

@@ -6,7 +6,6 @@ export const HISTORY_LIMIT = 10;
 
 export const iso = (ms: number): string => new Date(ms).toISOString();
 
-/** Local copy of the splitter's result, so a pending expense shows the right shares before the server sees it. */
 export function allocationsFor(content: ExpenseContent) {
   return allocate({
     method: content.method === 'percentage' ? 'percent' : content.method,
@@ -16,7 +15,6 @@ export function allocationsFor(content: ExpenseContent) {
   });
 }
 
-/** What a person wrote in an expense, taken back out of a stored record. */
 export function contentOf(record: WireExpense, editedAt: string = record.updatedAt): LocalContent {
   return {
     id: record.id, groupID: record.groupID, merchant: record.merchant, occurredAt: record.occurredAt,
@@ -51,7 +49,6 @@ export function groupFromSnapshot(snapshot: GroupSnapshot, local?: LocalGroup): 
   };
 }
 
-/** Only the fields the API accepts; local bookkeeping stays on the device. */
 export function toContent(c: ExpenseContent): ExpenseContent {
   return {
     id: c.id, merchant: c.merchant, occurredAt: c.occurredAt, category: c.category, notes: c.notes,

@@ -2,7 +2,6 @@ import type { ExpenseInput, GroupCreateInput, GroupSnapshot, Member, SettlementI
 import { ApiError } from './errors';
 import type { Api, Session } from './types';
 
-/** The part of `fetch` we use, so core needs no DOM or Node types. */
 export interface FetchResponse {
   status: number;
   headers: { get(name: string): string | null };
@@ -17,7 +16,6 @@ export interface HttpApiOptions {
   getToken: () => Promise<string | null> | string | null;
 }
 
-/** The API lives under this path (docs/shared-api.md). `/healthz` is the one route outside it. */
 export const API_PREFIX = '/v1';
 
 export class HttpApi implements Api {

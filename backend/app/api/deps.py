@@ -17,7 +17,6 @@ from app.services.password_resets import PasswordResetService
 from app.services.receipts import ReceiptService
 from app.services.settlements import SettlementService
 
-# Services build themselves: each declares its repositories (and they their connection) with `Depends` in __init__.
 AccountsDep = Annotated[AccountService, Depends(AccountService)]
 PasswordResetsDep = Annotated[PasswordResetService, Depends(PasswordResetService)]
 GroupsDep = Annotated[GroupService, Depends(GroupService)]
@@ -30,7 +29,6 @@ AnalyticsDep = Annotated[AnalyticsService, Depends(AnalyticsService)]
 
 
 def enforce_rate_limit(request: Request, limiters: Annotated[RateLimiters, Depends(get_rate_limiters)]) -> None:
-    """Runs before every route, ahead of any database work."""
     wait = limiters.check(request)
     if wait:
         seconds = int(wait) + 1
@@ -67,7 +65,6 @@ AccountToken = Annotated[str, Depends(account_token)]
 
 
 def current_user(token: AccountToken, accounts: AccountsDep) -> str:
-    """The id of the signed-in account, or 401."""
     return accounts.authenticate(token)
 
 

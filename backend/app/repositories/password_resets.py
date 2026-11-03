@@ -9,8 +9,6 @@ from app.core.db import DbConnection
 
 
 class PasswordResetRepository:
-    """SQL only. Password reset codes (only their hashes are stored)."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
@@ -24,12 +22,10 @@ class PasswordResetRepository:
                                        {'u': user_id}).scalar()
 
     def active(self, user_id: UUID) -> Row | None:
-        """The newest code that has not been used up, locked so two confirmations cannot both count it."""
         return self.connection.execute(text('''SELECT * FROM password_resets WHERE user_id=:u AND used_at IS NULL
                                                ORDER BY created_at DESC LIMIT 1 FOR UPDATE'''), {'u': user_id}).fetchone()
 
     def supersede(self, user_id: UUID, now: datetime) -> None:
-        """A new code replaces the ones before it."""
         self.connection.execute(text('UPDATE password_resets SET used_at=:now WHERE user_id=:u AND used_at IS NULL'),
                                 {'now': now, 'u': user_id})
 
@@ -38,6 +34,5 @@ class PasswordResetRepository:
                                 {'now': now, 'h': code_hash})
 
     def record_failed_attempt(self, code_hash: str) -> int:
-        """Counts a wrong guess against this code and returns how many there have been."""
         return self.connection.execute(text('''UPDATE password_resets SET attempts = attempts + 1
                                                WHERE code_hash=:h RETURNING attempts'''), {'h': code_hash}).scalar_one()

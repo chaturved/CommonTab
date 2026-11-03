@@ -6,15 +6,10 @@ export interface Session {
   user: { id: string; email: string; name: string };
 }
 
-/**
- * The calls the app makes. Methods throw `ApiError`. `HttpApi` talks to the backend;
- * tests use a fake server with the same contract.
- */
 export interface Api {
   register(input: { email: string; name: string; password: string }): Promise<Session>;
   login(input: { email: string; password: string }): Promise<Session>;
   logout(): Promise<void>;
-  /** Returns whether the server and its database are up; used to tell "server down" from "no connection". */
   healthy(): Promise<boolean>;
 
   listGroups(): Promise<GroupSnapshot[]>;

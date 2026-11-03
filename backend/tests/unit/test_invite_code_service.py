@@ -27,7 +27,7 @@ class TestInviteCodeService:
         self.users = MagicMock(spec_set=UserRepository)
         self.invitations = MagicMock(spec_set=InvitationRepository)
         self.snapshots = MagicMock(spec_set=SnapshotBuilder)
-        self.me = member_row(name='Ada')  # the signed-in member of the group
+        self.me = member_row(name='Ada')
         self.group_id, self.user_id = self.me.group_id, self.me.user_id
         self.members.member_of.return_value = self.me
         self.cy = user_row(name='Cy', email='cy@example.com')
@@ -36,7 +36,6 @@ class TestInviteCodeService:
         self.service = InvitationService(self.invitations, self.members, self.groups, self.users,
                                          MembershipGuard(self.members), self.snapshots)
 
-    # --- making a code
 
     def test_a_code_is_stored_hashed_with_no_email_and_shown_in_two_groups(self):
         made = self.service.create_code(str(self.group_id), str(self.user_id))
@@ -73,7 +72,6 @@ class TestInviteCodeService:
 
         assert caught.value.status == 404
 
-    # --- joining
 
     def a_code_for_the_group(self, **changes):
         row = invitation_row(**{'group_id': self.group_id, 'email': None, 'token_hash': hash_token('ABCD2345'), **changes})
@@ -89,7 +87,7 @@ class TestInviteCodeService:
         assert group == {'id': 'snapshot'}
         assert self.members.insert_member.call_args.args[1:4] == (self.group_id, self.cy.id, 'Cy')
         self.groups.bump_version.assert_called_once_with(self.group_id)
-        self.invitations.accept_invitation.assert_not_called()  # a group code can be used again
+        self.invitations.accept_invitation.assert_not_called()
 
     def test_the_code_is_looked_up_by_the_hash_of_its_normalized_form(self):
         self.a_code_for_the_group()
@@ -133,7 +131,7 @@ class TestInviteCodeService:
     @pytest.mark.parametrize('changes', [
         {'expires_at': datetime(2000, 1, 1, tzinfo=timezone.utc)},
         {'accepted_at': datetime(2026, 1, 1, tzinfo=timezone.utc)},
-        {'email': 'cy@example.com'},  # an email invitation is not a code
+        {'email': 'cy@example.com'},
     ])
     def test_an_expired_used_or_email_bound_invitation_cannot_be_joined_with(self, changes):
         self.a_code_for_the_group(**changes)

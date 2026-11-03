@@ -24,7 +24,7 @@ class TestInvite:
         self.users = MagicMock(spec_set=UserRepository)
         self.invitations = MagicMock(spec_set=InvitationRepository)
         self.snapshots = MagicMock(spec_set=SnapshotBuilder)
-        me = member_row(name='Ada')  # the signed-in member
+        me = member_row(name='Ada')
         self.group_id, self.user_id = me.group_id, me.user_id
         self.members.member_of.return_value = me
         self.cy = user_row(name='Cy', email='cy@example.com')
@@ -78,7 +78,7 @@ class TestAcceptInvite:
         self.users = MagicMock(spec_set=UserRepository)
         self.invitations = MagicMock(spec_set=InvitationRepository)
         self.snapshots = MagicMock(spec_set=SnapshotBuilder)
-        me = member_row(name='Ada')  # the signed-in member
+        me = member_row(name='Ada')
         self.group_id, self.user_id = me.group_id, me.user_id
         self.members.member_of.return_value = me
         self.cy = user_row(name='Cy', email='cy@example.com')
@@ -88,7 +88,7 @@ class TestAcceptInvite:
                                          MembershipGuard(self.members), self.snapshots)
         self.invitation = invitation_row(group_id=self.group_id, token_hash=hash_token('code'))
         self.invitations.invitation.return_value = self.invitation
-        self.members.member_of.return_value = None  # Cy is not in the group yet
+        self.members.member_of.return_value = None
 
     def accept(self, token='code'):
         return self.service.accept_invite(str(self.cy.id), token)

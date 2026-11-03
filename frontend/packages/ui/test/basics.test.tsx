@@ -74,6 +74,6 @@ describe('Icon', () => {
   test('resolves the token for the current color scheme', async () => {
     const Probe = (props: { color?: string }) => <Text>{props.color}</Text>;
     await render(<Icon icon={Probe} tone="accent" />);
-    expect(screen.getByText('#0B6B58')).toBeTruthy(); // light accent
+    expect(screen.getByText('#0B6B58')).toBeTruthy();
   });
 });

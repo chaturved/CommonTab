@@ -6,7 +6,6 @@ export class TestClock implements Clock {
   advance(ms: number) { this.t += ms; }
 }
 
-/** Predictable ids; `next()` is the jitter source (0.5 means "no jitter"). */
 export class TestRandom implements Random {
   private n = 0;
   jitter = 0.5;

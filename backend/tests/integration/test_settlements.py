@@ -37,8 +37,8 @@ class TestSettlements:
 
     def test_a_payment_queued_offline_still_applies_after_other_changes(self, database):
         api, ada, bob, group, endpoint = setup(database)
-        queued = pay(group, bob, ada, 5000)  # made while offline
-        api.patch(f"/v1/groups/{group['id']}", headers=headers(ada), json={'name': 'Renamed'})  # group version moves on
+        queued = pay(group, bob, ada, 5000)
+        api.patch(f"/v1/groups/{group['id']}", headers=headers(ada), json={'name': 'Renamed'})
         extra = expense(group, m(ada, group), [m(ada, group), m(bob, group)], amount=2)
         api.put(f"/v1/groups/{group['id']}/expenses/{extra['id']}", headers=headers(ada), json=extra)
         assert api.post(endpoint, headers=headers(bob), json=queued).status_code == 201
@@ -56,7 +56,6 @@ class TestSettlements:
         assert len(after['settlements']) == 1
         assert after['version'] == before['version']
         assert after['balances'] == before['balances']
-        # either participant may repeat it
         assert api.post(endpoint, headers=headers(ada), json=payment).status_code == 200
 
     def test_the_same_id_with_a_different_payment_is_a_conflict(self, database):
@@ -69,7 +68,7 @@ class TestSettlements:
         assert len(snapshot(api, group, ada)['settlements']) == 1
 
     def test_overpayment_is_rejected_with_the_most_that_can_be_paid(self, database):
-        api, ada, bob, group, endpoint = setup(database)  # Bob owes Ada 5000
+        api, ada, bob, group, endpoint = setup(database)
         response = api.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 5001))
         assert response.status_code == 422
         body = response.json()
@@ -89,14 +88,13 @@ class TestSettlements:
     def test_a_paid_up_balance_cannot_be_paid_again(self, database):
         api, ada, bob, group, endpoint = setup(database)
         assert api.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 5000)).status_code == 201
-        again = api.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 1))  # new id
+        again = api.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 1))
         assert again.status_code == 422 and again.json()['maxAmountMinor'] == 0
 
     def test_two_payments_racing_for_the_same_balance_cannot_both_succeed(self, database):
-        api, ada, bob, group, endpoint = setup(database)  # Bob owes 5000
+        api, ada, bob, group, endpoint = setup(database)
 
         def attempt(_):
-            # a TestClient per thread; both talk to the same database
             client = client_for(database)
             return client.post(endpoint, headers=headers(bob), json=pay(group, bob, ada, 5000)).status_code
 

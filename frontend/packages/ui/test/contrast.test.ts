@@ -10,7 +10,6 @@ export function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// [text, background, minimum ratio]. 4.5 for text, 3 for icons and large (>=18px bold) text.
 const PAIRS: [ColorName, ColorName, number][] = [
   ['fg', 'background', 4.5],
   ['fg', 'card', 4.5],

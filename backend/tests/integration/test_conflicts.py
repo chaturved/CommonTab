@@ -20,10 +20,8 @@ def setup(database):
 class TestConflicts:
     def test_stale_edit_returns_409_with_the_current_record(self, database):
         api, ada, bob, group, record, url = setup(database)
-        # Bob edits on top of version 1 first.
         bobs = {**record, 'version': 1, 'amountMinor': 20000, 'notes': "Bob's edit"}
         assert api.put(url, headers=headers(bob), json=bobs).status_code == 200
-        # Ada's edit, also based on version 1, is now stale.
         adas = {**record, 'version': 1, 'amountMinor': 30000}
         response = api.put(url, headers=headers(ada), json=adas)
         assert response.status_code == 409
@@ -37,7 +35,7 @@ class TestConflicts:
 
     def test_create_over_existing_with_different_content_is_a_conflict_with_current(self, database):
         api, ada, bob, group, record, url = setup(database)
-        again = {**record, 'amountMinor': 999}  # version null: claims to be a new expense
+        again = {**record, 'amountMinor': 999}
         response = api.put(url, headers=headers(ada), json=again)
         assert response.status_code == 409
         assert response.json()['current']['amountMinor'] == 10001
@@ -60,19 +58,19 @@ class TestConflicts:
     def test_retry_of_a_create_whose_response_was_lost_is_not_a_conflict(self, database):
         api, ada, bob, group, record, url = setup(database)
         before = api.get(f"/v1/groups/{group['id']}", headers=headers(ada)).json()
-        again = api.put(url, headers=headers(ada), json=record)  # same payload, version null, as if re-sent
+        again = api.put(url, headers=headers(ada), json=record)
         assert again.status_code == 200
         assert again.json()['version'] == 1
         after = api.get(f"/v1/groups/{group['id']}", headers=headers(ada)).json()
         assert len(after['expenses']) == 1
-        assert after['version'] == before['version']  # a replay changes nothing
+        assert after['version'] == before['version']
 
     def test_retry_of_an_edit_whose_response_was_lost_is_not_a_conflict(self, database):
         api, ada, bob, group, record, url = setup(database)
         edit = {**record, 'version': 1, 'amountMinor': 20000}
         first = api.put(url, headers=headers(ada), json=edit)
         assert first.status_code == 200 and first.json()['version'] == 2
-        retry = api.put(url, headers=headers(ada), json=edit)  # still based on version 1
+        retry = api.put(url, headers=headers(ada), json=edit)
         assert retry.status_code == 200
         assert retry.json() == first.json()
 

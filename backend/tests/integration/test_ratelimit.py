@@ -29,7 +29,7 @@ class TestRatelimit:
         bob = register(api, 'bob@example.com', 'Bob')
         assert [api.get('/v1/me', headers=headers(ada)).status_code for _ in range(3)] == [200, 200, 200]
         assert api.get('/v1/me', headers=headers(ada)).status_code == 429
-        assert api.get('/v1/me', headers=headers(bob)).status_code == 200  # same IP, different session
+        assert api.get('/v1/me', headers=headers(bob)).status_code == 200
 
     def test_health_checks_are_never_limited(self, database):
         api = app_with(database, rate_limit_per_minute=1, rate_limit_auth_per_minute=1)

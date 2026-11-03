@@ -6,7 +6,6 @@ import { allocationsFor, contentOf, iso, toContent, withHistory } from './record
 
 export interface ActionDeps extends OutboxContext {
   storage: Storage;
-  /** Called after every committed change so the UI can re-read the store. */
   notify(): void;
 }
 
@@ -15,18 +14,12 @@ export interface NewGroup {
   name: string;
   currencyCode: string;
   members: { id?: string; name: string }[];
-  /** Index into `members` of the person using this device. */
   meIndex: number;
-  /** Stay on this phone until `uploadGroup` is called. */
   localOnly?: boolean;
 }
 
 export type ExpenseDraft = Omit<ExpenseContent, 'id'> & { id?: string };
 
-/**
- * Everything a person does. Each action writes the record and its outbox entry in one transaction and
- * returns without touching the network.
- */
 export class Actions {
   constructor(private readonly deps: ActionDeps) {}
 
@@ -51,7 +44,6 @@ export class Actions {
     return group;
   }
 
-  /** Turn a local-only group into one that syncs: creates it on the server, then sends everything in it. */
   async uploadGroup(groupId: string): Promise<void> {
     await this.deps.storage.transaction(async (tx) => {
       const group = await tx.getGroup(groupId);
@@ -76,7 +68,6 @@ export class Actions {
     });
   }
 
-  /** Add a person who needs no account, or rename one. */
   async putMember(groupId: string, member: { id?: string; name: string }): Promise<Member> {
     const id = member.id ?? this.deps.random.uuid();
     const saved = await this.deps.storage.transaction(async (tx) => {
@@ -96,7 +87,7 @@ export class Actions {
     const { storage, random } = this.deps;
     const id = draft.id ?? random.uuid();
     const content: ExpenseContent = { ...draft, id };
-    const allocations = allocationsFor(content); // throws CoreError before anything is saved
+    const allocations = allocationsFor(content);
     const saved = await storage.transaction(async (tx) => {
       const group = await tx.getGroup(groupId);
       if (!group) throw new Error('Unknown group');
@@ -128,7 +119,7 @@ export class Actions {
       const queued = await enqueue(tx, this.ctx, {
         groupId: existing.groupID, entityId: expenseId, baseVersion: existing.version === 0 ? null : existing.version, payload: { kind: 'expense.delete' },
       });
-      if (!queued) await tx.deleteExpense(expenseId); // never reached the server: nothing to tell it
+      if (!queued) await tx.deleteExpense(expenseId);
       else await tx.putExpense({ ...existing, deletedAt: this.nowIso(), updatedAt: this.nowIso(), syncState: 'pending', conflict: undefined, error: undefined });
     });
     this.deps.notify();
@@ -175,7 +166,6 @@ export class Actions {
     this.deps.notify();
   }
 
-  /** Drop a change the server refused. The next pull puts the server's copy back. */
   async discardFailed(opId: string): Promise<void> {
     await this.deps.storage.transaction(async (tx) => {
       const entry = (await tx.listOutbox()).find((e) => e.opId === opId);

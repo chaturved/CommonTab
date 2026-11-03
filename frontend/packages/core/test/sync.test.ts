@@ -4,7 +4,6 @@ import { device, draft, TestClock, type Device } from './harness';
 
 interface World { server: FakeServer; clock: TestClock; phone: Device; groupId: string; me: string; bob: string }
 
-/** Ada's phone with a group (Ada and Bob, who has no account) that is already on the server and synced. */
 async function world(): Promise<World> {
   const clock = new TestClock();
   const server = new FakeServer(clock);
@@ -14,7 +13,6 @@ async function world(): Promise<World> {
   return { server, clock, phone, groupId: group.id, me: group.members[0]!.id, bob: group.members[1]!.id };
 }
 
-/** The same account on a second device, already caught up. */
 async function secondDevice(w: World, name = 'Tablet'): Promise<Device> {
   const other = device(w.server, w.clock, name);
   other.token = w.phone.token;
@@ -32,7 +30,7 @@ describe('local first', () => {
     expect(w.server.groups.get(w.groupId)!.members.map((m) => m.name)).toEqual(['Ada', 'Bob']);
     const saved = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob]));
     expect(saved).toMatchObject({ syncState: 'pending', version: 0 });
-    expect(saved.allocations.map((a) => a.minorUnits)).toEqual([5000, 5000]); // computed on the phone
+    expect(saved.allocations.map((a) => a.minorUnits)).toEqual([5000, 5000]);
     expect(w.server.groups.get(w.groupId)!.expenses.size).toBe(0);
 
     await w.phone.engine.sync();
@@ -84,10 +82,10 @@ describe('offline, retry and backoff', () => {
     await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { id: keep.id, merchant: 'Keep (edited)' }));
     const gone = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { merchant: 'Gone' }));
     await w.phone.actions.deleteExpense(gone.id);
-    expect((await outbox(w.phone)).map((e) => e.entityId)).toEqual([keep.id]); // edit coalesced, delete cancelled
+    expect((await outbox(w.phone)).map((e) => e.entityId)).toEqual([keep.id]);
     expect(await w.phone.storage.getExpense(gone.id)).toBeUndefined();
 
-    await w.phone.engine.sync(); // still offline
+    await w.phone.engine.sync();
     expect(await w.phone.engine.status()).toMatchObject({ connectivity: 'offline', waiting: 1, chip: 'waiting' });
     w.server.offline = false;
     w.server.log.length = 0;
@@ -109,7 +107,7 @@ describe('offline, retry and backoff', () => {
     w.server.offline = false;
     w.server.log.length = 0;
     await w.phone.engine.sync();
-    expect(w.server.log.filter((l) => l.startsWith('PUT'))).toEqual([]); // not due yet
+    expect(w.server.log.filter((l) => l.startsWith('PUT'))).toEqual([]);
 
     w.clock.advance(1000);
     w.server.offline = true;
@@ -149,7 +147,7 @@ describe('offline, retry and backoff', () => {
     const free = await w.phone.actions.saveExpense(trip.id, draft(meTrip, [meTrip], { merchant: 'free' }));
     await w.phone.engine.sync();
     expect(w.server.groups.get(trip.id)!.expenses.has(free.id)).toBe(true);
-    expect(w.server.groups.get(w.groupId)!.expenses.has(blocked.id)).toBe(true); // it had already been sent once
+    expect(w.server.groups.get(w.groupId)!.expenses.has(blocked.id)).toBe(true);
   });
 
   test('order inside a group is kept: a person is added before the expense that uses them', async () => {
@@ -166,7 +164,7 @@ describe('offline, retry and backoff', () => {
     const first = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { merchant: 'first' }));
     const second = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { merchant: 'second' }));
     w.server.offline = true;
-    await w.phone.engine.sync(); // the first fails and backs off
+    await w.phone.engine.sync();
     w.server.offline = false;
     w.server.log.length = 0;
     await w.phone.engine.sync();
@@ -184,8 +182,8 @@ describe('idempotent retry: the connection drops after the server applied a writ
     const saved = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob]));
     w.server.dropResponses = 1;
     await w.phone.engine.sync();
-    expect(w.server.groups.get(w.groupId)!.expenses.size).toBe(1); // applied
-    expect(await expense(w.phone, saved.id)).toMatchObject({ syncState: 'pending' }); // the phone doesn't know
+    expect(w.server.groups.get(w.groupId)!.expenses.size).toBe(1);
+    expect(await expense(w.phone, saved.id)).toMatchObject({ syncState: 'pending' });
 
     w.clock.advance(5000);
     await w.phone.engine.sync();
@@ -250,12 +248,10 @@ describe('idempotent retry: the connection drops after the server applied a writ
   test('editing while a send is in flight keeps the newer edit, built on the stored version', async () => {
     const w = await world();
     const saved = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob]));
-    // The person edits after the server stored the first version but before the phone hears about it.
     w.server.afterNextWrite = async () => {
       await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { id: saved.id, merchant: 'Second thoughts' }));
     };
     await w.phone.engine.sync();
-    // The second edit was built on version 1 (the stored one), so it is accepted rather than conflicting.
     expect(await expense(w.phone, saved.id)).toMatchObject({ syncState: 'synced', merchant: 'Second thoughts', version: 2 });
     expect(serverExpense(w, saved.id)).toMatchObject({ merchant: 'Second thoughts', version: 2 });
     expect(await outbox(w.phone)).toEqual([]);
@@ -272,7 +268,6 @@ describe('idempotent retry: the connection drops after the server applied a writ
 });
 
 describe('a second device edits the same expense', () => {
-  /** Both devices hold "Dinner"; the phone edits first, the tablet edits later and reaches the server first. */
   async function phoneLoses() {
     const w = await world();
     const saved = await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { merchant: 'Dinner' }));
@@ -353,7 +348,7 @@ describe('a second device edits the same expense', () => {
     await tablet.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { id: saved.id, merchant: 'Dinner (tablet)' }));
     w.clock.advance(1000);
     await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { id: saved.id, merchant: 'Dinner (phone)' }));
-    await tablet.engine.sync(); // reaches the server first, but its edit is the older one
+    await tablet.engine.sync();
     await w.phone.engine.sync();
 
     expect(serverExpense(w, saved.id)).toMatchObject({ merchant: 'Dinner (phone)', version: 3 });
@@ -379,7 +374,7 @@ describe('a second device edits the same expense', () => {
     expect(stuck.deletedAt).not.toBeNull();
     expect(stuck.conflict!.mine.merchant).toBe('Dinner (edited)');
 
-    await w.phone.actions.resolveConflict(saved.id, 'mine'); // Restore
+    await w.phone.actions.resolveConflict(saved.id, 'mine');
     await w.phone.engine.sync();
     expect(serverExpense(w, saved.id)).toMatchObject({ deletedAt: null, merchant: 'Dinner (edited)', version: 3 });
     expect(await expense(w.phone, saved.id)).toMatchObject({ syncState: 'synced', deletedAt: null });
@@ -426,7 +421,7 @@ describe('pull', () => {
     await tablet.engine.sync();
     await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob], { id: saved.id, merchant: 'Mine' }));
     w.server.failNext.push({ status: 422 });
-    await w.phone.engine.sync(); // the push is refused, then the pull runs
+    await w.phone.engine.sync();
     expect(await expense(w.phone, saved.id)).toMatchObject({ merchant: 'Mine', syncState: 'failed' });
   });
 
@@ -471,7 +466,7 @@ describe('pull', () => {
 describe('refusals and expired sessions', () => {
   async function owing() {
     const w = await world();
-    await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob])); // Bob owes Ada 5000
+    await w.phone.actions.saveExpense(w.groupId, draft(w.me, [w.me, w.bob]));
     await w.phone.engine.sync();
     return w;
   }
@@ -536,7 +531,7 @@ describe('refusals and expired sessions', () => {
 
     w.server.log.length = 0;
     await w.phone.engine.sync();
-    expect(w.server.log).toEqual([]); // paused: no calls until sign-in
+    expect(w.server.log).toEqual([]);
 
     const fresh = await w.server.api(() => null).login({ email: 'ada@example.com', password: 'correct horse battery' });
     w.phone.token = fresh.accessToken;
@@ -588,7 +583,7 @@ describe('local-only groups and upload', () => {
     await phone.actions.saveExpense(g.id, draft(me, [me, bob], { merchant: 'one' }));
     await phone.actions.saveExpense(g.id, draft(me, [me, bob], { merchant: 'two' }));
     await phone.actions.uploadGroup(g.id);
-    server.dropResponses = 1; // the group is created, but the phone never hears
+    server.dropResponses = 1;
     await phone.engine.sync();
     clock.advance(5000);
     await phone.engine.sync();

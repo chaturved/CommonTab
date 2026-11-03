@@ -25,7 +25,6 @@ const TONE: Record<PillTone, TextTone> = {
   neutral: 'fg-soft',
 };
 
-/** Small rounded label. Not interactive. */
 export function Pill({ label, tone = 'accent', icon, className }: PillProps) {
   return (
     <View className={cx('h-8 flex-row items-center gap-1.5 self-start rounded-pill px-3', BOX[tone], className)}>

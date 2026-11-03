@@ -10,10 +10,8 @@ export type BannerTone = 'warning' | 'error' | 'info';
 
 export interface BannerProps {
   tone?: BannerTone;
-  /** Bold lead-in, e.g. "You're offline." */
   title?: string;
   message: string;
-  /** Replaces the default icon for the tone. */
   icon?: ReactNode;
   className?: string;
 }
@@ -22,7 +20,6 @@ const BOX: Record<BannerTone, string> = { warning: 'bg-warn', error: 'bg-error',
 const ICON: Record<BannerTone, ColorName> = { warning: 'warn-icon', error: 'on-error', info: 'on-tint' };
 const TEXT: Record<BannerTone, TextTone> = { warning: 'on-warn', error: 'on-error', info: 'on-tint' };
 
-/** Inline notice. Errors are announced as alerts; warnings and info as status. */
 export function Banner({ tone = 'warning', title, message, icon, className }: BannerProps) {
   const glyph = { warning: TriangleAlert, error: CircleAlert, info: Info }[tone];
   return (

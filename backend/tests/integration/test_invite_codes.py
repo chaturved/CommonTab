@@ -43,8 +43,8 @@ class TestInviteCodes:
         second = api.post('/v1/invitations/join', headers=headers(cy), json={'code': code})
 
         assert joined.status_code == 200 and joined.json()['meMemberID'] == sam
-        assert len(joined.json()['members']) == 2  # Sam became Bob: no extra member
-        assert second.status_code == 404  # used up
+        assert len(joined.json()['members']) == 2
+        assert second.status_code == 404
 
     def test_a_wrong_or_garbled_code_is_404_and_outsiders_cannot_make_codes(self, database):
         api = client_for(database)
@@ -64,5 +64,4 @@ class TestInviteCodes:
                                json={'email': 'bob@example.com'}).json()['inviteToken']
 
         assert api.post('/v1/invitations/accept', headers=headers(bob), json={'inviteToken': code}).status_code == 404
-        # an email token is far longer than a code, so the join route refuses it outright
         assert api.post('/v1/invitations/join', headers=headers(bob), json={'code': email_token}).status_code == 422

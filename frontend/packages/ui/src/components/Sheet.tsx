@@ -11,11 +11,6 @@ export interface SheetProps {
   className?: string;
 }
 
-/**
- * Bottom sheet (e.g. SessionExpired, delete confirmation). Closes by tapping the scrim, the Android
- * back gesture, or the VoiceOver escape gesture. The sheet is a modal view, so screen readers skip the
- * scrim; put a labeled button inside for any action the user must be able to take.
- */
 export function Sheet({ visible, onClose, title, children, className }: SheetProps) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>

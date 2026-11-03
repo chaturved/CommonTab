@@ -6,16 +6,13 @@ import { MAX_PARTICIPANTS, splitEqual } from './splitter';
 export interface BillItem {
   name: string;
   priceCents: number;
-  /** Person ids sharing this item. Cannot be empty. */
   assignedTo: readonly string[];
 }
 
 export interface ItemizedBill {
-  /** Person ids in display order. */
   people: readonly string[];
   items: readonly BillItem[];
   taxCents: number;
-  /** Tip as a percentage of the subtotal, as decimal text ("18", "17.5"). */
   tipPercent: string;
 }
 
@@ -36,14 +33,8 @@ export interface ItemizedResult {
 }
 
 const MAX_ITEMS = 100;
-// Currency-independent cap: 1e9 major units at up to 3 digits.
 const MAX_UNITS = MAX_MAJOR_UNITS * 1000;
 
-/**
- * Split a bill by item. Each item's cents go to its assignees (the first ones, in person
- * order, get the odd cent); tax and tip are then shared in proportion to each person's
- * subtotal. Tip is `subtotal x percent`, rounded half up to a cent. Shares add up to the total.
- */
 export function splitByItem(bill: ItemizedBill): ItemizedResult {
   const { people, items } = bill;
   if (people.length === 0 || people.length > MAX_PARTICIPANTS || new Set(people).size !== people.length) {

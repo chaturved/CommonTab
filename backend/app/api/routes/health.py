@@ -9,12 +9,8 @@ router = APIRouter()
 
 
 @router.get('/healthz')
-@router.get('/health')  # older name, same behavior
+@router.get('/health')
 def health(database: Database = Depends(get_database)) -> JSONResponse:
-    """
-    Lets the app tell "server down" from "no connection": 200 when the API can reach its database,
-    503 otherwise. Reveals nothing else.
-    """
     try:
         database.ping()
     except Exception:

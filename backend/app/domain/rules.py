@@ -7,7 +7,6 @@ from app.core.errors import fail
 
 
 def parse_utc(value: str) -> datetime:
-    """ISO 8601 with an explicit timezone, normalized to UTC."""
     try:
         date = datetime.fromisoformat(value.replace('Z', '+00:00'))
         if date.tzinfo is None:

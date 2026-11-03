@@ -9,7 +9,6 @@ ENV_FILE = Path(__file__).resolve().parents[2] / '.env'
 
 
 def read_dotenv(path: Path = ENV_FILE) -> dict[str, str]:
-    """Minimal KEY=VALUE reader for local development. Real environment variables win over the file."""
     values: dict[str, str] = {}
     if not path.is_file():
         return values
@@ -23,20 +22,18 @@ def read_dotenv(path: Path = ENV_FILE) -> dict[str, str]:
 
 
 def normalize_database_url(url: str) -> str:
-    """Use the psycopg 3 driver for plain postgres:// and postgresql:// URLs."""
     for prefix in ('postgresql://', 'postgres://'):
         if url.startswith(prefix):
             return 'postgresql+psycopg://' + url[len(prefix):]
     return url
 
 
-DEFAULT_ALLOWED_ORIGINS = ('http://localhost:8081', 'http://localhost:19006')  # Expo web dev servers
+DEFAULT_ALLOWED_ORIGINS = ('http://localhost:8081', 'http://localhost:19006')
 SESSION_COOKIE = 'commontab_session'
-CLIENT_HEADER = 'X-CommonTab-Client'  # required on writes that authenticate by cookie (CSRF defence)
+CLIENT_HEADER = 'X-CommonTab-Client'
 
 
 def allowed_origins(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE) -> tuple[str, ...]:
-    """Web origins allowed to call the API with cookies (ALLOWED_ORIGINS, comma separated). Needs no database URL."""
     env = {**read_dotenv(dotenv), **(os.environ if environ is None else environ)}
     listed = tuple(item.strip() for item in env.get('ALLOWED_ORIGINS', '').split(',') if item.strip())
     return listed or DEFAULT_ALLOWED_ORIGINS
@@ -46,13 +43,13 @@ def allowed_origins(environ: dict[str, str] | None = None, dotenv: Path = ENV_FI
 class Settings:
     database_url: str = field(repr=False)  # holds a password: never show it in logs or test failures
     metrics_token: str | None = None
-    rate_limit_auth_per_minute: int = 10  # sign-up and sign-in, per IP
-    rate_limit_per_minute: int = 600  # everything else, per session
-    trust_proxy: bool = False  # read the client IP from X-Forwarded-For (only behind a proxy you control)
+    rate_limit_auth_per_minute: int = 10
+    rate_limit_per_minute: int = 600
+    trust_proxy: bool = False
     bill_session_lifetime_seconds: int = 7 * 24 * 60 * 60
-    resend_api_key: str | None = field(default=None, repr=False)  # no key: reset codes are logged, not emailed
-    mail_from: str = 'CommonTab <onboarding@resend.dev>'  # use an address on a domain verified in Resend
-    cookie_secure: bool = True  # the session cookie is only sent over https (set COOKIE_SECURE=false for local http)
+    resend_api_key: str | None = field(default=None, repr=False)
+    mail_from: str = 'CommonTab <onboarding@resend.dev>'
+    cookie_secure: bool = True
 
 
 def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE) -> Settings:
@@ -75,5 +72,4 @@ def load_settings(environ: dict[str, str] | None = None, dotenv: Path = ENV_FILE
 
 @lru_cache
 def get_settings() -> Settings:
-    """The settings, read once from the environment. FastAPI dependency; tests override it."""
     return load_settings()

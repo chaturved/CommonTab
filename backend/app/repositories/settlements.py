@@ -9,8 +9,6 @@ from app.core.db import DbConnection
 
 
 class SettlementRepository:
-    """SQL only. Payments between members. Append-only."""
-
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
