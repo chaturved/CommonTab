@@ -9,12 +9,13 @@ from sqlalchemy import Connection, Engine, create_engine, event, text
 SCHEMA_NAME = re.compile(r'^[a-z_][a-z0-9_]{0,62}$')
 
 
-def create_db_engine(url: str, schema: str | None = None) -> Engine:
+def create_db_engine(url: str, schema: str | None = None, pre_ping: bool = True) -> Engine:
     """
     Engine for the app or for tests. With `schema`, every connection works inside that schema
     (tests use a throwaway one), set per connection so it also works through Supabase's pooler.
+    `pre_ping` checks a pooled connection before use (one extra round trip); tests turn it off.
     """
-    engine = create_engine(url, pool_size=5, max_overflow=5, pool_pre_ping=True, connect_args={'connect_timeout': 15})
+    engine = create_engine(url, pool_size=5, max_overflow=5, pool_pre_ping=pre_ping, connect_args={'connect_timeout': 15})
     if schema is not None:
         if not SCHEMA_NAME.match(schema):
             raise ValueError(f'Invalid schema name: {schema!r}')

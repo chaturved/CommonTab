@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from .repository import AccountRepository
+from .service import AccountService
 
 
 def bearer_token(authorization: str | None) -> str:
@@ -9,5 +9,5 @@ def bearer_token(authorization: str | None) -> str:
     return authorization[7:]
 
 
-def current_user(accounts: AccountRepository, authorization: str | None) -> str:
+def current_user(accounts: AccountService, authorization: str | None) -> str:
     return accounts.authenticate(bearer_token(authorization))

@@ -1,111 +1,31 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
-import json
-import secrets
-import sqlite3
-import time
-from contextlib import contextmanager
-from datetime import datetime, timezone
-from pathlib import Path
-from uuid import UUID, uuid4
+from datetime import datetime
+from uuid import UUID
 
-from .models import Bill
-
-
-class SessionMissing(Exception):
-    pass
-
-
-class SessionExpired(Exception):
-    pass
-
-
-class VersionConflict(Exception):
-    pass
+import sqlalchemy as sa
+from sqlalchemy import Connection, Row, text
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class BillSessionRepository:
-    def __init__(self, path: Path, lifetime_seconds: int = 7 * 24 * 60 * 60):
-        self.path = path
-        self.lifetime_seconds = lifetime_seconds
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as db:
-            db.execute(
-                """CREATE TABLE IF NOT EXISTS sessions (
-                    id TEXT PRIMARY KEY,
-                    token_hash TEXT NOT NULL,
-                    version INTEGER NOT NULL,
-                    bill_json TEXT NOT NULL,
-                    expires_at INTEGER NOT NULL
-                )"""
-            )
+    """SQL only. Authorization, expiry and versioning rules live in BillSessionService."""
 
-    @contextmanager
-    def _connect(self):
-        connection = sqlite3.connect(self.path, timeout=5)
-        connection.row_factory = sqlite3.Row
-        try:
-            with connection:
-                yield connection
-        finally:
-            connection.close()
+    def delete_expired(self, db: Connection, now: datetime) -> None:
+        db.execute(text('DELETE FROM bill_sessions WHERE expires_at <= :now'), {'now': now})
 
-    @staticmethod
-    def _hash(token: str) -> str:
-        return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    _insert = sa.text('''INSERT INTO bill_sessions (id, token_hash, version, bill, expires_at)
+                         VALUES (:id, :token_hash, 1, :bill, :expires_at)''').bindparams(sa.bindparam('bill', type_=JSONB))
 
-    @staticmethod
-    def _payload(row: sqlite3.Row) -> dict:
-        return {
-            "id": row["id"],
-            "version": row["version"],
-            "expiresAt": datetime.fromtimestamp(row["expires_at"], timezone.utc).isoformat(),
-            "bill": json.loads(row["bill_json"]),
-        }
+    def insert(self, db: Connection, session_id: UUID, token_hash: str, bill: dict, expires_at: datetime) -> None:
+        db.execute(self._insert, {'id': session_id, 'token_hash': token_hash, 'bill': bill, 'expires_at': expires_at})
 
-    def create(self, bill: Bill) -> dict:
-        session_id = uuid4()
-        token = secrets.token_urlsafe(32)
-        expiry = int(time.time()) + self.lifetime_seconds
-        bill_json = bill.model_dump_json(by_alias=True)
-        with self._connect() as db:
-            db.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
-            db.execute(
-                "INSERT INTO sessions (id, token_hash, version, bill_json, expires_at) VALUES (?, ?, 1, ?, ?)",
-                (str(session_id), self._hash(token), bill_json, expiry),
-            )
-        return {
-            "id": session_id,
-            "accessToken": token,
-            "version": 1,
-            "expiresAt": datetime.fromtimestamp(expiry, timezone.utc).isoformat(),
-            "bill": bill.model_dump(mode="json", by_alias=True),
-        }
+    def get(self, db: Connection, session_id: UUID) -> Row | None:
+        return db.execute(text('SELECT * FROM bill_sessions WHERE id=:id'), {'id': session_id}).fetchone()
 
-    def get(self, session_id: UUID, token: str) -> dict:
-        with self._connect() as db:
-            row = db.execute("SELECT * FROM sessions WHERE id = ?", (str(session_id),)).fetchone()
-        self._authorize(row, token)
-        return self._payload(row)
+    _update = sa.text('''UPDATE bill_sessions SET bill=:bill, version=version+1
+                         WHERE id=:id AND version=:version AND expires_at > :now''').bindparams(
+        sa.bindparam('bill', type_=JSONB))
 
-    def update(self, session_id: UUID, token: str, version: int, bill: Bill) -> dict:
-        with self._connect() as db:
-            row = db.execute("SELECT * FROM sessions WHERE id = ?", (str(session_id),)).fetchone()
-            self._authorize(row, token)
-            cursor = db.execute(
-                "UPDATE sessions SET bill_json = ?, version = version + 1 "
-                "WHERE id = ? AND version = ? AND expires_at > ?",
-                (bill.model_dump_json(by_alias=True), str(session_id), version, int(time.time())),
-            )
-            if cursor.rowcount != 1:
-                raise VersionConflict
-            updated = db.execute("SELECT * FROM sessions WHERE id = ?", (str(session_id),)).fetchone()
-        return self._payload(updated)
-
-    def _authorize(self, row: sqlite3.Row | None, token: str) -> None:
-        if row is None or not hmac.compare_digest(row["token_hash"], self._hash(token)):
-            raise SessionMissing
-        if row["expires_at"] <= int(time.time()):
-            raise SessionExpired
+    def update(self, db: Connection, session_id: UUID, version: int, bill: dict, now: datetime) -> bool:
+        return db.execute(self._update, {'id': session_id, 'version': version, 'bill': bill, 'now': now}).rowcount == 1

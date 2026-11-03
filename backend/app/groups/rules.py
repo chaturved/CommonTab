@@ -6,14 +6,32 @@ from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from ..errors import fail
 
 
-def utc_timestamp(value: str) -> str:
+def parse_utc(value: str) -> datetime:
+    """ISO 8601 with an explicit timezone, normalized to UTC."""
     try:
         date = datetime.fromisoformat(value.replace('Z', '+00:00'))
         if date.tzinfo is None:
             raise ValueError
-        return date.astimezone(timezone.utc).isoformat().replace('+00:00', 'Z')
+        return date.astimezone(timezone.utc)
     except ValueError:
         fail(422, 'occurredAt must be an ISO 8601 timestamp with a timezone')
+
+
+def format_utc(date: datetime) -> str:
+    return date.astimezone(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+
+def balances(member_ids: list[str], expenses: list[dict], settlements: list[dict]) -> list[dict]:
+    """Net balance per member (positive: owed money). Same rule as frontend/packages/core `computeBalances`."""
+    net = {member: 0 for member in member_ids}
+    for expense in expenses:
+        net[expense['payerID']] += expense['amountMinor']
+        for share in expense['allocations']:
+            net[share['memberID']] -= share['minorUnits']
+    for settlement in settlements:
+        net[settlement['fromID']] += settlement['amountMinor']
+        net[settlement['toID']] -= settlement['amountMinor']
+    return [{'memberID': member, 'minorUnits': net[member]} for member in member_ids]
 
 
 def allocation(amount: int, method: str, participants: list[str], values: list[str]) -> list[dict]:

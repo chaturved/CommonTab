@@ -1,41 +1,23 @@
 from __future__ import annotations
 
-import sqlite3
-from contextlib import contextmanager
-from pathlib import Path
+from sqlalchemy import text
+
+from ..core.db import Database
 
 
 class AnalyticsRepository:
-    def __init__(self, path: Path):
-        self.path = path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with self.connect() as db:
-            db.execute('''CREATE TABLE IF NOT EXISTS event_counts (
-                name TEXT NOT NULL,
-                variant TEXT NOT NULL,
-                count INTEGER NOT NULL,
-                PRIMARY KEY (name, variant)
-            )''')
+    """Aggregate counts only: an allowlisted event name and A/B variant, nothing about the user."""
 
-    @contextmanager
-    def connect(self):
-        db = sqlite3.connect(self.path, timeout=5)
-        db.row_factory = sqlite3.Row
-        try:
-            with db:
-                yield db
-        finally:
-            db.close()
+    def __init__(self, db: Database):
+        self.db = db
 
     def record(self, name: str, variant: str) -> None:
-        with self.connect() as db:
-            db.execute(
-                'INSERT INTO event_counts (name, variant, count) VALUES (?, ?, 1) '
-                'ON CONFLICT(name, variant) DO UPDATE SET count = count + 1',
-                (name, variant),
-            )
+        with self.db.transaction() as db:
+            db.execute(text('''INSERT INTO event_counts (name, variant, count) VALUES (:name, :variant, 1)
+                               ON CONFLICT (name, variant) DO UPDATE SET count = event_counts.count + 1'''),
+                       {'name': name, 'variant': variant})
 
     def counts(self) -> list[dict]:
-        with self.connect() as db:
-            rows = db.execute('SELECT name, variant, count FROM event_counts ORDER BY name, variant').fetchall()
-        return [dict(row) for row in rows]
+        with self.db.transaction() as db:
+            rows = db.execute(text('SELECT name, variant, count FROM event_counts ORDER BY name, variant')).fetchall()
+        return [{'name': row.name, 'variant': row.variant, 'count': row.count} for row in rows]

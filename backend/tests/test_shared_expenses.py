@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 
 
-def client(tmp_path):
-    return TestClient(create_app(database_path=tmp_path / 'shared.sqlite3'))
+def client(database):
+    return TestClient(create_app(database))
 
 
 def register(client, email, name):
@@ -46,8 +46,8 @@ def expense(group, payer, participants, method='equal', values=None, amount=1000
             'method': method, 'participants': participants, 'values': values or []}
 
 
-def test_account_auth_and_private_group(tmp_path):
-    api = client(tmp_path)
+def test_account_auth_and_private_group(database):
+    api = client(database)
     ada = register(api, 'ADA@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
@@ -61,8 +61,8 @@ def test_account_auth_and_private_group(tmp_path):
     assert api.get('/v1/me', headers=headers(ada)).status_code == 401
 
 
-def test_allocation_balance_settlement_and_versions(tmp_path):
-    api = client(tmp_path)
+def test_allocation_balance_settlement_and_versions(database):
+    api = client(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
@@ -91,8 +91,8 @@ def test_allocation_balance_settlement_and_versions(tmp_path):
     assert api.delete(url + '?version=2', headers=headers(ada)).status_code == 204
 
 
-def test_exact_percentage_and_receipt_access(tmp_path):
-    api = client(tmp_path)
+def test_exact_percentage_and_receipt_access(database):
+    api = client(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     outsider = register(api, 'eve@example.com', 'Eve')
@@ -128,8 +128,8 @@ def test_exact_percentage_and_receipt_access(tmp_path):
     assert api.get(receipt_url, headers=headers(ada)).status_code == 404
 
 
-def test_profile_group_and_invitation_permissions(tmp_path):
-    api = client(tmp_path)
+def test_profile_group_and_invitation_permissions(database):
+    api = client(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     eve = register(api, 'eve@example.com', 'Eve')
@@ -154,9 +154,8 @@ def test_profile_group_and_invitation_permissions(tmp_path):
     assert api.post(url + '/invitations', headers=headers(ada), json={'email': 'bob@example.com'}).status_code == 409
 
 
-def test_shared_expense_validation_and_persistence_after_restart(tmp_path):
-    database = tmp_path / 'persistent.sqlite3'
-    api = TestClient(create_app(database_path=database))
+def test_shared_expense_validation_and_persistence_after_restart(database):
+    api = TestClient(create_app(database))
     ada = register(api, 'ada@example.com', 'Ada')
     outsider = register(api, 'eve@example.com', 'Eve')
     group = create_group(api, ada)
@@ -169,7 +168,7 @@ def test_shared_expense_validation_and_persistence_after_restart(tmp_path):
     assert api.put(url, headers=headers(outsider), json=record).status_code == 404
     assert api.put(url, headers=headers(ada), json=record).status_code == 200
 
-    restarted = TestClient(create_app(database_path=database))
+    restarted = TestClient(create_app(database))
     loaded = restarted.get(f"/v1/groups/{group['id']}", headers=headers(ada))
     assert loaded.status_code == 200
     assert loaded.json()['expenses'][0]['amountMinor'] == 4250
@@ -182,8 +181,8 @@ def test_shared_expense_validation_and_persistence_after_restart(tmp_path):
     assert restarted.get(receipt_url, headers=headers(ada)).status_code == 404
 
 
-def test_settlement_rejects_stale_group_and_overpayment(tmp_path):
-    api = client(tmp_path)
+def test_settlement_rejects_stale_group_and_overpayment(database):
+    api = client(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
     eve = register(api, 'eve@example.com', 'Eve')

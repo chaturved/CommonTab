@@ -2,10 +2,10 @@ from fastapi import APIRouter, Header, Response
 
 from .auth import bearer_token, current_user
 from .models import AccountInput, LoginInput, UpdateProfileInput
-from .repository import AccountRepository
+from .service import AccountService
 
 
-def router_for(accounts: AccountRepository) -> APIRouter:
+def router_for(accounts: AccountService) -> APIRouter:
     router = APIRouter(prefix='/v1')
 
     def user(authorization: str | None) -> str:

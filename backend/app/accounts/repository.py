@@ -1,89 +1,39 @@
 from __future__ import annotations
 
-import hashlib
-import secrets
-import sqlite3
-import time
-from datetime import datetime, timezone
-from uuid import uuid4
+from datetime import datetime
+from uuid import UUID
 
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, VerificationError
-
-from ..errors import fail
-from ..database import AppDatabase
-from .models import AccountInput
+from sqlalchemy import Connection, Row, text
 
 
 class AccountRepository:
-    def __init__(self, db: AppDatabase):
-        self.db = db
-        self.passwords = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
+    """SQL only. Rules live in AccountService."""
 
-    @staticmethod
-    def token_hash(token: str) -> str:
-        return hashlib.sha256(token.encode()).hexdigest()
+    def insert_user(self, db: Connection, user_id: UUID, email: str, name: str, password_hash: str,
+                    created_at: datetime) -> bool:
+        """Returns False when the email is already registered."""
+        result = db.execute(text('''
+            INSERT INTO users (id, email, name, password_hash, created_at)
+            VALUES (:id, :email, :name, :hash, :created_at) ON CONFLICT (email) DO NOTHING
+        '''), {'id': user_id, 'email': email, 'name': name, 'hash': password_hash, 'created_at': created_at})
+        return result.rowcount == 1
 
-    @staticmethod
-    def email(value: str) -> str:
-        email = value.strip().lower()
-        if len(email) > 254 or email.count('@') != 1 or not email.split('@')[0] or '.' not in email.split('@')[1]:
-            fail(422, 'Invalid email address')
-        return email
+    def user_by_email(self, db: Connection, email: str) -> Row | None:
+        return db.execute(text('SELECT * FROM users WHERE email=:email'), {'email': email}).fetchone()
 
-    @staticmethod
-    def public_user(row: sqlite3.Row) -> dict:
-        return {'id': row['id'], 'email': row['email'], 'name': row['name']}
+    def user_by_id(self, db: Connection, user_id: UUID) -> Row | None:
+        return db.execute(text('SELECT * FROM users WHERE id=:id'), {'id': user_id}).fetchone()
 
-    def register(self, input: AccountInput) -> dict:
-        email = self.email(input.email)
-        name = input.name.strip()
-        if not name:
-            fail(422, 'Name is required')
-        user_id = str(uuid4())
-        with self.db.connect() as db:
-            try:
-                db.execute('INSERT INTO users VALUES (?, ?, ?, ?, ?)',
-                           (user_id, email, name, self.passwords.hash(input.password), int(time.time())))
-            except sqlite3.IntegrityError:
-                fail(409, 'An account with this email already exists')
-        return self.login(email, input.password)
+    def insert_token(self, db: Connection, token_hash: str, user_id: UUID, expires_at: datetime) -> None:
+        db.execute(text('INSERT INTO auth_tokens (token_hash, user_id, expires_at) VALUES (:h, :u, :e)'),
+                   {'h': token_hash, 'u': user_id, 'e': expires_at})
 
-    def login(self, email: str, password: str) -> dict:
-        with self.db.connect() as db:
-            row = db.execute('SELECT * FROM users WHERE email=?', (self.email(email),)).fetchone()
-            try:
-                if row is None:
-                    fail(401, 'Invalid credentials')
-                self.passwords.verify(row['password_hash'], password)
-            except (VerifyMismatchError, VerificationError):
-                fail(401, 'Invalid credentials')
-            token = secrets.token_urlsafe(32)
-            expires = int(time.time()) + 30 * 24 * 3600
-            db.execute('INSERT INTO auth_tokens VALUES (?, ?, ?)', (self.token_hash(token), row['id'], expires))
-            return {'accessToken': token, 'expiresAt': datetime.fromtimestamp(expires, timezone.utc).isoformat(),
-                    'user': self.public_user(row)}
+    def token(self, db: Connection, token_hash: str) -> Row | None:
+        return db.execute(text('SELECT user_id, expires_at FROM auth_tokens WHERE token_hash=:h'),
+                          {'h': token_hash}).fetchone()
 
-    def authenticate(self, token: str) -> str:
-        with self.db.connect() as db:
-            row = db.execute('SELECT user_id, expires_at FROM auth_tokens WHERE token_hash=?',
-                             (self.token_hash(token),)).fetchone()
-        if not row or row['expires_at'] <= int(time.time()):
-            fail(401, 'Invalid or expired session')
-        return row['user_id']
+    def delete_token(self, db: Connection, token_hash: str) -> None:
+        db.execute(text('DELETE FROM auth_tokens WHERE token_hash=:h'), {'h': token_hash})
 
-    def logout(self, token: str):
-        with self.db.connect() as db:
-            db.execute('DELETE FROM auth_tokens WHERE token_hash=?', (self.token_hash(token),))
-
-    def me(self, user_id: str) -> dict:
-        with self.db.connect() as db:
-            row = db.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone()
-        return self.public_user(row)
-
-    def rename_me(self, user_id: str, name: str) -> dict:
-        if not name.strip():
-            fail(422, 'Name is required')
-        with self.db.connect() as db:
-            db.execute('UPDATE users SET name=? WHERE id=?', (name.strip(), user_id))
-        return self.me(user_id)
+    def rename(self, db: Connection, user_id: UUID, name: str) -> None:
+        db.execute(text('UPDATE users SET name=:name WHERE id=:id'), {'name': name, 'id': user_id})

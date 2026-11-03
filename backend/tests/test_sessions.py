@@ -21,8 +21,8 @@ def sample_bill() -> dict:
     }
 
 
-def test_create_read_update_and_version_conflict(tmp_path):
-    client = TestClient(create_app(tmp_path / "sessions.sqlite3"))
+def test_create_read_update_and_version_conflict(database):
+    client = TestClient(create_app(database))
     bill = sample_bill()
 
     created = client.post("/v1/sessions", json={"bill": bill})
@@ -45,8 +45,8 @@ def test_create_read_update_and_version_conflict(tmp_path):
     assert stale.status_code == 409
 
 
-def test_session_requires_secret(tmp_path):
-    client = TestClient(create_app(tmp_path / "sessions.sqlite3"))
+def test_session_requires_secret(database):
+    client = TestClient(create_app(database))
     session = client.post("/v1/sessions", json={"bill": sample_bill()}).json()
     url = f"/v1/sessions/{session['id']}"
 
@@ -54,8 +54,8 @@ def test_session_requires_secret(tmp_path):
     assert client.get(url, headers={"Authorization": "Bearer incorrect"}).status_code == 404
 
 
-def test_rejects_unknown_item_assignment(tmp_path):
-    client = TestClient(create_app(tmp_path / "sessions.sqlite3"))
+def test_rejects_unknown_item_assignment(database):
+    client = TestClient(create_app(database))
     bill = sample_bill()
     bill["items"][0]["assignedPersonIDs"] = [str(uuid4())]
 
@@ -63,8 +63,8 @@ def test_rejects_unknown_item_assignment(tmp_path):
     assert response.status_code == 422
 
 
-def test_expired_session(tmp_path):
-    client = TestClient(create_app(tmp_path / "sessions.sqlite3", lifetime_seconds=-1))
+def test_expired_session(database):
+    client = TestClient(create_app(database, lifetime_seconds=-1))
     session = client.post("/v1/sessions", json={"bill": sample_bill()}).json()
     url = f"/v1/sessions/{session['id']}"
 
@@ -72,9 +72,9 @@ def test_expired_session(tmp_path):
     assert response.status_code == 410
 
 
-def test_anonymous_event_counts_and_protected_metrics(tmp_path, monkeypatch):
+def test_anonymous_event_counts_and_protected_metrics(database, monkeypatch):
     monkeypatch.setenv("SPLITTIP_METRICS_TOKEN", "admin-secret")
-    client = TestClient(create_app(tmp_path / "sessions.sqlite3"))
+    client = TestClient(create_app(database))
     for _ in range(2):
         assert client.post("/v1/events", json={"name": "scan_opened", "variant": "B"}).status_code == 202
     assert client.post("/v1/events", json={"name": "unknown", "variant": "B"}).status_code == 422

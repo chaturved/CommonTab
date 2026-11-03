@@ -6,12 +6,12 @@ from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import Response as RawResponse
 
 from ..accounts.auth import current_user
-from ..accounts.repository import AccountRepository
+from ..accounts.service import AccountService
 from .models import AcceptInvitation, ExpenseInput, GroupInput, InvitationInput, RenameGroupInput, SettlementInput
-from .repository import GroupExpenseRepository
+from .service import GroupService
 
 
-def router_for(repository: GroupExpenseRepository, accounts: AccountRepository) -> APIRouter:
+def router_for(repository: GroupService, accounts: AccountService) -> APIRouter:
     router = APIRouter(prefix='/v1')
 
     def user(authorization: str | None) -> str:

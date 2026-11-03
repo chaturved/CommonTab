@@ -5,10 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Header, HTTPException, status
 
 from .models import CreateSession, CreatedSession, Session, UpdateSession
-from .repository import SessionExpired, SessionMissing, BillSessionRepository, VersionConflict
+from .service import BillSessionService, SessionExpired, SessionMissing, VersionConflict
 
 
-def router_for(store: BillSessionRepository) -> APIRouter:
+def router_for(store: BillSessionService) -> APIRouter:
     router = APIRouter(prefix='/v1')
 
     def token(authorization: str | None) -> str:
