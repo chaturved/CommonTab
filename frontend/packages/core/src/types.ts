@@ -98,3 +98,24 @@ export interface GroupCreateInput {
   members: { id: string; name: string }[];
   meMemberID: string;
 }
+
+export type ActivityKind =
+  | 'group.created' | 'group.archived' | 'group.unarchived'
+  | 'expense.added' | 'expense.edited' | 'expense.deleted'
+  | 'payment.recorded'
+  | 'member.joined' | 'member.left' | 'member.added' | 'member.removed';
+
+export interface ActivityEvent {
+  seq: number;
+  groupID: string;
+  actorID: string | null;
+  kind: ActivityKind;
+  subjectID: string | null;
+  data: Record<string, unknown>;
+  at: string;
+}
+
+export interface ActivityPage {
+  events: ActivityEvent[];
+  next: number;
+}

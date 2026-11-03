@@ -1,4 +1,4 @@
-import type { ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
+import type { ActivityPage, ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
 
 export interface Session {
   accessToken: string;
@@ -15,6 +15,7 @@ export interface Api {
   login(input: { email: string; password: string }): Promise<Session>;
   logout(): Promise<void>;
   me(): Promise<Profile>;
+  activity(since: number, limit: number): Promise<ActivityPage>;
   renameMe(name: string): Promise<Profile>;
   changePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
   deleteAccount(password: string): Promise<void>;

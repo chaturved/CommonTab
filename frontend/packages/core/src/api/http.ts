@@ -1,4 +1,4 @@
-import type { ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
+import type { ActivityPage, ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, SettlementInput, WireExpense, WireSettlement } from '../types';
 import { ApiError } from './errors';
 import type { Api, InviteCode, Profile, Session } from './types';
 
@@ -57,6 +57,7 @@ export class HttpApi implements Api {
   login = (input: { email: string; password: string }) => this.call<Session>('POST', '/auth/sessions', input, false);
   logout = () => this.call<void>('DELETE', '/auth/sessions');
   me = () => this.call<Profile>('GET', '/me');
+  activity = (since: number, limit: number) => this.call<ActivityPage>('GET', `/activity?since=${since}&limit=${limit}`);
   renameMe = (name: string) => this.call<Profile>('PATCH', '/me', { name });
   changePassword = (input: { currentPassword: string; newPassword: string }) => this.call<void>('POST', '/me/password', input);
   deleteAccount = (password: string) => this.call<void>('POST', '/me/delete', { password });

@@ -1,10 +1,12 @@
 import type { OutboxEntry } from '../outbox/types';
+import type { ActivityEvent } from '../types';
 import type { LocalExpense, LocalGroup, LocalSettlement, Storage, Store } from './types';
 
 interface Tables {
   groups: Map<string, LocalGroup>;
   expenses: Map<string, LocalExpense>;
   settlements: Map<string, LocalSettlement>;
+  activity: Map<number, ActivityEvent>;
   outbox: Map<string, OutboxEntry>;
   meta: Map<string, string>;
 }
@@ -13,14 +15,14 @@ const copy = <T>(value: T): T => (value === undefined ? value : (JSON.parse(JSON
 
 function cloneTables(t: Tables): Tables {
   return {
-    groups: new Map(t.groups), expenses: new Map(t.expenses), settlements: new Map(t.settlements),
+    groups: new Map(t.groups), expenses: new Map(t.expenses), settlements: new Map(t.settlements), activity: new Map(t.activity),
     outbox: new Map(t.outbox), meta: new Map(t.meta),
   };
 }
 
 export class MemoryStorage implements Storage {
   private tables: Tables = {
-    groups: new Map(), expenses: new Map(), settlements: new Map(), outbox: new Map(), meta: new Map(),
+    groups: new Map(), expenses: new Map(), settlements: new Map(), activity: new Map(), outbox: new Map(), meta: new Map(),
   };
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -48,6 +50,7 @@ export class MemoryStorage implements Storage {
         for (const [key, e] of t.expenses) if (e.groupID === id) t.expenses.delete(key);
         for (const [key, s] of t.settlements) if (s.groupID === id) t.settlements.delete(key);
         for (const [key, o] of t.outbox) if (o.groupId === id) t.outbox.delete(key);
+        for (const [key, a] of t.activity) if (a.groupID === id) t.activity.delete(key);
       },
       getExpense: async (id) => copy(t.expenses.get(id)),
       putExpense: async (e) => void t.expenses.set(e.id, copy(e)),
@@ -57,6 +60,8 @@ export class MemoryStorage implements Storage {
       putSettlement: async (s) => void t.settlements.set(s.id, copy(s)),
       deleteSettlement: async (id) => void t.settlements.delete(id),
       listSettlements: async (groupId) => byGroup(t.settlements, groupId),
+      putActivity: async (events) => void events.forEach((e) => t.activity.set(e.seq, copy(e))),
+      listActivity: async () => [...t.activity.values()].sort((a, b) => a.seq - b.seq).map(copy),
       listOutbox: async () => [...t.outbox.values()].sort((a, b) => a.seq - b.seq).map(copy),
       putOutbox: async (entry) => void t.outbox.set(entry.opId, copy(entry)),
       deleteOutbox: async (opId) => void t.outbox.delete(opId),
@@ -78,6 +83,8 @@ export class MemoryStorage implements Storage {
   putSettlement = (s: LocalSettlement) => this.transaction((tx) => tx.putSettlement(s));
   deleteSettlement = (id: string) => this.transaction((tx) => tx.deleteSettlement(id));
   listSettlements = (groupId: string) => this.committed.listSettlements(groupId);
+  putActivity = (events: ActivityEvent[]) => this.transaction((tx) => tx.putActivity(events));
+  listActivity = () => this.committed.listActivity();
   listOutbox = () => this.committed.listOutbox();
   putOutbox = (entry: OutboxEntry) => this.transaction((tx) => tx.putOutbox(entry));
   deleteOutbox = (opId: string) => this.transaction((tx) => tx.deleteOutbox(opId));

@@ -17,6 +17,9 @@ export interface EngineDeps {
 
 const LAST_SYNCED = 'lastSyncedAt';
 const MAX_SENDS_PER_RUN = 500;
+const ACTIVITY_SEQ = 'activitySeq';
+const ACTIVITY_PAGE = 200;
+const MAX_ACTIVITY_PAGES = 50;
 
 class SessionExpired extends Error {}
 
@@ -254,6 +257,22 @@ export class SyncEngine {
     for (const item of listed) {
       await this.deps.storage.transaction((tx) => ('status' in item ? applyClosed(tx, item) : applySnapshot(tx, item, this.deps.clock.now())));
     }
+    await this.pullActivity();
     this.notify();
+  }
+
+  private async pullActivity(): Promise<void> {
+    const { storage, api } = this.deps;
+    let cursor = Number((await storage.getMeta(ACTIVITY_SEQ)) ?? 0);
+    for (let page = 0; page < MAX_ACTIVITY_PAGES; page++) {
+      const { events, next } = await api.activity(cursor, ACTIVITY_PAGE);
+      if (events.length === 0) return;
+      await storage.transaction(async (tx) => {
+        await tx.putActivity(events);
+        await tx.setMeta(ACTIVITY_SEQ, String(next));
+      });
+      cursor = next;
+      if (events.length < ACTIVITY_PAGE) return;
+    }
   }
 }

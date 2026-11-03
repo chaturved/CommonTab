@@ -1,8 +1,9 @@
 import type { OutboxEntry } from '../outbox/types';
+import type { ActivityEvent } from '../types';
 import { MemoryStorage } from './memory';
 import type { LocalExpense, LocalGroup, LocalSettlement, Storage, Store } from './types';
 
-export type Table = 'groups' | 'expenses' | 'settlements' | 'outbox' | 'meta';
+export type Table = 'groups' | 'expenses' | 'settlements' | 'activity' | 'outbox' | 'meta';
 
 export interface StoredRow {
   table: Table;
@@ -33,6 +34,7 @@ export class PersistentStorage implements Storage {
         if (table === 'groups') await tx.putGroup(value as LocalGroup);
         else if (table === 'expenses') await tx.putExpense(value as LocalExpense);
         else if (table === 'settlements') await tx.putSettlement(value as LocalSettlement);
+        else if (table === 'activity') await tx.putActivity([value as ActivityEvent]);
         else if (table === 'outbox') await tx.putOutbox(value as OutboxEntry);
         else await tx.setMeta(key, value as string);
       }
@@ -61,6 +63,8 @@ export class PersistentStorage implements Storage {
   putSettlement = (s: LocalSettlement) => this.transaction((tx) => tx.putSettlement(s));
   deleteSettlement = (id: string) => this.transaction((tx) => tx.deleteSettlement(id));
   listSettlements = (groupId: string) => this.memory.listSettlements(groupId);
+  putActivity = (events: ActivityEvent[]) => this.transaction((tx) => tx.putActivity(events));
+  listActivity = () => this.memory.listActivity();
   listOutbox = () => this.memory.listOutbox();
   putOutbox = (entry: OutboxEntry) => this.transaction((tx) => tx.putOutbox(entry));
   deleteOutbox = (opId: string) => this.transaction((tx) => tx.deleteOutbox(opId));
@@ -72,6 +76,7 @@ async function forgetGroup(tx: Store, id: string, remove: (table: Table, key: st
   for (const e of await tx.listExpenses(id)) remove('expenses', e.id);
   for (const s of await tx.listSettlements(id)) remove('settlements', s.id);
   for (const o of await tx.listOutbox()) if (o.groupId === id) remove('outbox', o.opId);
+  for (const a of await tx.listActivity()) if (a.groupID === id) remove('activity', String(a.seq));
   remove('groups', id);
 }
 
@@ -86,6 +91,7 @@ function recording(tx: Store, writes: StoredWrite[]): Store {
     deleteExpense: async (id) => { await tx.deleteExpense(id); remove('expenses', id); },
     putSettlement: async (s) => { await tx.putSettlement(s); put('settlements', s.id, s); },
     deleteSettlement: async (id) => { await tx.deleteSettlement(id); remove('settlements', id); },
+    putActivity: async (events) => { await tx.putActivity(events); for (const e of events) put('activity', String(e.seq), e); },
     putOutbox: async (entry) => { await tx.putOutbox(entry); put('outbox', entry.opId, entry); },
     deleteOutbox: async (opId) => { await tx.deleteOutbox(opId); remove('outbox', opId); },
     setMeta: async (key, value) => { await tx.setMeta(key, value); put('meta', key, value); },

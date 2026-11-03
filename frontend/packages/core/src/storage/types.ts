@@ -1,4 +1,4 @@
-import type { ExpenseContent, GroupSnapshot, Member, WireExpense, WireSettlement } from '../types';
+import type { ActivityEvent, ExpenseContent, GroupSnapshot, Member, WireExpense, WireSettlement } from '../types';
 import type { OutboxEntry } from '../outbox/types';
 
 export type SyncState = 'synced' | 'pending' | 'failed' | 'conflict';
@@ -63,6 +63,9 @@ export interface Store {
   putSettlement(settlement: LocalSettlement): Promise<void>;
   deleteSettlement(id: string): Promise<void>;
   listSettlements(groupId: string): Promise<LocalSettlement[]>;
+
+  putActivity(events: ActivityEvent[]): Promise<void>;
+  listActivity(): Promise<ActivityEvent[]>;
 
   listOutbox(): Promise<OutboxEntry[]>;
   putOutbox(entry: OutboxEntry): Promise<void>;

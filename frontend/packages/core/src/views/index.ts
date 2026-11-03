@@ -7,3 +7,4 @@ export * from './settle';
 export * from './exportCsv';
 export * from './tip';
 export * from './itemized';
+export * from './activity';

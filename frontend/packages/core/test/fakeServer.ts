@@ -1,5 +1,5 @@
 import {
-  allocate, ApiError, type Api, type Clock, type ExpenseInput, type GroupCreateInput, type GroupSnapshot, type GroupStub, type Member,
+  allocate, ApiError, type Api, type ActivityEvent, type Clock, type ExpenseInput, type GroupCreateInput, type GroupSnapshot, type GroupStub, type Member,
   type Session, type SettlementInput, type WireExpense, type WireSettlement,
 } from '../src';
 
@@ -22,6 +22,7 @@ export class FakeServer {
   private counter = 0;
 
   offline = false;
+  activityLog: ActivityEvent[] = [];
   closed = new Map<string, { status: 'removed' | 'deleted'; since: string }>();
   unhealthy = false;
   dropResponses = 0;
@@ -80,6 +81,7 @@ export class FakeServer {
         if (!user) throw new ApiError(401, 'Not signed in');
         return { id: user.id, email: user.email, name: user.name };
       },
+      activity: async (since) => ({ events: this.activityLog.filter((e) => e.seq > since), next: this.activityLog.at(-1)?.seq ?? since }),
       renameMe: notSimulated,
       changePassword: notSimulated,
       deleteAccount: notSimulated,
