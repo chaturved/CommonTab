@@ -244,8 +244,8 @@ export function balanceChangeNote(changes: readonly BalanceChange[], meMemberID:
   const others = changes.filter((c) => c.memberID !== meMemberID);
   if (others.length === 0) return null;
   const names = others.length === 1 ? others[0]!.name : `${others.slice(0, -1).map((c) => c.name).join(', ')} and ${others[others.length - 1]!.name}`;
-  const amounts = new Set(others.map((c) => Math.abs(c.deltaMinor)));
-  if (amounts.size === 1) return `Balances for ${names} will change by ${formatCurrency([...amounts][0]!, currencyCode)}${others.length > 1 ? ' each' : ''}.`;
+  const amounts = new Set(others.map((c) => c.deltaMinor));
+  if (amounts.size === 1) return `Balances for ${names} will change by ${formatCurrency(Math.abs([...amounts][0]!), currencyCode)}${others.length > 1 ? ' each' : ''}.`;
   return `Balances for ${names} will change.`;
 }
 
