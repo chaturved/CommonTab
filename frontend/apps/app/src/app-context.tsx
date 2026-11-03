@@ -43,9 +43,11 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     const app = AppState.addEventListener('change', (state) => { if (state === 'active') void services.engine.sync(); });
     const online = () => void services.engine.sync();
     globalThis.addEventListener?.('online', online);
+    globalThis.addEventListener?.('offline', online);
     return () => {
       app.remove();
       globalThis.removeEventListener?.('online', online);
+      globalThis.removeEventListener?.('offline', online);
     };
   }, [services, signedIn]);
 

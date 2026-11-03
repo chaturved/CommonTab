@@ -1,10 +1,13 @@
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import { SessionExpiredSheet } from '../../src/auth/SessionExpiredSheet';
 
 export default function AppLayout() {
   return (
     <>
-      <Slot />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="create-group" options={{ presentation: 'modal' }} />
+      </Stack>
       <SessionExpiredSheet />
     </>
   );

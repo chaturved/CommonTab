@@ -86,6 +86,8 @@ export function overallTotals(summaries: readonly GroupSummary[]): CurrencyTotal
   return [...byCurrency.values()];
 }
 
+const RANK = { needsSettling: 0, new: 1, settled: 2 } as const;
+
 export function sortForList(summaries: readonly GroupSummary[]): GroupSummary[] {
-  return [...summaries].sort((a, b) => Math.abs(b.myBalance) - Math.abs(a.myBalance) || a.name.localeCompare(b.name));
+  return [...summaries].sort((a, b) => RANK[a.status] - RANK[b.status] || Math.abs(b.myBalance) - Math.abs(a.myBalance) || a.name.localeCompare(b.name));
 }

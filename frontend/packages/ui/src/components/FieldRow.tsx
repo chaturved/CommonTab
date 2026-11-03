@@ -13,7 +13,7 @@ export function FieldRow({ label, last, className, ...props }: FieldRowProps) {
   const colors = useThemeColors();
   return (
     <View className={cx('min-h-row flex-row items-center gap-3 px-4', last ? '' : 'border-b border-divider', className)}>
-      <Text variant="body-small" tone="muted" className="w-[84px]" accessible={false}>
+      <Text variant="body-small" tone="muted" className="w-[84px] shrink-0" accessible={false}>
         {label}
       </Text>
       <TextInput

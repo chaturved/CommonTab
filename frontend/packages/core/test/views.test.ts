@@ -66,6 +66,13 @@ describe('overallTotals and sorting', () => {
   test('the biggest balance comes first, ties by name', () => {
     expect(sortForList([a, b]).map((s) => s.name)).toEqual(['Austin', 'Apartment']);
   });
+
+  test('groups that need settling come before new ones, and settled ones are last', () => {
+    const fresh = summarizeGroup(group({ id: 'c', name: 'Brand new' }), [], []);
+    const payments: LocalSettlement[] = ['sam', 'riya'].map((from) => ({ id: from, groupID: 'g', fromID: from, toID: 'me', amountMinor: 5450, createdAt: '2026-11-02T10:00:00Z', syncState: 'synced' }));
+    const done = summarizeGroup(group({ id: 'd', name: 'Aardvark' }), [dinner], payments);
+    expect(sortForList([done, fresh, a, b]).map((s) => s.name)).toEqual(['Austin', 'Apartment', 'Brand new', 'Aardvark']);
+  });
 });
 
 describe('expense rows', () => {

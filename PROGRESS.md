@@ -131,6 +131,15 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Known gap:** signing out while offline on web cannot clear the cookie on the server, so the browser can still be signed in next time. The sign-out flow in 6e should say so.
 - The Resend sandbox returned 422 for a message to `example.com`; the API logged it and still answered 202, as designed.
 
+## Step 6c: home, groups, group detail — done
+- **Screens:** tab shell (Home, Groups, +, Activity, Account), Home (overall balance hero with You owe / Owed to you, groups, recent expenses; the empty "Split costs without the awkward math" state), Groups (Active and Settled tabs, "Needs settling" cards with who owes whom), Create group (name, currency picker, people; the first person is you), Group detail (balance hero, balances, expenses, "All settled up" with payments, empty group), Members (owner, owes/owed). Offline: warning banner, "As of 11:13 AM · may not include changes from others", "1 change waiting to sync" on groups and expenses. Account has Sign out; Activity is an empty placeholder (the changes feed is still an open gap).
+- **Core view models with tests** (`packages/core/src/views`): group summaries, who owes whom (from `simplifyDebts`), overall totals per currency, expense rows ("You paid $163.50 · Oct 30", "you lent / you owe"), group sort (needs settling, then new, then settled). ui: `SegmentedControl`.
+- **Decision, differs from the design copy:** balances count local changes right away, so adding an expense updates the balance at once. The design's "N changes on this phone aren't counted yet" would be wrong once an edit replaces the synced copy, so the caption reads "includes N changes waiting to sync".
+- **Web layout:** sign-in and reset screens use a centered column (480px); app screens use a 720px column on wide windows. Phones are unaffected.
+- **Checked in a browser** (390px and 1280px, API on Supabase, seeded demo data matching the designs: $97.00 overall, $109.00 and $12.00, Austin Trip $325.50 total): Home, Groups, Group detail, settled group, Members, Create group (synced), empty Home, offline (API stopped) on Home and group. iOS and Android bundles build; not run on a device.
+- **Left for later steps:** Add expense and the "+" (opens a placeholder, 6d), Settle up, invite and join by code, Leave and Delete group, Archive (6e and the gap list). "Needs settling" also lists brand-new groups with no balance yet.
+- Fixed on the way: Tailwind did not scan `apps/app/src`, hiding classes only used there.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

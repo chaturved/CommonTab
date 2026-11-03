@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { BackButton, FieldGroup, FieldRow, PasswordMeter } from '../src';
+import { BackButton, FieldGroup, FieldRow, PasswordMeter, SegmentedControl } from '../src';
 
 describe('FieldRow', () => {
   test('the input is found by its label and reports typing', async () => {
@@ -53,5 +53,16 @@ describe('BackButton', () => {
     await render(<BackButton onPress={onPress} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('SegmentedControl', () => {
+  test('marks the selected option and reports a change', async () => {
+    const onChange = jest.fn();
+    await render(<SegmentedControl options={[{ key: 'active', label: 'Active · 2' }, { key: 'settled', label: 'Settled · 1' }]} value="active" onChange={onChange} />);
+    expect(screen.getByRole('tab', { name: 'Active · 2' }).props.accessibilityState).toMatchObject({ selected: true });
+    expect(screen.getByRole('tab', { name: 'Settled · 1' }).props.accessibilityState).toMatchObject({ selected: false });
+    await fireEvent.press(screen.getByRole('tab', { name: 'Settled · 1' }));
+    expect(onChange).toHaveBeenCalledWith('settled');
   });
 });
