@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { Share, View } from 'react-native';
+import { Platform, Share, View } from 'react-native';
 import { describeAuthFailure, type InviteCode } from '@commontab/core';
 import { Banner, Button, Card, Text } from '@commontab/ui';
 import { useApp } from '../../../../src/app-context';
@@ -25,17 +25,18 @@ export default function Invite() {
   const [copied, setCopied] = useState(false);
   const synced = data?.group.syncState === 'synced' && !data.group.localOnly;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (reset = false) => {
     if (!id) return;
     setLoading(true);
     setProblem(null);
     try {
+      if (reset) await services.api.revokeInviteCodes(id);
       const fresh = await services.api.createInviteCode(id);
       cache.set(id, fresh);
       setCode(fresh);
     } catch (error) {
       const failure = describeAuthFailure(error, 'signIn');
-      setProblem(failure.kind === 'offline' ? 'Making a code needs an internet connection. Try again when you are back online.' : "Couldn't make a code right now. Try again in a moment.");
+      setProblem(failure.kind === 'offline' ? (reset ? 'Resetting the code needs an internet connection. Try again when you are back online.' : 'Making a code needs an internet connection. Try again when you are back online.') : "Couldn't make a code right now. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -54,6 +55,16 @@ export default function Invite() {
       await Clipboard.setStringAsync(message);
       setCopied(true);
     }
+  };
+
+  const link = code && Platform.OS === 'web' ? `${window.location.origin}/join/${code.code}` : null;
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = async () => {
+    if (!link) return;
+    await Clipboard.setStringAsync(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   const copy = async () => {
@@ -89,11 +100,13 @@ export default function Invite() {
             <Button label={copied ? 'Copied' : 'Copy code'} variant="secondary" onPress={copy} />
           </>
         ) : (
-          <Button label={problem ? 'Try again' : 'Get a code'} variant="secondary" loading={loading} disabled={!synced} onPress={load} />
+          <Button label={problem ? 'Try again' : 'Get a code'} variant="secondary" loading={loading} disabled={!synced} onPress={() => void load()} />
         )}
+        {link ? <Button label={linkCopied ? 'Copied' : 'Copy link'} variant="secondary" onPress={copyLink} accessibilityLabel="Copy invite link" /> : null}
+        {code ? <Button label="Reset code" variant="secondary" loading={loading} onPress={() => void load(true)} accessibilityLabel="Reset code. The old code stops working" /> : null}
         <View className="gap-1 rounded-card bg-card p-4">
           <Text variant="body-small" className="font-bold">Anyone with the code can join</Text>
-          <Text variant="body-small" tone="muted" className="text-[13px] leading-[18px]">Only share it with people you want in this group.</Text>
+          <Text variant="body-small" tone="muted" className="text-[13px] leading-[18px]">Only share it with people you want in this group. Reset the code to stop the old one working.</Text>
         </View>
       </View>
     </FormPage>

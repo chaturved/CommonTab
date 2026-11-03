@@ -34,6 +34,7 @@ export interface Api {
   unarchiveGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
   createInviteCode(groupId: string, memberId?: string): Promise<InviteCode>;
+  revokeInviteCodes(groupId: string): Promise<void>;
   joinWithCode(code: string): Promise<GroupSnapshot>;
   createSettlement(groupId: string, settlement: SettlementInput): Promise<WireSettlement>;
 }

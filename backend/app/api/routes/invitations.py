@@ -25,6 +25,11 @@ def invite_code(group_id: UUID, input: InviteCodeInput, user: CurrentUser, servi
     return service.create_code(str(group_id), user, input.member_id)
 
 
+@router.delete('/groups/{group_id}/invite-code', status_code=204)
+def revoke_codes(group_id: UUID, user: CurrentUser, service: InvitationsDep):
+    service.revoke_codes(str(group_id), user)
+
+
 @router.post('/invitations/join')
 def join(input: JoinInput, user: CurrentUser, service: InvitationsDep):
     return service.join_with_code(user, input.code)

@@ -48,6 +48,21 @@ class TestInviteCodeService:
         assert (group_id, email, member_id) == (self.group_id, None, None)
         assert timedelta(days=6) < expires - datetime.now(timezone.utc) <= timedelta(days=7)
 
+    def test_revoking_ends_the_groups_open_codes(self):
+        self.service.revoke_codes(str(self.group_id), str(self.user_id))
+
+        group_id, now = self.invitations.revoke_codes.call_args.args
+        assert group_id == self.group_id and abs(now - datetime.now(timezone.utc)) < timedelta(seconds=5)
+
+    def test_an_outsider_cannot_revoke_codes(self):
+        self.members.member_of.return_value = None
+
+        with pytest.raises(APIError) as caught:
+            self.service.revoke_codes(str(self.group_id), str(uuid4()))
+
+        assert caught.value.status == 404
+        self.invitations.revoke_codes.assert_not_called()
+
     def test_a_code_for_a_person_remembers_who(self):
         sam = member_row(group_id=self.group_id, user_id=None, name='Sam')
         self.members.member.return_value = sam

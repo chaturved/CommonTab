@@ -69,6 +69,11 @@ class InvitationService:
         return {'code': display_code(code), 'expiresAt': expires.isoformat(), 'groupID': group_id,
                 'memberID': str(member_id) if member_id else None}
 
+    def revoke_codes(self, group_id: str, user_id: str) -> None:
+        gid = UUID(group_id)
+        self.guard.require(gid, UUID(user_id))
+        self.invitations.revoke_codes(gid, datetime.now(timezone.utc))
+
     def join_with_code(self, user_id: str, raw_code: str) -> dict:
         uid = UUID(user_id)
         code = normalize_code(raw_code)

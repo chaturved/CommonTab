@@ -90,6 +90,7 @@ export class HttpApi implements Api {
   deleteGroup = (groupId: string) => this.call<void>('DELETE', `/groups/${groupId}`);
   createInviteCode = (groupId: string, memberId?: string) =>
     this.call<InviteCode>('POST', `/groups/${groupId}/invite-code`, { memberID: memberId ?? null });
+  revokeInviteCodes = (groupId: string) => this.call<void>('DELETE', `/groups/${groupId}/invite-code`);
   joinWithCode = (code: string) => this.call<GroupSnapshot>('POST', '/invitations/join', { code });
   createSettlement = (groupId: string, settlement: SettlementInput) =>
     this.call<WireSettlement>('POST', `/groups/${groupId}/settlements`, settlement);

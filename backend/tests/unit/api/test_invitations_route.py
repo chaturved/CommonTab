@@ -29,6 +29,12 @@ class TestInvitationsRoute:
     def test_an_email_that_is_too_short_is_422(self):
         assert self.client.post(f'/v1/groups/{GROUP}/invitations', json={'email': 'a'}).status_code == 422
 
+    def test_revoking_codes_is_204(self):
+        response = self.client.delete(f'/v1/groups/{GROUP}/invite-code')
+
+        assert response.status_code == 204
+        self.service.revoke_codes.assert_called_once_with(GROUP, USER_ID)
+
     def test_accepting_passes_the_code(self):
         self.service.accept_invite.return_value = {'id': GROUP}
 

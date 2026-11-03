@@ -158,7 +158,7 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 
 ## Step 6e (part 1): settle up, invite, join — done
 - **Settle up** (`/group/[id]/settle`): from a person's "Settle up" button in Balances (phone and web) or the web header. Shows who pays whom, an amount with "Full balance" and "Half" shortcuts, and "Record payment". The client mirrors the server's limit (the smaller of what the payer owes and what the payee is owed), so an overpayment says "That's more than is owed. The most Sam can pay you is $54.50." before anything is sent. A payment queued offline syncs like any other change. I left out the design's Date row: payments have no date field in the API (the day recorded is the date).
-- **Invite** (`/group/[id]/invite`): "Add friends to Austin Trip" with the 8-character code (`JF0H-P0YW`), "Expires in 7 days", Share invite, Copy code. Making a code needs a connection and a group that has synced. **Reset code is not built**: the server has no way to revoke a code yet (6f).
+- **Invite** (`/group/[id]/invite`): "Add friends to Austin Trip" with the 8-character code (`JF0H-P0YW`), "Expires in 7 days", Share invite, Copy code. Making a code needs a connection and a group that has synced. **Reset code** ends every open code and makes a new one (6f part 4).
 - **Join with a code** (`/join`): Home empty state, Groups, and the web Groups header. Forgiving input (lower case, spaces). Clear messages for a wrong or expired code, no connection, too many tries. **Before an account:** Welcome and the web sign-in have "Have an invite code? Join a group", which asks for the code, then Create account or Sign in, then joins automatically. If that last join fails it does so silently (the code can be entered again from Groups).
 - **Core (tests):** `settleLimit`, `directionWith`, `checkSettlement`.
 - **Checked in a browser** (390px, API on Supabase): settled $10.00 of Sam's $54.50 (group $109.00 to $99.00, Sam $44.50), overpayment message, invite code, then signed in as the second account and joined with the code typed in lower case with a space; the group and its expenses appeared and the new member sees "not involved".
@@ -216,6 +216,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Tests:** backend 524 passing (unit 336), core 324.
 - **App:** the Activity tab (phone and web): day headings, who did what, filters All / Expenses / Payments / Group changes, "you lent / you owe" on expense rows, tap to open the expense or group. The expense detail History lists who changed it and when, above the local edit lines.
 - **Not built:** the group History tab still shows only payments, deleted expenses and local edits (it could use the feed); the feed is not paged in the UI beyond what has synced.
+
+## Step 6f part 4: reset invite code and join link
+- **API (approved):** `DELETE /v1/groups/{id}/invite-code` (any member, `204`) ends every open code for the group; no schema change. In `docs/shared-api.md`.
+- **App:** Invite has "Reset code" (the old code stops working, a new one shows) and, on the web, "Copy link" (`<site>/join/CODE`). `/join/CODE` opens the Join screen with the code filled in when signed in; when signed out it goes to Create account and joins after sign-up or sign-in.
+- **Not built:** native apps have no link to share (no domain yet); the web link uses the address the app is served from, not `commontab.app`.
 
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

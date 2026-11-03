@@ -21,5 +21,10 @@ class InvitationRepository:
     def invitation(self, token_hash: str) -> Row | None:
         return self.connection.execute(text('SELECT * FROM invitations WHERE token_hash=:h FOR UPDATE'), {'h': token_hash}).fetchone()
 
+    def revoke_codes(self, group_id: UUID, now: datetime) -> None:
+        self.connection.execute(text('''UPDATE invitations SET expires_at=:now
+                           WHERE group_id=:g AND email IS NULL AND accepted_at IS NULL AND expires_at>:now'''),
+                   {'g': group_id, 'now': now})
+
     def accept_invitation(self, token_hash: str, accepted_at: datetime) -> None:
         self.connection.execute(text('UPDATE invitations SET accepted_at=:t WHERE token_hash=:h'), {'t': accepted_at, 'h': token_hash})

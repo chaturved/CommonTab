@@ -16,6 +16,25 @@ class TestInviteCodes:
         record = expense(group, m(ada, group), [m(ada, group), joined.json()['meMemberID']], amount=1000)
         assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(bob), json=record).status_code == 200
 
+    def test_resetting_ends_every_open_code_and_a_new_one_still_works(self, database):
+        api = client_for(database)
+        ada, bob, cy = (register(api, f'{n}@example.com', n.title()) for n in ('ada', 'bob', 'cy'))
+        group = create_group(api, ada)
+        old = api.post(f"/v1/groups/{group['id']}/invite-code", headers=headers(ada), json={}).json()['code']
+
+        assert api.delete(f"/v1/groups/{group['id']}/invite-code", headers=headers(ada)).status_code == 204
+        fresh = api.post(f"/v1/groups/{group['id']}/invite-code", headers=headers(ada), json={}).json()['code']
+
+        assert api.post('/v1/invitations/join', headers=headers(bob), json={'code': old}).status_code == 404
+        assert api.post('/v1/invitations/join', headers=headers(cy), json={'code': fresh}).status_code == 200
+
+    def test_only_a_member_can_reset_codes(self, database):
+        api = client_for(database)
+        ada, bob = register(api, 'ada@example.com', 'Ada'), register(api, 'bob@example.com', 'Bob')
+        group = create_group(api, ada)
+
+        assert api.delete(f"/v1/groups/{group['id']}/invite-code", headers=headers(bob)).status_code == 404
+
     def test_one_group_code_serves_several_people_and_joining_twice_is_harmless(self, database):
         api = client_for(database)
         ada, bob, cy = (register(api, f'{n}@example.com', n.title()) for n in ('ada', 'bob', 'cy'))

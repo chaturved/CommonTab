@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import { View } from 'react-native';
 import { ApiError } from '@commontab/core';
@@ -13,7 +13,8 @@ export default function JoinGroup() {
   const router = useRouter();
   const desktop = useIsDesktop();
   const { services } = useApp();
-  const [code, setCode] = useState('');
+  const params = useLocalSearchParams<{ code?: string }>();
+  const [code, setCode] = useState(params.code ?? '');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 

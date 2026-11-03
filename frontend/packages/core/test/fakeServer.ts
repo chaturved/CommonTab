@@ -93,6 +93,7 @@ export class FakeServer {
       unarchiveGroup: notSimulated,
       deleteGroup: notSimulated,
       createInviteCode: notSimulated,
+      revokeInviteCodes: notSimulated,
       joinWithCode: notSimulated,
       healthy: async () => {
         if (this.offline) throw new ApiError(0, 'offline');
