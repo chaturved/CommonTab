@@ -134,17 +134,24 @@ class GroupService:
         return {'id': str(row.id), 'name': row.name, 'userID': str(row.user_id) if row.user_id else None,
                 'email': row.email}
 
-    def invite(self, group_id: str, user_id: str, email: str) -> dict:
+    def invite(self, group_id: str, user_id: str, email: str, member_id: UUID | None = None) -> dict:
         email = self.accounts.email(email)
         gid = UUID(group_id)
         with self.db.transaction() as db:
             self.require_member(db, gid, UUID(user_id))
             if self.repository.is_member_email(db, gid, email):
                 fail(409, 'Already a member')
+            if member_id is not None:
+                person = self.repository.member(db, member_id)
+                if person is None or person.group_id != gid:
+                    fail(422, 'That person is not in this group')
+                if person.user_id is not None:
+                    fail(422, 'That person already has an account')
             token = secrets.token_urlsafe(32)
             expires = datetime.now(timezone.utc) + INVITE_LIFETIME
-            self.repository.insert_invitation(db, self.accounts.token_hash(token), gid, email, expires)
-        return {'inviteToken': token, 'expiresAt': expires.isoformat(), 'email': email, 'groupID': group_id}
+            self.repository.insert_invitation(db, self.accounts.token_hash(token), gid, email, expires, member_id)
+        return {'inviteToken': token, 'expiresAt': expires.isoformat(), 'email': email, 'groupID': group_id,
+                'memberID': str(member_id) if member_id else None}
 
     def accept_invite(self, user_id: str, token: str) -> dict:
         uid = UUID(user_id)
@@ -157,7 +164,15 @@ class GroupService:
                 fail(404, 'Invitation missing or expired')
             if not hmac.compare_digest(row.email, email):
                 fail(403, 'Invitation belongs to a different email')
-            self.repository.insert_member(db, uuid4(), row.group_id, uid, self.accounts.name_of(db, uid), now)
+            if self.repository.member_of(db, row.group_id, uid) is not None:
+                fail(409, 'Already a member')
+            if row.member_id is not None:
+                person = self.repository.member(db, row.member_id, lock=True)
+                if person.user_id is not None:
+                    fail(409, 'That person was already linked to an account', 'id_conflict')
+                self.repository.link_member(db, person.id, uid)  # past expenses become this account's
+            else:
+                self.repository.insert_member(db, uuid4(), row.group_id, uid, self.accounts.name_of(db, uid), now)
             self.repository.accept_invitation(db, token_hash, now)
             self.repository.bump_version(db, row.group_id)
             return self.snapshot(db, row.group_id, uid)

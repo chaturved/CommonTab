@@ -39,6 +39,8 @@ class GroupInput(BaseModel):
 
 class InvitationInput(BaseModel):
     email: str = Field(min_length=3, max_length=254)
+    # An existing person without an account: accepting the invitation links them to the account.
+    member_id: UUID | None = Field(default=None, alias="memberID")
 
 
 class ExpenseInput(BaseModel):

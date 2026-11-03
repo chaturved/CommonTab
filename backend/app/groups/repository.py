@@ -63,6 +63,9 @@ class GroupRepository:
                  LEFT JOIN users u ON u.id = m.user_id WHERE m.id=:id''' + (' FOR UPDATE OF m' if lock else '')
         return db.execute(text(sql), {'id': member_id}).fetchone()
 
+    def link_member(self, db: Connection, member_id: UUID, user_id: UUID) -> None:
+        db.execute(text('UPDATE members SET user_id=:u WHERE id=:id'), {'u': user_id, 'id': member_id})
+
     def rename_member(self, db: Connection, member_id: UUID, name: str) -> None:
         db.execute(text('UPDATE members SET name=:name WHERE id=:id'), {'name': name, 'id': member_id})
 
@@ -79,10 +82,11 @@ class GroupRepository:
                                   WHERE m.group_id=:g AND u.email=:email'''),
                           {'g': group_id, 'email': email}).fetchone() is not None
 
-    def insert_invitation(self, db: Connection, token_hash: str, group_id: UUID, email: str, expires_at: datetime) -> None:
-        db.execute(text('''INSERT INTO invitations (token_hash, group_id, email, expires_at, accepted_at)
-                           VALUES (:h, :g, :email, :e, NULL)'''),
-                   {'h': token_hash, 'g': group_id, 'email': email, 'e': expires_at})
+    def insert_invitation(self, db: Connection, token_hash: str, group_id: UUID, email: str, expires_at: datetime,
+                          member_id: UUID | None = None) -> None:
+        db.execute(text('''INSERT INTO invitations (token_hash, group_id, email, expires_at, accepted_at, member_id)
+                           VALUES (:h, :g, :email, :e, NULL, :m)'''),
+                   {'h': token_hash, 'g': group_id, 'email': email, 'e': expires_at, 'm': member_id})
 
     def invitation(self, db: Connection, token_hash: str) -> Row | None:
         return db.execute(text('SELECT * FROM invitations WHERE token_hash=:h FOR UPDATE'), {'h': token_hash}).fetchone()

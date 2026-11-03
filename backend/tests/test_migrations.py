@@ -118,3 +118,17 @@ def test_0003_downgrade_refuses_when_people_without_accounts_exist(scratch):
     with pytest.raises(Exception, match='no account'):
         with engine.begin() as connection:
             downgrade(connection, '0002')
+
+
+def test_invitations_can_name_a_member_from_0004(scratch):
+    engine, schema = scratch
+    names = lambda: {c['name'] for c in inspect(engine).get_columns('invitations', schema=schema)}  # noqa: E731
+    with engine.begin() as connection:
+        upgrade(connection, '0003')
+    assert 'member_id' not in names()
+    with engine.begin() as connection:
+        upgrade(connection)
+    assert 'member_id' in names()
+    with engine.begin() as connection:
+        downgrade(connection, '0003')
+    assert 'member_id' not in names()

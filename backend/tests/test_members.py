@@ -138,3 +138,81 @@ def test_expenses_cannot_use_a_person_from_another_group(database):
     record = expense(group, m(ada, group), [m(ada, group), stranger])
     response = api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record)
     assert response.status_code == 422
+
+
+# --- linking a person to an account by invitation --------------------------------
+
+def invite(api, group, inviter, email, member_id=None):
+    body = {'email': email, **({'memberID': member_id} if member_id else {})}
+    return api.post(f"/v1/groups/{group['id']}/invitations", headers=headers(inviter), json=body)
+
+
+def accept(api, user, invitation):
+    return api.post('/v1/invitations/accept', headers=headers(user), json={'inviteToken': invitation.json()['inviteToken']})
+
+
+def test_accepting_an_invitation_for_a_person_links_them_to_the_account(database):
+    api = TestClient(create_app(database))
+    ada = register(api, 'ada@example.com', 'Ada')
+    group = create_group(api, ada)
+    sam, _ = add_person(api, group, ada, 'Sam')
+    record = expense(group, sam, [m(ada, group), sam], amount=4000)  # Sam paid before having an account
+    api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record)
+
+    riya = register(api, 'riya@example.com', 'Riya')
+    invitation = invite(api, group, ada, 'riya@example.com', sam)
+    assert invitation.status_code == 201 and invitation.json()['memberID'] == sam
+    accepted = accept(api, riya, invitation)
+    assert accepted.status_code == 200, accepted.text
+
+    snap = accepted.json()
+    assert snap['meMemberID'] == sam  # Riya is Sam: no new member was created
+    assert len(snap['members']) == 2
+    person = [x for x in snap['members'] if x['id'] == sam][0]
+    assert person['userID'] == riya['user']['id'] and person['email'] == 'riya@example.com'
+    assert {b['memberID']: b['minorUnits'] for b in snap['balances']}[sam] == 2000  # her history came with her
+    assert api.get('/v1/groups', headers=headers(riya)).json()[0]['id'] == group['id']
+
+
+def test_an_invitation_without_a_person_still_adds_a_new_member(database):
+    api, ada, bob, group = two_people(database)
+    assert len(snapshot(api, group, ada)['members']) == 2
+    assert len({x['id'] for x in snapshot(api, group, bob)['members']}) == 2
+
+
+def test_cannot_invite_for_someone_who_already_has_an_account_or_another_groups_person(database):
+    api, ada, bob, group = two_people(database)
+    other = create_group(api, ada)
+    stranger, _ = add_person(api, other, ada)
+    assert invite(api, group, ada, 'new@example.com', m(bob, group)).status_code == 422
+    assert invite(api, group, ada, 'new@example.com', stranger).status_code == 422
+    assert invite(api, group, ada, 'new@example.com', str(uuid4())).status_code == 422
+
+
+def test_a_person_can_only_be_linked_once(database):
+    api = TestClient(create_app(database))
+    ada = register(api, 'ada@example.com', 'Ada')
+    group = create_group(api, ada)
+    sam, _ = add_person(api, group, ada, 'Sam')
+    first = register(api, 'one@example.com', 'One')
+    second = register(api, 'two@example.com', 'Two')
+    to_first = invite(api, group, ada, 'one@example.com', sam)
+    to_second = invite(api, group, ada, 'two@example.com', sam)
+    assert accept(api, first, to_first).status_code == 200
+    late = accept(api, second, to_second)
+    assert late.status_code == 409 and late.json()['code'] == 'id_conflict'
+    assert api.get('/v1/groups', headers=headers(second)).json() == []
+
+
+def test_an_account_already_in_the_group_cannot_also_be_a_person_in_it(database):
+    api = TestClient(create_app(database))
+    ada = register(api, 'ada@example.com', 'Ada')
+    bob = register(api, 'bob@example.com', 'Bob')
+    group = create_group(api, ada)
+    sam, _ = add_person(api, group, ada, 'Sam')
+    for_sam = invite(api, group, ada, 'bob@example.com', sam)
+    join(api, group, ada, bob)  # Bob joins through a different invitation first
+    late = accept(api, bob, for_sam)
+    assert late.status_code == 409
+    snap = snapshot(api, group, ada)
+    assert [x['userID'] for x in snap['members'] if x['id'] == sam] == [None]

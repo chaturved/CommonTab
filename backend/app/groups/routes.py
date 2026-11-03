@@ -44,7 +44,7 @@ def router_for(service: GroupService, accounts: AccountService) -> APIRouter:
 
     @router.post('/groups/{group_id}/invitations', status_code=201)
     def invite(group_id: UUID, input: InvitationInput, authorization: str | None = Header(default=None)):
-        return service.invite(str(group_id), user(authorization), input.email)
+        return service.invite(str(group_id), user(authorization), input.email, input.member_id)
 
     @router.post('/invitations/accept')
     def accept(input: AcceptInvitation, authorization: str | None = Header(default=None)):
