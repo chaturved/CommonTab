@@ -10,7 +10,7 @@ Branch: `rebuild/cross-platform`. One commit per logical change, messages start 
 
 ## Step 2: `frontend/packages/core` money, splitter, ledger — done
 - `money`: currency digits, exact decimal parse/format, `allocateProportionally` (largest remainder, bigint inside).
-- `splitter`: equal, exact, percent, by-item with tax and tip. Same rules as the Swift app and `backend/app/groups/rules.py`.
+- `splitter`: equal, exact, percent, by-item with tax and tip. Same rules as the Swift app and `backend/app/domain/rules.py`.
 - `ledger`: `computeBalances` (skips tombstones), `simplifyDebts` (greedy, deterministic).
 - Shared fixtures in `fixtures/money/`; Swift golden cases ported. Core runs all of them; the backend runs the equal, exact and percent files (`backend/tests/test_money_fixtures.py`). By-item, ledger and simplify exist only in core; the server has no such functions yet.
 - Tests: core 116, backend 34 (11 existing, 23 fixtures). CI has a new `frontend` job.
@@ -97,3 +97,12 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - A group that disappears from the server (left, removed) is not handled yet; it needs the leave/remove work from the backend gap list.
 - No real storage yet (SQLite, IndexedDB) and the triggers (foreground, connectivity, 5-minute timer) belong to the app; the engine exposes `nextRetryAt` for the timer.
 - `SYNC_ARCHITECTURE.md` still says retries were already safe; the server fix is in step 4. Not edited.
+
+## Step 5c: backend structure (SOLID clean-up) — done
+- **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
+- **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.
+- **Transactions and DI:** one `Database` is created in `create_app` and held on the app. `get_db` gives each request one connection/transaction (`scope='function'`, so it commits before the response is sent); repositories are built on it, services on the repositories. No method takes a `db` argument and services open no transactions. (An earlier Unit of Work version was replaced by this at your request.)
+- **Split:** `GroupService` became groups, invitations, expenses, settlements and receipts services (plus a membership guard, snapshot builder and image processor). `GroupRepository` became six repositories.
+- **Tidy:** bill sessions raise `APIError` like everything else; the metrics token comes from settings; one receipt size constant.
+- **Not done (on purpose):** injecting a clock and id generator, and typed records instead of SQLAlchemy `Row`. Nothing needs them yet; revisit if tests need to control time.
+- Tests: backend 105, unchanged, run on every commit. API contract and database unchanged.

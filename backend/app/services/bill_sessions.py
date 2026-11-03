@@ -9,20 +9,9 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Row
 
+from app.core.errors import fail
 from app.repositories.bill_sessions import BillSessionRepository
 from app.schemas.bill_sessions import Bill
-
-
-class SessionMissing(Exception):
-    pass
-
-
-class SessionExpired(Exception):
-    pass
-
-
-class VersionConflict(Exception):
-    pass
 
 
 class BillSessionService:
@@ -62,11 +51,11 @@ class BillSessionService:
         row = self.bill_sessions.get(session_id)
         self._authorize(row, token)
         if not self.bill_sessions.update(session_id, version, self._json(bill), datetime.now(timezone.utc)):
-            raise VersionConflict
+            fail(409, 'Session changed; reload before saving')
         return self._payload(self.bill_sessions.get(session_id))
 
     def _authorize(self, row: Row | None, token: str) -> None:
         if row is None or not hmac.compare_digest(row.token_hash, self._hash(token)):
-            raise SessionMissing
+            fail(404, 'Session not found')
         if row.expires_at <= datetime.now(timezone.utc):
-            raise SessionExpired
+            fail(410, 'Session expired')

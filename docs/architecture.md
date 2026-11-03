@@ -18,7 +18,7 @@ website/
   app/                    Browser app, styles, and calculator tests
   assets/                 Images used by the deployed site
 backend/
-  app/                    Accounts, groups, bill sessions, analytics
+  app/                    API routes, services, repositories, schemas
   tests/                  HTTP contract and behavior tests
   pyproject.toml          Python service package
 frontend/                 TypeScript workspace (packages/core, packages/ui, apps/app)
@@ -32,7 +32,7 @@ scripts/                  Repository utilities
 - `legacy/ios/CommonTab/Application` coordinates local archive and receipt repository interfaces. `Data/Local` implements storage and keeps credentials in the Keychain.
 - `legacy/ios/CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
 - `legacy/ios/CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
-- `backend/app` composes four API areas in `main.py`. Each area owns its routes and persistence. `groups/rules.py` contains money allocation and balance rules; `accounts/auth.py` handles bearer tokens. `errors.py` defines the shared API error response.
+- `backend/app` is layered. `main.py` builds the app; `api/routes/` has one router module per resource and `api/deps.py` wires each request (one database transaction from `get_db`, repositories on its connection, services on the repositories, bearer-token auth). `services/` holds the rules, `repositories/` the SQL, `schemas/` the request and response models. `domain/rules.py` contains money allocation and balance rules. `core/errors.py` defines the shared API error response.
 - `website` is a static deployment. Its product pages and browser app are separate directories and share only public assets. The browser app currently saves personal expenses on the device and does not call the shared API.
 
 ## Cross-platform contract

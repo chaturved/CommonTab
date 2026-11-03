@@ -45,6 +45,7 @@ def get_password_hasher(request: Request) -> PasswordHasher:
 
 
 DatabaseDep = Annotated[Database, Depends(get_database)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 # --- one database transaction per request --------------------------------------------------------------

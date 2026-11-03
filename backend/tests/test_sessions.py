@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from app.core.config import Settings
 from app.main import create_app
 
 
@@ -72,9 +73,8 @@ def test_expired_session(database):
     assert response.status_code == 410
 
 
-def test_anonymous_event_counts_and_protected_metrics(database, monkeypatch):
-    monkeypatch.setenv("SPLITTIP_METRICS_TOKEN", "admin-secret")
-    client = TestClient(create_app(database))
+def test_anonymous_event_counts_and_protected_metrics(database):
+    client = TestClient(create_app(database, settings=Settings(database_url="", metrics_token="admin-secret")))
     for _ in range(2):
         assert client.post("/v1/events", json={"name": "scan_opened", "variant": "B"}).status_code == 202
     assert client.post("/v1/events", json={"name": "unknown", "variant": "B"}).status_code == 422

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import os
 import secrets
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.deps import AnalyticsDep, Token
+from app.api.deps import AnalyticsDep, SettingsDep, Token
 from app.schemas.analytics import ProductEvent
 
 router = APIRouter(prefix='/v1')
@@ -18,8 +17,8 @@ def record(event: ProductEvent, analytics: AnalyticsDep) -> dict[str, str]:
 
 
 @router.get('/metrics')
-def metrics(token: Token, analytics: AnalyticsDep) -> dict:
-    admin_token = os.environ.get('SPLITTIP_METRICS_TOKEN')
+def metrics(token: Token, analytics: AnalyticsDep, settings: SettingsDep) -> dict:
+    admin_token = settings.metrics_token
     if not admin_token:
         raise HTTPException(503, 'Metrics access is not configured')
     if not secrets.compare_digest(token, admin_token):

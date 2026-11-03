@@ -116,12 +116,13 @@ commontab/
     pyproject.toml
     Dockerfile
     app/
-      main.py                      # router wiring, /healthz
-      core/                        # config, logging, errors, rate limit, db session
-      accounts/                    # routes, service, repository, models
-      groups/                      # routes, service, repository, models, rules
-      bill_sessions/
-      analytics/
+      main.py                      # create_app: wiring only
+      api/                         # deps.py (get_db, auth), routes/ (one router per resource)
+      schemas/                     # request and response models
+      services/                    # business rules
+      repositories/                # SQL only
+      domain/                      # pure rules: allocation, balances
+      core/                        # config, errors, db, rate limit, token hashing
       worker/                      # later: repeating expenses and push jobs
     migrations/                    # Alembic, Postgres
     tests/

@@ -1,6 +1,18 @@
 # CommonTab API
 
-FastAPI service for accounts, shared groups, expenses, settlements, temporary bill sessions and aggregate analytics. Postgres (Supabase in production), Alembic migrations, routes / service / repository layers per area under `app/`.
+FastAPI service for accounts, shared groups, expenses, settlements, temporary bill sessions and aggregate analytics. Postgres (Supabase in production), Alembic migrations, a layered layout under `app/`:
+
+```
+app/main.py          create_app: builds the Database once, installs error handling, rate limits and routers
+app/api/             deps.py (get_db, repositories, services, current user) and routes/ (one module per resource)
+app/schemas/         Pydantic request and response models
+app/services/        business rules; no SQL, no HTTP
+app/repositories/    SQL only; one class per aggregate
+app/domain/          pure rules (allocation, balances, UTC helpers, limits)
+app/core/            config, db (engine and transaction), errors, rate limiting, token hashing
+```
+
+Each request gets one database transaction from `get_db` (committed before the response is sent, rolled back on error); repositories share its connection and services are built from repositories.
 
 ## Run it
 
