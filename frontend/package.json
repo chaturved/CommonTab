@@ -1,0 +1,5 @@
+{
+  "name": "commontab",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"]
+}
