@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
-import { Banner, SyncChip, syncText } from '../src';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { Text as RNText } from 'react-native';
+import { Banner, SyncChip, setAppearance, syncText, useThemeColors } from '../src';
 
 describe('Banner', () => {
   test('warning is a status with title and message', async () => {
@@ -51,5 +52,21 @@ describe('SyncChip', () => {
     expect(button.props.className).toContain('min-h-touch');
     await fireEvent.press(button);
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('appearance override', () => {
+  function Probe() {
+    return <RNText testID="probe">{useThemeColors().scheme}</RNText>;
+  }
+
+  afterEach(() => act(() => setAppearance('system')));
+
+  test('choosing dark or light wins over the system, and system gives control back', async () => {
+    await render(<Probe />);
+    await act(async () => setAppearance('dark'));
+    expect(screen.getByTestId('probe').props.children).toBe('dark');
+    await act(async () => setAppearance('light'));
+    expect(screen.getByTestId('probe').props.children).toBe('light');
   });
 });

@@ -19,3 +19,10 @@ test('DESIGN.md class names exist: bg-card, text-muted, text-owe, rounded-card',
 });
 
 test('touch target token is 44', () => expect(preset.theme.extend.minHeight.touch).toBe(44));
+
+test('a chosen appearance can override the system on the web', () => {
+  const rules: Record<string, unknown> = {};
+  const plugin = preset.plugins[0] as { handler: (api: { addBase: (r: Record<string, unknown>) => void }) => void };
+  plugin.handler({ addBase: (r) => Object.assign(rules, r) });
+  expect(Object.keys(rules)).toEqual(expect.arrayContaining([':root[data-theme="light"]', ':root[data-theme="dark"]']));
+});

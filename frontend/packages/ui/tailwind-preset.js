@@ -26,6 +26,8 @@ module.exports = {
       addBase({
         ':root': cssVars('light'),
         '@media (prefers-color-scheme: dark)': { ':root': cssVars('dark') },
+        ':root[data-theme="light"]': cssVars('light'),
+        ':root[data-theme="dark"]': cssVars('dark'),
       });
     }),
   ],
