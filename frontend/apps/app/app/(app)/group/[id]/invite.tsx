@@ -5,7 +5,7 @@ import { Share, View } from 'react-native';
 import { describeAuthFailure, type InviteCode } from '@commontab/core';
 import { Banner, Button, Card, Text } from '@commontab/ui';
 import { useApp } from '../../../../src/app-context';
-import { Screen } from '../../../../src/components/Screen';
+import { FormPage } from '../../../../src/components/FormPage';
 import { useGroup } from '../../../../src/data';
 
 const cache = new Map<string, InviteCode>();
@@ -62,12 +62,7 @@ export default function Invite() {
   };
 
   return (
-    <Screen wide>
-      <View className="min-h-touch w-full max-w-[560px] flex-row items-center justify-between self-center">
-        <View className="w-[72px]" />
-        <Text variant="screen-title" accessibilityRole="header">Invite people</Text>
-        <Button label="Done" variant="ghost" size="small" onPress={() => router.back()} />
-      </View>
+    <FormPage title="Invite people" trailing="done" onClose={() => router.back()}>
       <View className="w-full max-w-[560px] gap-4 self-center">
         <View className="gap-1 px-2 pt-2">
           <Text variant="large-title" accessibilityRole="header">Add friends to {data?.group.name ?? 'this group'}</Text>
@@ -95,6 +90,6 @@ export default function Invite() {
           <Text variant="body-small" tone="muted" className="text-[13px] leading-[18px]">Only share it with people you want in this group.</Text>
         </View>
       </View>
-    </Screen>
+    </FormPage>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronRight, Plus, X } from 'lucide-react-native';
+import { Plus, X } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
 import { Avatar, Button, FieldGroup, FieldRow, Icon, ListRow, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
-import { Screen } from '../../src/components/Screen';
+import { FormPage } from '../../src/components/FormPage';
+import { PickerRow } from '../../src/components/PickerRow';
 import { CURRENCIES } from '../../src/currencies';
 
 interface Person {
@@ -48,25 +49,16 @@ export default function CreateGroup() {
   };
 
   return (
-    <Screen footer={<Button label="Create group" loading={busy} disabled={!ready} onPress={create} />}>
-      <View className="min-h-touch flex-row items-center justify-between">
-        <Button label="Cancel" variant="ghost" size="small" onPress={() => router.back()} />
-        <Text variant="screen-title" accessibilityRole="header">New group</Text>
-        <View className="w-[72px]" />
-      </View>
+    <FormPage title="New group" onClose={() => router.back()} primary={{ label: 'Create group', onPress: create, disabled: !ready, loading: busy }}>
       <FieldGroup>
         <FieldRow label="Name" value={name} onChangeText={setName} placeholder="Austin Trip" maxLength={80} autoCapitalize="words" />
-        <Pressable accessibilityRole="button" accessibilityLabel={`Currency, ${currency.code} ${currency.name}`} onPress={() => setPicking(true)} className="min-h-row flex-row items-center gap-3 px-4 active:opacity-80">
-          <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">Currency</Text>
-          <Text variant="body" className="flex-1">{currency.code} · {currency.name}</Text>
-          <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" />
-        </Pressable>
+        <PickerRow label="Currency" value={`${currency.code} · ${currency.name}`} onPress={() => setPicking(true)} last />
       </FieldGroup>
       <View className="gap-0.5 px-2 pt-2">
         <Text variant="section" accessibilityRole="header">Members</Text>
         <Text variant="body-small" tone="muted">The first person is you.</Text>
       </View>
-      <FieldGroup>
+      <View className="overflow-hidden rounded-card bg-card">
         <View className="min-h-row flex-row items-center gap-3 border-b border-divider px-4">
           <Avatar name={user?.name ?? 'You'} id={user?.id} />
           <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">Member 1</Text>
@@ -103,7 +95,7 @@ export default function CreateGroup() {
             setNextKey((k) => k + 1);
           }}
         />
-      </FieldGroup>
+      </View>
       <Text variant="caption" tone="muted" className="px-2 text-[13px] leading-[18px]">
         You can add people who don't have CommonTab yet. Invite them with a code later.
       </Text>
@@ -123,6 +115,6 @@ export default function CreateGroup() {
           ))}
         </View>
       </Sheet>
-    </Screen>
+    </FormPage>
   );
 }

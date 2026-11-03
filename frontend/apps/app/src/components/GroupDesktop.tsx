@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { byNewest, expenseRow, formatCurrency, type LocalExpense } from '@commontab/core';
@@ -17,10 +17,11 @@ type Tab = (typeof TABS)[number];
 
 export function GroupDesktop({ data }: { data: GroupData }) {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string; expense?: string }>();
   const status = useSyncStatus();
   const { group, expenses, summary } = data;
-  const [tab, setTab] = useState<Tab>('Expenses');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>((TABS as readonly string[]).includes(params.tab ?? '') ? (params.tab as Tab) : 'Expenses');
+  const [selectedId, setSelectedId] = useState<string | null>(params.expense ?? null);
   const currency = summary.currencyCode;
   const live = expenses.filter((e) => !e.deletedAt);
   const rows = live.map((e) => expenseRow(e, group)).sort(byNewest);

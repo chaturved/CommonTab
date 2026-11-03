@@ -1,9 +1,10 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { BackButton, Text } from '@commontab/ui';
 import { ExpenseDetailContent } from '../../../../src/components/ExpenseDetail';
 import { Screen } from '../../../../src/components/Screen';
 import { useGroups } from '../../../../src/data';
+import { useIsDesktop } from '../../../../src/layout';
 
 export default function ExpenseScreen() {
   const router = useRouter();
@@ -11,7 +12,10 @@ export default function ExpenseScreen() {
   const { ready, groups } = useGroups();
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);
+  const desktop = useIsDesktop();
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
+  if (desktop && data) return <Redirect href={{ pathname: '/group/[id]', params: { id: data.group.id, expense: id } }} />;
 
   return (
     <Screen wide>

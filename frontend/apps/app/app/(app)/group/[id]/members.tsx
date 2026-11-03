@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { UserPlus } from 'lucide-react-native';
 import { Pressable } from 'react-native';
@@ -7,11 +7,14 @@ import { MembersList } from '../../../../src/components/GroupParts';
 import { Eyebrow } from '../../../../src/components/Section';
 import { Screen } from '../../../../src/components/Screen';
 import { useGroup } from '../../../../src/data';
+import { useIsDesktop } from '../../../../src/layout';
 
 export default function Members() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data } = useGroup(id);
+  const desktop = useIsDesktop();
+  if (desktop) return <Redirect href={{ pathname: '/group/[id]', params: { id, tab: 'Members' } }} />;
   const members = data?.group.members ?? [];
 
   return (

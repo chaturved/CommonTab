@@ -3,9 +3,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
 import { checkSettlement, directionWith, displayName, formatCurrency, formatMinorUnits, halfOf } from '@commontab/core';
-import { Avatar, BackButton, Banner, Button, FieldGroup, Hero, Icon, ListRow, Sheet, Text, useThemeColors } from '@commontab/ui';
+import { Avatar, Banner, Button, FieldGroup, Hero, Icon, ListRow, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '../../../../src/app-context';
-import { Screen } from '../../../../src/components/Screen';
+import { FormPage } from '../../../../src/components/FormPage';
 import { useGroup } from '../../../../src/data';
 
 const decimalOnly = (text: string) => {
@@ -54,12 +54,7 @@ export default function Settle() {
   };
 
   return (
-    <Screen wide footer={data ? <View className="w-full max-w-[560px] self-center"><Button label="Record payment" loading={busy} disabled={!check.ok} onPress={record} /></View> : undefined}>
-      <View className="min-h-touch w-full max-w-[560px] flex-row items-center justify-between self-center">
-        <BackButton onPress={() => router.back()} />
-        <Text variant="screen-title" accessibilityRole="header">Settle up</Text>
-        <View className="w-11" />
-      </View>
+    <FormPage title="Settle up" leading="back" onClose={() => router.back()} primary={data ? { label: 'Record payment', onPress: record, disabled: !check.ok, loading: busy } : undefined}>
       {!data ? (
         ready ? (
           <View className="items-center gap-2 px-6 py-10">
@@ -134,6 +129,6 @@ export default function Settle() {
           ))}
         </View>
       </Sheet>
-    </Screen>
+    </FormPage>
   );
 }

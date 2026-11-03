@@ -7,6 +7,10 @@ export type FieldLayout = 'row' | 'stacked';
 
 const FieldLayoutContext = createContext<FieldLayout>('row');
 
+export function useFieldLayout(): FieldLayout {
+  return useContext(FieldLayoutContext);
+}
+
 export function FieldLayoutProvider({ layout, children }: { layout: FieldLayout; children: ReactNode }) {
   return <FieldLayoutContext.Provider value={layout}>{children}</FieldLayoutContext.Provider>;
 }

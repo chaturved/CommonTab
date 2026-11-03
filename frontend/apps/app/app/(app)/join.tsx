@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import { View } from 'react-native';
 import { ApiError } from '@commontab/core';
-import { Banner, Button, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text } from '@commontab/ui';
+import { Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
-import { Screen } from '../../src/components/Screen';
+import { FormPage } from '../../src/components/FormPage';
 
 export default function JoinGroup() {
   const router = useRouter();
@@ -32,13 +32,7 @@ export default function JoinGroup() {
   };
 
   return (
-    <Screen wide footer={<View className="w-full max-w-[560px] self-center"><Button label="Join group" loading={busy} disabled={code.trim().length === 0} onPress={join} /></View>}>
-      <View className="min-h-touch w-full max-w-[560px] flex-row items-center justify-between self-center">
-        <Button label="Cancel" variant="ghost" size="small" onPress={() => router.back()} />
-        <Text variant="screen-title" accessibilityRole="header">Join group</Text>
-        <View className="w-[72px]" />
-      </View>
-      <View className="w-full max-w-[560px] gap-4 self-center">
+    <FormPage title="Join group" onClose={() => router.back()} primary={{ label: 'Join group', onPress: join, disabled: code.trim().length === 0, loading: busy }}>
         <View className="items-center gap-2 px-4 py-4">
           <View className="h-16 w-16 items-center justify-center rounded-pill bg-tint">
             <Icon icon={UserPlus} size={34} strokeWidth={1.8} tone="accent" />
@@ -52,7 +46,6 @@ export default function JoinGroup() {
             <FieldRow label="Invitation code" value={code} onChangeText={setCode} placeholder="Paste code" autoCapitalize="characters" autoCorrect={false} autoFocus onSubmitEditing={() => code.trim() && void join()} />
           </FieldGroup>
         </FieldLayoutProvider>
-      </View>
-    </Screen>
+          </FormPage>
   );
 }

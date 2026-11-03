@@ -4,12 +4,16 @@ import { Text } from '@commontab/ui';
 import { ExpenseFormView } from '../../../../src/components/ExpenseFormView';
 import { Screen } from '../../../../src/components/Screen';
 import { useGroups } from '../../../../src/data';
+import { useIsDesktop } from '../../../../src/layout';
 
 export default function EditExpense() {
+  const desktop = useIsDesktop();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, groups } = useGroups();
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);
+
+  if (desktop && data && expense && !expense.deletedAt) return <ExpenseFormView key={expense.id} mode="edit" data={data} expense={expense} />;
 
   return (
     <Screen wide>

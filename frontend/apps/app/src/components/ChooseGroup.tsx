@@ -6,13 +6,13 @@ import type { GroupData } from '../data';
 
 const lastActivity = (g: GroupData) => g.expenses.reduce((latest, e) => Math.max(latest, Date.parse(e.updatedAt)), 0);
 
-export function ChooseGroup({ groups, onPick, onCreate }: { groups: GroupData[]; onPick: (id: string) => void; onCreate: () => void }) {
+export function ChooseGroup({ groups, onPick, onCreate, hideHeading }: { groups: GroupData[]; onPick: (id: string) => void; onCreate: () => void; hideHeading?: boolean }) {
   const ordered = [...groups].sort((a, b) => lastActivity(b) - lastActivity(a) || a.group.name.localeCompare(b.group.name));
   const now = Date.now();
   return (
     <View className="gap-4">
       <View className="gap-1 px-2 pt-2">
-        <Text variant="large-title" accessibilityRole="header">Add expense to…</Text>
+        {hideHeading ? null : <Text variant="large-title" accessibilityRole="header">Add expense to…</Text>}
         <Text variant="body-small" tone="muted">Pick a group. Your last one is on top.</Text>
       </View>
       <View className="gap-2.5">

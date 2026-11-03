@@ -171,6 +171,15 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Checked in a browser** (390px, API on Supabase): dark mode and its persistence, CSV contents (including the payment), calculator numbers, by-item split (Ramen $18 for you, Sake $24 shared by Riya and Sam gives $42.00 with 18 / 12 / 12), clear data and re-download.
 - **Not built:** the **Simplify debts toggle** (the app always shows the simplified payments; a "without simplifying" view would need a pairwise calculation: gap), notification settings (v1.1 push), the design's date row on settle up, receipt scan (v1.1).
 
+## Step 6w (follow-up): desktop for the secondary pages — done
+- **Why:** 6c to 6e were checked mostly at phone size; the pages added after the web designs were still phone screens in a narrow column on desktop.
+- **Dialogs (from WebAddExpense):** Add expense, Edit expense, Create group, Settle up, Invite and Join open as a 600px dialog over the dimmed page behind it (a transparent modal route on desktop; the same routes are normal screens on phones). Labeled fields above bordered inputs, "Paid by | Date | Category" in one row, the four split tabs, member rows with avatars, Cancel and Save at the bottom. One shared `FormPage` picks the screen or the dialog; `DesktopDialog` is the dialog.
+- **Account (from WebAccount):** two columns. Profile and Session and data on the left, and Settings (appearance, default currency, export, clear data) and Tools on the right, so desktop has no separate Settings page (`/settings` goes to Account; it stays a page on phones). Row actions are text links ("Open", "Sign out").
+- **Calculator:** page header with Save as expense, inputs on the left and the result beside them. **Members** and the **expense detail** open inside the group page on desktop (`?tab=Members`, `?expense=<id>`), where the detail panel already lives.
+- **Sheets** (pickers, confirmations) now centre on wide screens instead of spanning the window.
+- **Checked in a browser** at 1280px and 390px: Account, Add expense, Create group, Invite, Calculator at desktop; Create group and Add expense at phone size (unchanged). Not re-checked at desktop in this pass: Settle up and Join dialogs, the Edit dialog, and the Members and expense redirects (same components as the checked ones).
+- **Not dimmed:** the dialog's dim layer covers the content area, not the sidebar (the canvas dims everything).
+
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 

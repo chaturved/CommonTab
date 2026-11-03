@@ -6,9 +6,12 @@ import { ChooseGroup } from '../../src/components/ChooseGroup';
 import { ExpenseFormView } from '../../src/components/ExpenseFormView';
 import { Screen } from '../../src/components/Screen';
 import { useGroups } from '../../src/data';
+import { useIsDesktop } from '../../src/layout';
+import { DesktopDialog } from '../../src/components/DesktopDialog';
 
 export default function AddExpense() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const { group: groupParam, amount } = useLocalSearchParams<{ group?: string; amount?: string }>();
   const { ready, groups } = useGroups();
   const [picked, setPicked] = useState<string | null>(null);
@@ -16,6 +19,14 @@ export default function AddExpense() {
   const data = groups.find((g) => g.group.id === id);
 
   if (!ready) return <Screen wide>{null}</Screen>;
+
+  if (groups.length === 0 && desktop) {
+    return (
+      <DesktopDialog title="Create a group first" onClose={() => router.back()} primary={{ label: 'Create a group', onPress: () => router.replace('/create-group') }}>
+        <Text tone="muted">Expenses live in a group, so make one to start splitting.</Text>
+      </DesktopDialog>
+    );
+  }
 
   if (groups.length === 0) {
     return (
@@ -30,6 +41,14 @@ export default function AddExpense() {
     );
   }
 
+  if (!data && desktop) {
+    return (
+      <DesktopDialog title="Add expense to…" onClose={() => router.back()} secondaryLabel="Cancel">
+        <ChooseGroup groups={groups} onPick={setPicked} onCreate={() => router.replace('/create-group')} hideHeading />
+      </DesktopDialog>
+    );
+  }
+
   if (!data) {
     return (
       <Screen wide>
@@ -40,9 +59,6 @@ export default function AddExpense() {
     );
   }
 
-  return (
-    <Screen wide>
-      <ExpenseFormView key={data.group.id} mode="add" data={data} groups={groups} onPickGroup={setPicked} initial={amount ? { amountText: amount } : undefined} />
-    </Screen>
-  );
+  const form = <ExpenseFormView key={data!.group.id} mode="add" data={data!} groups={groups} onPickGroup={setPicked} initial={amount ? { amountText: amount } : undefined} />;
+  return desktop ? form : <Screen wide>{form}</Screen>;
 }

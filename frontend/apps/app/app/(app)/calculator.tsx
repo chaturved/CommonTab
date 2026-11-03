@@ -5,7 +5,9 @@ import { Pressable, TextInput, View } from 'react-native';
 import { formatCurrency, formatMinorUnits, parseMinorUnits, tipSplit, type ItemizedResult } from '@commontab/core';
 import { BackButton, Button, Card, Icon, SegmentedControl, Text, useThemeColors } from '@commontab/ui';
 import { ItemizedEditor } from '../../src/components/ItemizedEditor';
+import { PageHeader } from '../../src/components/PageHeader';
 import { Screen } from '../../src/components/Screen';
+import { useIsDesktop } from '../../src/layout';
 
 const CURRENCY = 'USD';
 const TIPS = ['15', '18', '20', '25'];
@@ -18,6 +20,7 @@ const decimalOnly = (text: string) => {
 
 export default function Calculator() {
   const router = useRouter();
+  const desktop = useIsDesktop();
   const colors = useThemeColors();
   const [tab, setTab] = useState<'person' | 'item'>('person');
   const [billText, setBillText] = useState('');
@@ -36,19 +39,33 @@ export default function Calculator() {
   const show = (units: number) => formatCurrency(units, CURRENCY);
   const total = tab === 'person' ? split?.totalMinor : itemResult?.total;
   const saveAsExpense = () => router.push({ pathname: '/add-expense', params: { amount: formatMinorUnits(total ?? 0, CURRENCY) } });
+  const resultCard = split ? (
+              <Card className="gap-1 p-4" accessible accessibilityLabel={`Tip ${show(split.tipMinor)}. Total ${show(split.totalMinor)}. Per person ${show(Math.max(...split.shares))}`}>
+                <Row label={`Tip (${tip || 0}%)`} value={show(split.tipMinor)} />
+                <Row label="Total" value={show(split.totalMinor)} />
+                <Text variant="label" tone="muted" className="pt-3">Per person</Text>
+                <Text variant="large-title" tone="accent" className="text-[40px] leading-[46px]">{show(Math.max(...split.shares))}</Text>
+                {new Set(split.shares).size > 1 ? <Text variant="caption" tone="muted" className="text-[13px]">Some people pay a cent less so the total is exact.</Text> : null}
+              </Card>
+  ) : null;
   const names = Array.from({ length: itemPeople }, (_, i) => ({ id: `p${i + 1}`, name: `Person ${i + 1}` }));
 
   return (
-    <Screen wide footer={<View className="w-full max-w-[560px] self-center"><Button label="Save as expense" disabled={!total} onPress={saveAsExpense} /></View>}>
-      <View className="min-h-touch w-full max-w-[560px] flex-row items-center justify-between self-center">
-        <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/account'))} />
-        <Text variant="screen-title" accessibilityRole="header">Tip & split</Text>
-        <View className="w-11" />
-      </View>
-      <View className="w-full max-w-[560px] gap-4 self-center">
+    <Screen wide footer={desktop ? undefined : <View className="w-full max-w-[560px] self-center"><Button label="Save as expense" disabled={!total} onPress={saveAsExpense} /></View>}>
+      {desktop ? (
+        <PageHeader title="Tip & split calculator" subtitle="Split a restaurant bill by person or by item" actions={<Button label="Save as expense" size="small" disabled={!total} onPress={saveAsExpense} />} />
+      ) : (
+        <View className="min-h-touch w-full max-w-[560px] flex-row items-center justify-between self-center">
+          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/account'))} />
+          <Text variant="screen-title" accessibilityRole="header">Tip & split</Text>
+          <View className="w-11" />
+        </View>
+      )}
+      <View className={desktop ? 'w-full gap-4' : 'w-full max-w-[560px] gap-4 self-center'}>
         <SegmentedControl options={[{ key: 'person', label: 'By person' }, { key: 'item', label: 'By item' }]} value={tab} onChange={(key) => setTab(key as 'person' | 'item')} />
         {tab === 'person' ? (
-          <>
+          <View className={desktop ? 'flex-row items-start gap-[22px]' : 'gap-4'}>
+            <View className="min-w-0 flex-1 gap-4">
             <View className="gap-1 rounded-card bg-card px-4 py-3">
               <Text variant="caption" tone="muted" className="text-[13px] font-bold">Bill before tip</Text>
               <View className="flex-row items-center gap-2">
@@ -66,16 +83,10 @@ export default function Calculator() {
             </View>
             <Text variant="label" tone="muted">People</Text>
             <Stepper value={people} onChange={setPeople} label="people" />
-            {split ? (
-              <Card className="gap-1 p-4" accessible accessibilityLabel={`Tip ${show(split.tipMinor)}. Total ${show(split.totalMinor)}. Per person ${show(Math.max(...split.shares))}`}>
-                <Row label={`Tip (${tip || 0}%)`} value={show(split.tipMinor)} />
-                <Row label="Total" value={show(split.totalMinor)} />
-                <Text variant="label" tone="muted" className="pt-3">Per person</Text>
-                <Text variant="large-title" tone="accent" className="text-[40px] leading-[46px]">{show(Math.max(...split.shares))}</Text>
-                {new Set(split.shares).size > 1 ? <Text variant="caption" tone="muted" className="text-[13px]">Some people pay a cent less so the total is exact.</Text> : null}
-              </Card>
-            ) : null}
-          </>
+            {desktop ? null : resultCard}
+            </View>
+            {desktop ? <View className="min-w-0 flex-1">{resultCard}</View> : null}
+          </View>
         ) : (
           <>
             <Text variant="label" tone="muted">People</Text>
