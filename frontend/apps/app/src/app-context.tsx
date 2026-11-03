@@ -7,6 +7,8 @@ import { createServices, type Services } from './services';
 interface AppValue {
   services: Services;
   user: SignedInUser | null;
+  justSignedIn: boolean;
+  clearJustSignedIn(): void;
   signIn(email: string, password: string): Promise<void>;
   register(email: string, name: string, password: string): Promise<void>;
   signOut(): Promise<void>;
@@ -29,6 +31,7 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
   const [services, setServices] = useState<Services | null>(null);
   const [user, setUser] = useState<SignedInUser | null>(null);
   const pendingCode = useRef<string | null>(null);
+  const [justSignedIn, setJustSignedIn] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +66,7 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
   const accept = useCallback(async (next: SignedInUser) => {
     await services!.rememberUser(next);
     services!.engine.resume();
+    setJustSignedIn(true);
     setUser(next);
     const code = pendingCode.current;
     if (code) {
@@ -81,6 +85,8 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
   const value = useMemo<AppValue | null>(() => services && {
     services,
     user,
+    justSignedIn,
+    clearJustSignedIn: () => setJustSignedIn(false),
     signIn: async (email, password) => accept(await services.auth.signIn(email, password)),
     register: async (email, name, password) => accept(await services.auth.register(email, name, password)),
     setPendingJoinCode: (code) => { pendingCode.current = code; },
@@ -105,7 +111,7 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
       await services.api.deleteAccount(password);
       await leave();
     },
-  }, [services, user, accept, leave]);
+  }, [services, user, justSignedIn, accept, leave]);
 
   return value ? <AppContext.Provider value={value}>{children}</AppContext.Provider> : <>{fallback}</>;
 }

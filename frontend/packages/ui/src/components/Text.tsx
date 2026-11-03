@@ -27,6 +27,10 @@ const TONE = {
   'hero-muted': 'text-hero-muted',
   mint: 'text-mint',
   white: 'text-white',
+  'site-bg': 'text-site-bg',
+  'site-text': 'text-site-text',
+  'site-muted': 'text-site-muted',
+  'site-amber': 'text-site-amber',
 } as const;
 
 export type TextTone = keyof typeof TONE;

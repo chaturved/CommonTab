@@ -1,10 +1,14 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { useApp } from '../../src/app-context';
 import { SessionExpiredSheet } from '../../src/auth/SessionExpiredSheet';
 import { DesktopShell } from '../../src/components/DesktopShell';
 import { useIsDesktop } from '../../src/layout';
 
 export default function AppLayout() {
   const desktop = useIsDesktop();
+  const { clearJustSignedIn } = useApp();
+  useEffect(() => clearJustSignedIn(), [clearJustSignedIn]);
   const dialog = desktop ? ({ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } } as const) : ({ presentation: 'card' } as const);
   const stack = (
     <Stack screenOptions={{ headerShown: false }}>

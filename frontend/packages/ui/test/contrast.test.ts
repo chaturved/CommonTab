@@ -36,6 +36,16 @@ const PAIRS: [ColorName, ColorName, number][] = [
   ['warn-icon', 'warn', 3],
   ['on-error', 'error', 4.5],
   ['owe', 'error', 3],
+  ['site-text', 'site-bg', 4.5],
+  ['site-text', 'site-card', 4.5],
+  ['site-muted', 'site-bg', 4.5],
+  ['site-muted', 'site-card', 4.5],
+  ['mint', 'site-bg', 4.5],
+  ['mint', 'site-card', 4.5],
+  ['site-bg', 'mint', 4.5],
+  ['site-amber', 'site-bg', 4.5],
+  ['site-amber', 'site-chip', 4.5],
+  ['site-text', 'site-chip', 4.5],
 ];
 
 describe.each<ColorScheme>(['light', 'dark'])('WCAG AA contrast (%s)', (scheme) => {

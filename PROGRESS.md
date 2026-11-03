@@ -232,8 +232,17 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 ## Step 7 part 1: routes for a landing page — done
 - **Decision:** the landing page is built in the Expo app (not static HTML) and is the web root `/`; Home moves to `/home` and the intro screen to `/welcome`. `website/` goes once the landing page is ported.
 - **Now:** `/home` is Home (tabs, sidebar and back fallbacks point at it); `/welcome` is the old Welcome (desktop web still goes on to `/sign-in`); `/` is a temporary redirect: signed in to `/home`, signed out to `/welcome`. Signing in lands on `/home`, signing out on `/welcome`.
-- **Next:** the landing page at `/` on web (shared hero with Welcome, marketing sections below), then the static export and retiring `website/`. Native `/` will stay a redirect.
+- **Next:** the static export and retiring `website/` (part 3).
 
+## Step 7 part 2: landing page
+- **Web `/`** (`app/index.web.tsx`, `src/landing/`) is the landing page from `Landing.dc.html` (desktop) and `LandingMobile.dc.html` (phone width and below 1024px): nav (Product, How it works, Download scroll to sections; Sign in; Get started), headline, three phone mock-ups with the "$54.50 each" badge, the feature cards, three steps, the closing call to action and the footer. Signed in, the nav and buttons say "Open app" and go to `/home`. Native `/` (`app/index.tsx`) is still a redirect: signed in to `/home`, signed out to `/welcome`.
+- **Shared with Welcome:** `BrandMark` and the dark palette (new `site-*` tokens in `packages/ui`, same in light and dark, with contrast tests; new `mint` Button variant). Welcome's line is now "Nobody should do bill math twice."
+- **After sign-in or sign-up** the web root sends you to `/home` (a `justSignedIn` flag in the app context, cleared when the app shell opens). Later visits to `/` show the landing page.
+- **Copy changes from the design:** "Scan the receipt" (not in v1) is replaced by "Any currency"; the closing button is "Get started free" (or "Open the app" when signed in) because the store badges have no listings yet and are left out.
+- **Not done:** Privacy and Terms in the footer (and on Welcome) are plain text: there are no pages yet; the "Download" nav item only scrolls to the closing section.
+- **Known:** the web app still shows nothing until the session has loaded, so the landing page is not in the static HTML yet (part 3).
+
+## Step 5c: backend structure
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.
