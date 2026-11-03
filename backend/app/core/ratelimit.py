@@ -10,7 +10,7 @@ from fastapi import Request
 
 from app.core.config import SESSION_COOKIE, Settings, get_settings
 
-AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions'}
+AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions', '/v1/invitations/join'}  # guessable secrets: strict, per IP
 EXEMPT_PATHS = {'/healthz', '/health'}
 
 

@@ -103,6 +103,10 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - Rate limits key on the header or the cookie. `Settings` no longer prints `database_url`.
 - Web and API must share a site in production (for example `app.` and `api.` on one domain).
 
+## Step 5e: invite by code — done
+- Migration 0005 makes `invitations.email` optional (a row with no email is a code). `POST /groups/{id}/invite-code` (any member; optional `memberID`) returns an 8-character code (`ABCD-2345`, 7 days); `POST /invitations/join {code}` adds the account and returns the group. Group codes are reusable until they expire; person codes link once. Codes are stored hashed, typed forgivingly (case, dash, I/L/O), and joining is rate limited per IP like sign-in. Email invitations are unchanged; the two kinds cannot be used on each other's route.
+- Supabase `public` schema is migrated to 0005.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

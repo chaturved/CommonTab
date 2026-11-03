@@ -128,3 +128,24 @@ class TestMigrations:
         with engine.begin() as connection:
             downgrade(connection, '0003')
         assert 'member_id' not in names()
+
+    def test_invitations_may_have_no_email_from_0005_and_downgrade_drops_those_codes(self, scratch):
+        engine, schema = scratch
+        nullable = lambda: next(c['nullable'] for c in inspect(engine).get_columns('invitations', schema=schema)  # noqa: E731
+                                if c['name'] == 'email')
+        with engine.begin() as connection:
+            upgrade(connection, '0004')
+        assert nullable() is False
+        with engine.begin() as connection:
+            upgrade(connection)
+            run = lambda sql, **p: connection.execute(text(sql), p)  # noqa: E731
+            user, group = uuid4(), uuid4()
+            run("INSERT INTO users VALUES (:i, 'a@x.com', 'Ada', 'h', now())", i=user)
+            run("INSERT INTO expense_groups VALUES (:g, 'Trip', 'USD', :u, now(), 1)", g=group, u=user)
+            run("INSERT INTO invitations (token_hash, group_id, email, expires_at) VALUES ('code', :g, NULL, now())", g=group)
+            run("INSERT INTO invitations (token_hash, group_id, email, expires_at) VALUES ('mail', :g, 'b@x.com', now())", g=group)
+        assert nullable() is True
+        with engine.begin() as connection:
+            downgrade(connection, '0004')
+            remaining = connection.execute(text('SELECT token_hash FROM invitations')).scalars().all()
+        assert remaining == ['mail'] and nullable() is False

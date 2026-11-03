@@ -6,6 +6,7 @@ from app.core.config import Settings
 from app.core.db import Database, get_database
 from app.core.ratelimit import RateLimiters, get_rate_limiters
 from app.services.accounts import AccountService
+from app.services.invitations import InvitationService
 
 PASSWORD = 'correct horse battery staple'
 
@@ -81,3 +82,12 @@ class TestRateLimitRoute:
         other = self.client.post('/v1/auth/sessions', json=body, headers={'X-Forwarded-For': '2.2.2.2'})
 
         assert (first.status_code, other.status_code) == (200, 200)
+
+    def test_guessing_codes_is_limited_like_signing_in(self):
+        self.limit(rate_limit_auth_per_minute=2)
+        invitations = MagicMock(spec_set=InvitationService)
+        self.overrides[InvitationService] = lambda: invitations
+
+        statuses = [self.client.post('/v1/invitations/join', json={'code': 'ABCD-2345'}).status_code for _ in range(3)]
+
+        assert statuses == [200, 200, 429]

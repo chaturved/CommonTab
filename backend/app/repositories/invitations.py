@@ -14,7 +14,7 @@ class InvitationRepository:
     def __init__(self, connection: Connection = DbConnection):
         self.connection = connection
 
-    def insert_invitation(self, token_hash: str, group_id: UUID, email: str, expires_at: datetime,
+    def insert_invitation(self, token_hash: str, group_id: UUID, email: str | None, expires_at: datetime,
                           member_id: UUID | None = None) -> None:
         self.connection.execute(text('''INSERT INTO invitations (token_hash, group_id, email, expires_at, accepted_at, member_id)
                            VALUES (:h, :g, :email, :e, NULL, :m)'''),

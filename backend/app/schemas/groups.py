@@ -89,3 +89,12 @@ class RenameGroupInput(BaseModel):
 
 class AcceptInvitation(BaseModel):
     inviteToken: str
+
+
+class InviteCodeInput(BaseModel):
+    # An existing person without an account: joining with this code links that person to the account (once).
+    member_id: UUID | None = Field(default=None, alias="memberID")
+
+
+class JoinInput(BaseModel):
+    code: str = Field(min_length=1, max_length=32)
