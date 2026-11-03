@@ -56,11 +56,12 @@ describe('Avatar', () => {
     expect(screen.getByLabelText('Sam Miller')).toBeTruthy();
   });
 
-  test('stack lists every member to screen readers and shows +N', async () => {
+  test('stack lists every member to screen readers and folds the rest into one +N circle', async () => {
     const members = ['Ann', 'Ben', 'Cy', 'Di', 'Ed'].map((name) => ({ id: name, name }));
     await render(<AvatarStack members={members} />);
     expect(screen.getByLabelText('Members: Ann, Ben, Cy, Di, Ed')).toBeTruthy();
-    expect(screen.getByText('+2')).toBeTruthy();
+    expect(screen.getByText('+3', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('Cy')).toBeNull();
   });
 });
 

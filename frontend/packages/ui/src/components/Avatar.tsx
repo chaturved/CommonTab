@@ -49,7 +49,8 @@ export interface AvatarStackProps {
 }
 
 export function AvatarStack({ members, max = 3, className }: AvatarStackProps) {
-  const shown = members.slice(0, max);
+  const overflow = members.length > max;
+  const shown = overflow ? members.slice(0, max - 1) : members;
   const extra = members.length - shown.length;
   return (
     <View accessible accessibilityLabel={`Members: ${members.map((m) => m.name).join(', ')}`} className={cx('flex-row items-center', className)}>
@@ -58,10 +59,12 @@ export function AvatarStack({ members, max = 3, className }: AvatarStackProps) {
           <Avatar name={member.name} id={member.id} />
         </View>
       ))}
-      {extra > 0 ? (
-        <Text variant="caption" tone="muted" className="ml-1.5 font-bold">
-          +{extra}
-        </Text>
+      {overflow ? (
+        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden className="-ml-2.5 h-8 w-8 items-center justify-center rounded-pill border-2 border-card bg-divider">
+          <Text variant="caption" tone="fg-soft" className="text-[11px] font-bold">
+            +{extra}
+          </Text>
+        </View>
       ) : null}
     </View>
   );
