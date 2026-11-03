@@ -55,7 +55,7 @@ class TestExpenseService:
         self.expenses.expense.side_effect = [None, expense_row(id=body.id)]
         self.save(body)
         inserted = self.expenses.insert_expense.call_args.args[0]
-        stored = expense_row(**{k: v for k, v in inserted.items() if k != 'updated_at'}, group_id=self.group_id)
+        stored = expense_row(**{k: v for k, v in inserted.items() if k != 'updated_at'})
         self.expenses.expense.side_effect = None
         self.expenses.expense.return_value = stored
         self.groups.bump_version.reset_mock()
