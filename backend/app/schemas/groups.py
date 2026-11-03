@@ -51,6 +51,16 @@ class ExpenseInput(BaseModel):
     participants: list[UUID] = Field(min_length=1, max_length=20)
     values: list[constr(max_length=32)] = Field(default_factory=list)
     version: int | None = Field(default=None, ge=1)
+    currency_code: str | None = Field(default=None, pattern=r"^[A-Z]{3}$", alias="currencyCode")
+    original_minor: int | None = Field(default=None, gt=0, le=100_000_000_000, alias="originalMinor")
+    rate_micros: int | None = Field(default=None, gt=0, le=1_000_000_000_000_000, alias="rateMicros")
+
+    @model_validator(mode="after")
+    def validate_foreign_currency(self) -> ExpenseInput:
+        given = [self.currency_code, self.original_minor, self.rate_micros]
+        if any(value is not None for value in given) and not all(value is not None for value in given):
+            raise ValueError("currencyCode, originalMinor and rateMicros go together")
+        return self
 
     @model_validator(mode="after")
     def validate_participants(self) -> ExpenseInput:

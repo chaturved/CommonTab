@@ -1,0 +1,10 @@
+[
+  { "name": "120.00 EUR at 1.08 is 129.60 USD", "input": { "original": 12000, "from": "EUR", "to": "USD", "rateMicros": 1080000 }, "expect": 12960 },
+  { "name": "half a cent rounds up: 0.05 EUR at 1.1", "input": { "original": 5, "from": "EUR", "to": "USD", "rateMicros": 1100000 }, "expect": 6 },
+  { "name": "just under half rounds down: 0.04 EUR at 1.12", "input": { "original": 4, "from": "EUR", "to": "USD", "rateMicros": 1120000 }, "expect": 4 },
+  { "name": "zero-decimal source: 5000 JPY at 0.0067 is 33.50 USD", "input": { "original": 5000, "from": "JPY", "to": "USD", "rateMicros": 6700 }, "expect": 3350 },
+  { "name": "zero-decimal target: 10.00 USD at 150.5 is 1505 JPY", "input": { "original": 1000, "from": "USD", "to": "JPY", "rateMicros": 150500000 }, "expect": 1505 },
+  { "name": "three-decimal source: 1.000 KWD at 3.25 is 3.25 USD", "input": { "original": 1000, "from": "KWD", "to": "USD", "rateMicros": 3250000 }, "expect": 325 },
+  { "name": "rate of one keeps the cents", "input": { "original": 1001, "from": "GBP", "to": "USD", "rateMicros": 1000000 }, "expect": 1001 },
+  { "name": "an amount that converts to nothing is refused", "input": { "original": 1, "from": "JPY", "to": "USD", "rateMicros": 1000 }, "error": true }
+]

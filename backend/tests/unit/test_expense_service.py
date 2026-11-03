@@ -11,7 +11,7 @@ from app.repositories.members import MemberRepository
 from app.schemas.groups import ExpenseInput
 from app.services.access import MembershipGuard
 from app.services.expenses import ExpenseService
-from rows import NOW, expense_row, member_row
+from rows import NOW, expense_row, group_row, member_row
 
 
 class TestExpenseService:
@@ -226,3 +226,66 @@ class TestExpenseActivity:
         self.expenses.expense.return_value = expense_row(group_id=self.group_id, deleted_at=NOW)
         self.service.delete_expense(str(self.group_id), str(stored.id), str(self.user_id))
         self.activity.record.assert_not_called()
+
+
+class TestForeignCurrencyExpense:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.expenses = MagicMock(spec_set=ExpenseRepository)
+        self.activity = MagicMock(spec_set=ActivityRepository)
+        self.me = member_row(name='Ada')
+        self.group_id, self.user_id = self.me.group_id, self.me.user_id
+        self.members.member_of.return_value = self.me
+        self.members.member_ids.return_value = {self.me.id}
+        self.groups.group.return_value = group_row(id=self.group_id, currency_code='USD')
+        self.expenses.expense.return_value = None
+        self.service = ExpenseService(self.expenses, self.members, self.groups, MembershipGuard(self.members), self.activity)
+
+    def body(self, **changes) -> ExpenseInput:
+        base = {'id': str(uuid4()), 'merchant': 'Hotel', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 12960,
+                'payerID': str(self.me.id), 'method': 'equal', 'participants': [str(self.me.id)],
+                'currencyCode': 'EUR', 'originalMinor': 12000, 'rateMicros': 1_080_000}
+        return ExpenseInput.model_validate({**base, **changes})
+
+    def save(self, body):
+        return self.service.save_expense(str(self.group_id), str(self.user_id), body)
+
+    def test_the_original_amount_currency_and_rate_are_stored_with_the_converted_amount(self):
+        body = self.body()
+        self.expenses.expense.side_effect = [None, expense_row(id=body.id)]
+
+        self.save(body)
+
+        values = self.expenses.insert_expense.call_args.args[0]
+        assert (values['amount_minor'], values['currency_code'], values['original_minor'], values['rate_micros']) == (12960, 'EUR', 12000, 1_080_000)
+
+    def test_an_amount_that_does_not_match_the_rate_is_refused_with_the_expected_amount(self):
+        with pytest.raises(APIError) as caught:
+            self.save(self.body(amountMinor=12961))
+
+        assert (caught.value.status, caught.value.code, caught.value.extra['expectedAmountMinor']) == (422, 'conversion_mismatch', 12960)
+        self.expenses.insert_expense.assert_not_called()
+
+    def test_the_groups_own_currency_is_not_a_foreign_currency(self):
+        with pytest.raises(APIError) as caught:
+            self.save(self.body(currencyCode='USD', amountMinor=12000, rateMicros=1_000_000))
+
+        assert caught.value.status == 422
+
+    def test_an_amount_too_small_to_convert_is_refused(self):
+        with pytest.raises(APIError) as caught:
+            self.save(self.body(currencyCode='JPY', originalMinor=1, rateMicros=1000, amountMinor=1))
+
+        assert caught.value.status == 422
+
+    @pytest.mark.parametrize('missing', ['currencyCode', 'originalMinor', 'rateMicros'])
+    def test_the_three_fields_go_together(self, missing):
+        data = {'id': str(uuid4()), 'merchant': 'Hotel', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 12960,
+                'payerID': str(self.me.id), 'method': 'equal', 'participants': [str(self.me.id)],
+                'currencyCode': 'EUR', 'originalMinor': 12000, 'rateMicros': 1_080_000}
+        del data[missing]
+
+        with pytest.raises(ValueError):
+            ExpenseInput.model_validate(data)

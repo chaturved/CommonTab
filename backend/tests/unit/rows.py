@@ -19,7 +19,7 @@ def expense_row(**changes) -> SimpleNamespace:
     return SimpleNamespace(**{
         'id': uuid4(), 'group_id': uuid4(), 'merchant': 'Dinner', 'occurred_at': NOW, 'category': 'other',
         'notes': '', 'amount_minor': 1001, 'payer_id': uuid4(), 'method': 'equal', 'allocations': [],
-        'input_values': [], 'version': 1, 'has_receipt': False, 'updated_at': NOW, 'deleted_at': None, **changes})
+        'input_values': [], 'version': 1, 'currency_code': None, 'original_minor': None, 'rate_micros': None, 'has_receipt': False, 'updated_at': NOW, 'deleted_at': None, **changes})
 
 
 def settlement_row(**changes) -> SimpleNamespace:

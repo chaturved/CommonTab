@@ -222,6 +222,10 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **App:** Invite has "Reset code" (the old code stops working, a new one shows) and, on the web, "Copy link" (`<site>/join/CODE`). `/join/CODE` opens the Join screen with the code filled in when signed in; when signed out it goes to Create account and joins after sign-up or sign-in.
 - **Not built:** native apps have no link to share (no domain yet); the web link uses the address the app is served from, not `commontab.app`.
 
+## Step 6f part 5: foreign-currency expenses
+- **Approved plan:** rates go through the backend (cached there), not from the apps; the app keeps the last rate per pair for offline.
+- **Commit 1 (server):** migration `0009` (`currency_code`, `original_minor`, `rate_micros`, all or none); the server checks `amountMinor` = converted original (`fixtures/money/convert.json`, shared with core `convertMinorUnits`). Not yet applied to Supabase.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

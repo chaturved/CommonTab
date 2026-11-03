@@ -23,6 +23,7 @@ def expense_payload(row: Row) -> dict:
             'occurredAt': format_utc(row.occurred_at), 'category': row.category, 'notes': row.notes,
             'amountMinor': row.amount_minor, 'payerID': str(row.payer_id), 'method': row.method,
             'allocations': row.allocations, 'values': row.input_values, 'version': row.version,
+            'currencyCode': row.currency_code, 'originalMinor': row.original_minor, 'rateMicros': row.rate_micros,
             'hasReceipt': row.has_receipt, 'updatedAt': format_utc(row.updated_at),
             'deletedAt': format_utc(row.deleted_at) if row.deleted_at else None}
 

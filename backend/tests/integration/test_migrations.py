@@ -184,3 +184,16 @@ class TestMigrations:
         with engine.begin() as connection:
             downgrade(connection, '0007')
         assert 'activity' not in tables(engine, schema)
+
+    def test_foreign_currency_columns_exist_from_0009_and_go_on_downgrade(self, scratch):
+        engine, schema = scratch
+        columns = lambda: {c['name'] for c in inspect(engine).get_columns('expenses', schema=schema)}  # noqa: E731
+        with engine.begin() as connection:
+            upgrade(connection, '0008')
+        assert 'rate_micros' not in columns()
+        with engine.begin() as connection:
+            upgrade(connection)
+        assert {'currency_code', 'original_minor', 'rate_micros'} <= columns()
+        with engine.begin() as connection:
+            downgrade(connection, '0008')
+        assert 'rate_micros' not in columns()

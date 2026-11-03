@@ -8,6 +8,7 @@ from sqlalchemy import Row
 from fastapi import Depends
 
 from app.core.errors import fail
+from app.domain.currency import convert_minor
 from app.domain.rules import allocation, parse_utc
 from app.repositories.activity import ActivityRepository
 from app.repositories.expenses import ExpenseRepository
@@ -38,7 +39,9 @@ class ExpenseService:
         participants = [str(member) for member in input.participants]
         allocations = allocation(input.amount_minor, input.method, participants, input.values)
         me = self.guard.require(gid, uid)
-        if self.groups.group(gid).archived_at is not None:
+        group = self.groups.group(gid)
+        self.check_conversion(group.currency_code, input)
+        if group.archived_at is not None:
             self.groups.unarchive(gid)
         members = self.members.member_ids(gid)
         if input.payer_id not in members or not set(input.participants).issubset(members):
@@ -49,6 +52,7 @@ class ExpenseService:
             'category': input.category, 'notes': input.notes, 'amount_minor': input.amount_minor,
             'payer_id': input.payer_id, 'method': input.method, 'allocations': allocations,
             'input_values': input.values, 'updated_at': datetime.now(timezone.utc),
+            'currency_code': input.currency_code, 'original_minor': input.original_minor, 'rate_micros': input.rate_micros,
         }
         if existing:
             if existing.group_id != gid:
@@ -75,6 +79,19 @@ class ExpenseService:
         self.groups.bump_version(gid)
         return expense_payload(self.expenses.expense(input.id))
 
+    @staticmethod
+    def check_conversion(group_currency: str, input: ExpenseInput) -> None:
+        if input.currency_code is None:
+            return
+        if input.currency_code == group_currency:
+            fail(422, 'The expense is already in the group currency')
+        try:
+            expected = convert_minor(input.original_minor, input.currency_code, group_currency, input.rate_micros)
+        except ValueError as problem:
+            fail(422, str(problem))
+        if input.amount_minor != expected:
+            fail(422, 'The amount does not match the original amount and rate', 'conversion_mismatch', expectedAmountMinor=expected)
+
     def log(self, group_id: UUID, actor_id: UUID, kind: str, subject_id: UUID, data: dict, at: datetime) -> None:
         self.activity.record(group_id, actor_id, kind, subject_id, data, at)
 
@@ -84,7 +101,8 @@ class ExpenseService:
                 and row.category == values['category'] and row.notes == values['notes']
                 and row.amount_minor == values['amount_minor'] and row.payer_id == values['payer_id']
                 and row.method == values['method'] and row.allocations == values['allocations']
-                and row.input_values == values['input_values'])
+                and row.input_values == values['input_values'] and row.currency_code == values['currency_code']
+                and row.original_minor == values['original_minor'] and row.rate_micros == values['rate_micros'])
 
     def delete_expense(self, group_id: str, expense_id: str, user_id: str) -> None:
         gid = UUID(group_id)
