@@ -5,11 +5,18 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
+    "test": "jest --no-watchman",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "nativewind": "4.2.7",
     "react": "*",
     "react-native": "*"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^14.1.0",
+    "@types/react": "^19.3.0",
+    "jest-expo": "^58.0.13",
+    "react-test-renderer": "^19.3.0"
   }
 }

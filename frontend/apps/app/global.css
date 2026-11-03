@@ -2,5 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --probe: #0b6b58; }
-@media (prefers-color-scheme: dark) { :root { --probe: #5fd3b3; } }
