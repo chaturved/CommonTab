@@ -8,3 +8,4 @@ export * from './outbox';
 export * from './api';
 export * from './auth';
 export * from './sync';
+export * from './views';
