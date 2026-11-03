@@ -11,6 +11,7 @@ from app.core.errors import fail
 from app.core.security import hash_token
 from app.domain.emails import normalize_email
 from app.domain.short_codes import display_code, new_code, normalize_code
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.invitations import InvitationRepository
 from app.repositories.members import MemberRepository
@@ -26,7 +27,9 @@ class InvitationService:
                  members: MemberRepository = Depends(MemberRepository),
                  groups: GroupRepository = Depends(GroupRepository), users: UserRepository = Depends(UserRepository),
                  guard: MembershipGuard = Depends(MembershipGuard),
-                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder),
+                 activity: ActivityRepository = Depends(ActivityRepository)):
+        self.activity = activity
         self.invitations = invitations
         self.members = members
         self.groups = groups
@@ -83,8 +86,11 @@ class InvitationService:
                     fail(409, 'That person was already linked to an account', 'id_conflict')
                 self.members.link_member(person.id, uid)
                 self.invitations.accept_invitation(token_hash, now)
+                joined = person.id
             else:
-                self.members.insert_member(uuid4(), row.group_id, uid, self.users.user_by_id(uid).name, now)
+                joined = uuid4()
+                self.members.insert_member(joined, row.group_id, uid, self.users.user_by_id(uid).name, now)
+            self.activity.record(row.group_id, joined, 'member.joined', joined, {}, now)
             self.groups.bump_version(row.group_id)
         return self.snapshots.build(row.group_id, uid)
 
@@ -105,8 +111,11 @@ class InvitationService:
             if person.user_id is not None:
                 fail(409, 'That person was already linked to an account', 'id_conflict')
             self.members.link_member(person.id, uid)
+            joined = person.id
         else:
-            self.members.insert_member(uuid4(), row.group_id, uid, self.users.user_by_id(uid).name, now)
+            joined = uuid4()
+            self.members.insert_member(joined, row.group_id, uid, self.users.user_by_id(uid).name, now)
         self.invitations.accept_invitation(token_hash, now)
+        self.activity.record(row.group_id, joined, 'member.joined', joined, {}, now)
         self.groups.bump_version(row.group_id)
         return self.snapshots.build(row.group_id, uid)

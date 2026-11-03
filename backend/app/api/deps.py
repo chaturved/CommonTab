@@ -8,6 +8,7 @@ from app.core.config import CLIENT_HEADER, SESSION_COOKIE
 from app.core.errors import APIError
 from app.core.ratelimit import RateLimiters, get_rate_limiters
 from app.services.accounts import AccountService
+from app.services.activity import ActivityService
 from app.services.analytics import AnalyticsService
 from app.services.bill_sessions import BillSessionService
 from app.services.expenses import ExpenseService
@@ -26,6 +27,7 @@ SettlementsDep = Annotated[SettlementService, Depends(SettlementService)]
 ReceiptsDep = Annotated[ReceiptService, Depends(ReceiptService)]
 BillSessionsDep = Annotated[BillSessionService, Depends(BillSessionService)]
 AnalyticsDep = Annotated[AnalyticsService, Depends(AnalyticsService)]
+ActivityDep = Annotated[ActivityService, Depends(ActivityService)]
 
 
 def enforce_rate_limit(request: Request, limiters: Annotated[RateLimiters, Depends(get_rate_limiters)]) -> None:

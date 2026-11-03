@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from app.core.errors import fail
 from app.domain.rules import format_utc
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
@@ -19,7 +20,9 @@ class GroupService:
     def __init__(self, groups: GroupRepository = Depends(GroupRepository),
                  members: MemberRepository = Depends(MemberRepository), users: UserRepository = Depends(UserRepository),
                  guard: MembershipGuard = Depends(MembershipGuard),
-                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder),
+                 activity: ActivityRepository = Depends(ActivityRepository)):
+        self.activity = activity
         self.groups = groups
         self.members = members
         self.users = users
@@ -54,6 +57,8 @@ class GroupService:
         for member_id, member_user, member_name in people:
             if not self.members.insert_member(member_id, group_id, member_user, member_name, now):
                 fail(409, 'Member ID already in use', 'id_conflict')
+        creator = next(member_id for member_id, member_user, _ in people if member_user == uid)
+        self.activity.record(group_id, creator, 'group.created', group_id, {'name': name}, now)
         return self.snapshots.build(group_id, uid), True
 
     def _replay(self, group_id: UUID, uid: UUID, name: str, input: GroupInput) -> dict:
@@ -80,10 +85,12 @@ class GroupService:
         if not name:
             fail(422, 'Name is required')
         gid, mid = UUID(group_id), UUID(member_id)
-        self.guard.require(gid, UUID(user_id))
+        me = self.guard.require(gid, UUID(user_id))
         existing = self.members.member(mid, lock=True)
         if existing is None:
-            self.members.insert_member(mid, gid, None, name, datetime.now(timezone.utc))
+            now = datetime.now(timezone.utc)
+            self.members.insert_member(mid, gid, None, name, now)
+            self.activity.record(gid, me.id, 'member.added', mid, {'name': name}, now)
             self.groups.bump_version(gid)
         elif existing.group_id != gid:
             fail(409, 'Member ID belongs to another group', 'id_conflict')
@@ -114,31 +121,38 @@ class GroupService:
             if not others:
                 fail(409, 'You are the only person with an account here. Delete the group instead.', 'last_account')
             self.groups.set_owner(gid, others[0])
-        self.members.remove_member(me.id, datetime.now(timezone.utc))
+        now = datetime.now(timezone.utc)
+        self.members.remove_member(me.id, now)
+        self.activity.record(gid, me.id, 'member.left', me.id, {}, now)
         self.groups.bump_version(gid)
 
     def remove_member(self, group_id: str, member_id: str, user_id: str) -> None:
         gid, uid, mid = UUID(group_id), UUID(user_id), UUID(member_id)
-        self.guard.require(gid, uid)
+        me = self.guard.require(gid, uid)
         self._require_owner(gid, uid)
         target = self.members.member(mid, lock=True)
         if target is None or target.group_id != gid or target.removed_at is not None:
             fail(404, 'Member not found')
         if target.user_id == uid:
             fail(409, 'Use Leave group to remove yourself', 'use_leave')
-        self.members.remove_member(mid, datetime.now(timezone.utc))
+        now = datetime.now(timezone.utc)
+        self.members.remove_member(mid, now)
+        self.activity.record(gid, me.id, 'member.removed', mid, {'name': target.name}, now)
         self.groups.bump_version(gid)
 
     def archive(self, group_id: str, user_id: str) -> None:
         gid, uid = UUID(group_id), UUID(user_id)
-        self.guard.require(gid, uid)
+        me = self.guard.require(gid, uid)
         self._require_settled(self.snapshots.build(gid, uid))
-        self.groups.archive(gid, datetime.now(timezone.utc))
+        now = datetime.now(timezone.utc)
+        self.groups.archive(gid, now)
+        self.activity.record(gid, me.id, 'group.archived', gid, {}, now)
 
     def unarchive(self, group_id: str, user_id: str) -> None:
         gid = UUID(group_id)
-        self.guard.require(gid, UUID(user_id))
+        me = self.guard.require(gid, UUID(user_id))
         self.groups.unarchive(gid)
+        self.activity.record(gid, me.id, 'group.unarchived', gid, {}, datetime.now(timezone.utc))
 
     def delete_group(self, group_id: str, user_id: str) -> None:
         gid, uid = UUID(group_id), UUID(user_id)

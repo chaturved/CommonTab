@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.errors import APIError
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
 from app.repositories.settlements import SettlementRepository
@@ -28,7 +29,8 @@ class TestSettlementService:
         self.snapshots.build.return_value = {'balances': [{'memberID': str(self.bob), 'minorUnits': -500},
                                                           {'memberID': str(self.ada), 'minorUnits': 500}]}
         self.settlements.settlement.return_value = None
-        self.service = SettlementService(self.settlements, self.groups, MembershipGuard(self.members), self.snapshots)
+        self.activity = MagicMock(spec_set=ActivityRepository)
+        self.service = SettlementService(self.settlements, self.groups, MembershipGuard(self.members), self.snapshots, self.activity)
 
     def payment(self, amount, frm=None, to=None, id=None) -> SettlementInput:
         return SettlementInput.model_validate({'id': str(id or uuid4()), 'fromID': str(frm or self.bob),
@@ -89,3 +91,20 @@ class TestSettlementService:
             self.settle(self.payment(100, frm=uuid4(), to=self.ada))
         assert caught.value.status == 403
         self.snapshots.build.assert_not_called()
+
+    def test_a_recorded_payment_is_logged_with_who_paid_whom_and_how_much(self):
+        body = self.payment(500)
+        self.settlements.settlement.side_effect = [None, settlement_row(id=body.id, amount_minor=500)]
+
+        self.settle(body)
+
+        args = self.activity.record.call_args.args
+        assert (args[1], args[2], args[3], args[4]) == (self.bob, 'payment.recorded', body.id, {'fromID': str(self.bob), 'toID': str(self.ada), 'amountMinor': 500})
+
+    def test_a_repeated_payment_logs_nothing_more(self):
+        body = self.payment(200)
+        self.settlements.settlement.return_value = settlement_row(id=body.id, group_id=self.group_id, from_id=self.bob, to_id=self.ada, amount_minor=200)
+
+        self.settle(body)
+
+        self.activity.record.assert_not_called()

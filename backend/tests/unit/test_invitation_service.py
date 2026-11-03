@@ -6,6 +6,7 @@ import pytest
 
 from app.core.errors import APIError
 from app.core.security import hash_token
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.invitations import InvitationRepository
 from app.repositories.members import MemberRepository
@@ -30,8 +31,9 @@ class TestInvite:
         self.cy = user_row(name='Cy', email='cy@example.com')
         self.users.user_by_id.return_value = self.cy
         self.members.is_member_email.return_value = False
+        self.activity = MagicMock(spec_set=ActivityRepository)
         self.service = InvitationService(self.invitations, self.members, self.groups, self.users,
-                                         MembershipGuard(self.members), self.snapshots)
+                                         MembershipGuard(self.members), self.snapshots, self.activity)
 
 
     def invite(self, email='cy@example.com', member_id=None):
@@ -84,8 +86,9 @@ class TestAcceptInvite:
         self.cy = user_row(name='Cy', email='cy@example.com')
         self.users.user_by_id.return_value = self.cy
         self.members.is_member_email.return_value = False
+        self.activity = MagicMock(spec_set=ActivityRepository)
         self.service = InvitationService(self.invitations, self.members, self.groups, self.users,
-                                         MembershipGuard(self.members), self.snapshots)
+                                         MembershipGuard(self.members), self.snapshots, self.activity)
         self.invitation = invitation_row(group_id=self.group_id, token_hash=hash_token('code'))
         self.invitations.invitation.return_value = self.invitation
         self.members.member_of.return_value = None

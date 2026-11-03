@@ -210,6 +210,11 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Not built:** the design's "1 change you made offline couldn't be sent. Review it" link in the removed view (the count shows, without the link); a transfer-ownership screen (leaving hands it on automatically); removing a person who has an account is allowed even while they owe, as in the design.
 
 
+## Step 6f part 3: change feed and Activity — backend done, app next
+- **Data model (approved):** migration `0008`: `activity` (sequence, group, acting member, kind, subject, data, time). Applied to Supabase.
+- **API:** `GET /v1/activity?since=&limit=` (see `docs/shared-api.md`). Events are written where the change happens (expenses, payments, joining, leaving, removing, archiving, creating a group, adding a person); a repeated request records nothing; an old group has no history before this.
+- **Tests:** backend 524 passing (unit 336).
+
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 

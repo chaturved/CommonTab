@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from app.core.errors import fail
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.settlements import SettlementRepository
 from app.schemas.groups import SettlementInput
@@ -17,7 +18,9 @@ class SettlementService:
     def __init__(self, settlements: SettlementRepository = Depends(SettlementRepository),
                  groups: GroupRepository = Depends(GroupRepository),
                  guard: MembershipGuard = Depends(MembershipGuard),
-                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder)):
+                 snapshots: SnapshotBuilder = Depends(SnapshotBuilder),
+                 activity: ActivityRepository = Depends(ActivityRepository)):
+        self.activity = activity
         self.settlements = settlements
         self.groups = groups
         self.guard = guard
@@ -48,5 +51,7 @@ class SettlementService:
                  else 'Settlement exceeds outstanding balance', 'exceeds_balance', maxAmountMinor=owed)
         self.settlements.insert_settlement(input.id, gid, input.from_id, input.to_id, input.amount_minor,
                                           datetime.now(timezone.utc))
+        self.activity.record(gid, me.id, 'payment.recorded', input.id,
+                             {'fromID': from_id, 'toID': to_id, 'amountMinor': input.amount_minor}, datetime.now(timezone.utc))
         self.groups.bump_version(gid)
         return settlement_payload(self.settlements.settlement(input.id)), True

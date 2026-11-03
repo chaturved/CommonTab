@@ -7,6 +7,7 @@ import pytest
 from app.core.errors import APIError
 from app.core.security import hash_token
 from app.domain.short_codes import normalize_code
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.invitations import InvitationRepository
 from app.repositories.members import MemberRepository
@@ -33,8 +34,9 @@ class TestInviteCodeService:
         self.cy = user_row(name='Cy', email='cy@example.com')
         self.users.user_by_id.return_value = self.cy
         self.snapshots.build.return_value = {'id': 'snapshot'}
+        self.activity = MagicMock(spec_set=ActivityRepository)
         self.service = InvitationService(self.invitations, self.members, self.groups, self.users,
-                                         MembershipGuard(self.members), self.snapshots)
+                                         MembershipGuard(self.members), self.snapshots, self.activity)
 
 
     def test_a_code_is_stored_hashed_with_no_email_and_shown_in_two_groups(self):

@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.errors import APIError
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
@@ -26,7 +27,8 @@ class TestGroupLifecycle:
         self.members.member_of.return_value = self.me
         self.groups.group.return_value = group_row(id=self.group_id, owner_id=uuid4())
         self.settled()
-        self.service = GroupService(self.groups, self.members, MagicMock(spec_set=UserRepository), MembershipGuard(self.members), self.snapshots)
+        self.activity = MagicMock(spec_set=ActivityRepository)
+        self.service = GroupService(self.groups, self.members, MagicMock(spec_set=UserRepository), MembershipGuard(self.members), self.snapshots, self.activity)
 
     def owing(self, minor: int) -> None:
         self.snapshots.build.return_value = {'balances': [{'memberID': str(self.me.id), 'minorUnits': minor}, {'memberID': 'sam', 'minorUnits': -minor}]}
@@ -147,3 +149,24 @@ class TestGroupLifecycle:
         self.members.member_of.return_value = None
 
         assert self.refused(self.service.leave, str(self.user_id)).status == 404
+
+    def kinds(self):
+        return [c.args[2] for c in self.activity.record.call_args_list]
+
+    def test_leaving_and_removing_are_logged_with_the_actor(self):
+        self.service.leave(str(self.group_id), str(self.user_id))
+        assert self.kinds() == ['member.left'] and self.activity.record.call_args.args[1] == self.me.id
+
+        self.activity.record.reset_mock()
+        self.own_the_group()
+        sam = member_row(group_id=self.group_id, user_id=None, name='Sam')
+        self.members.member.return_value = sam
+        self.service.remove_member(str(self.group_id), str(sam.id), str(self.user_id))
+        assert self.kinds() == ['member.removed']
+        assert self.activity.record.call_args.args[3:5] == (sam.id, {'name': 'Sam'})
+
+    def test_archiving_and_unarchiving_are_logged(self):
+        self.service.archive(str(self.group_id), str(self.user_id))
+        self.service.unarchive(str(self.group_id), str(self.user_id))
+
+        assert self.kinds() == ['group.archived', 'group.unarchived']

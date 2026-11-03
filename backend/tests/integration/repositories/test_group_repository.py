@@ -69,6 +69,8 @@ class TestGroupRepository:
             'amount_minor': 1000, 'payer_id': ada, 'method': 'equal', 'allocations': [], 'input_values': [], 'version': 1,
             'updated_at': NOW})
         SettlementRepository(self.connection).insert_settlement(uuid4(), group_id, sam, ada, 100, NOW)
+        from app.repositories.activity import ActivityRepository
+        ActivityRepository(self.connection).record(group_id, ada, 'group.created', group_id, {}, NOW)
 
         self.repo.delete_group(group_id)
 

@@ -7,7 +7,7 @@ from app.core.db import create_db_engine
 from app.core.migrate import downgrade, upgrade
 
 TABLES = {'users', 'auth_tokens', 'expense_groups', 'members', 'invitations', 'expenses',
-          'settlements', 'bill_sessions', 'event_counts', 'password_resets', 'alembic_version'}
+          'settlements', 'bill_sessions', 'event_counts', 'password_resets', 'activity', 'alembic_version'}
 
 
 @pytest.fixture
@@ -172,3 +172,15 @@ class TestMigrations:
         with engine.begin() as connection:
             downgrade(connection, '0006')
         assert 'deleted_at' not in columns('expense_groups') and 'removed_at' not in columns('members')
+
+    def test_the_activity_log_exists_from_0008_and_goes_on_downgrade(self, scratch):
+        engine, schema = scratch
+        with engine.begin() as connection:
+            upgrade(connection, '0007')
+        assert 'activity' not in tables(engine, schema)
+        with engine.begin() as connection:
+            upgrade(connection)
+        assert 'activity' in tables(engine, schema)
+        with engine.begin() as connection:
+            downgrade(connection, '0007')
+        assert 'activity' not in tables(engine, schema)

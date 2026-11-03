@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.errors import APIError
+from app.repositories.activity import ActivityRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
@@ -32,8 +33,9 @@ class TestGroupService:
         self.groups.insert_group.return_value = True
         self.members.insert_member.return_value = True
         self.snapshots.build.return_value = {'id': 'snapshot'}
+        self.activity = MagicMock(spec_set=ActivityRepository)
         self.service = GroupService(self.groups, self.members, self.users, MembershipGuard(self.members),
-                                    self.snapshots)
+                                    self.snapshots, self.activity)
 
 
     def test_creating_a_group_adds_the_creator_as_its_only_member(self):

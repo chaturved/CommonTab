@@ -9,6 +9,7 @@ from fastapi import Depends
 
 from app.core.errors import fail
 from app.domain.rules import allocation, parse_utc
+from app.repositories.activity import ActivityRepository
 from app.repositories.expenses import ExpenseRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
@@ -21,11 +22,13 @@ class ExpenseService:
     def __init__(self, expenses: ExpenseRepository = Depends(ExpenseRepository),
                  members: MemberRepository = Depends(MemberRepository),
                  groups: GroupRepository = Depends(GroupRepository),
-                 guard: MembershipGuard = Depends(MembershipGuard)):
+                 guard: MembershipGuard = Depends(MembershipGuard),
+                 activity: ActivityRepository = Depends(ActivityRepository)):
         self.expenses = expenses
         self.members = members
         self.groups = groups
         self.guard = guard
+        self.activity = activity
 
     def save_expense(self, group_id: str, user_id: str, input: ExpenseInput) -> dict:
         occurred_at = parse_utc(input.occurred_at)
@@ -34,7 +37,7 @@ class ExpenseService:
         gid, uid = UUID(group_id), UUID(user_id)
         participants = [str(member) for member in input.participants]
         allocations = allocation(input.amount_minor, input.method, participants, input.values)
-        self.guard.require(gid, uid)
+        me = self.guard.require(gid, uid)
         if self.groups.group(gid).archived_at is not None:
             self.groups.unarchive(gid)
         members = self.members.member_ids(gid)
@@ -54,6 +57,7 @@ class ExpenseService:
                 if input.version != existing.version:
                     fail(409, 'Expense was deleted', 'version_conflict', current=expense_payload(existing))
                 self.expenses.update_expense({**values, 'version': existing.version + 1, 'deleted_at': None})
+                self.log(gid, me.id, 'expense.added', input.id, {'merchant': values['merchant'], 'amountMinor': input.amount_minor}, values['updated_at'])
             elif self.same_content(existing, values):
                 return expense_payload(existing)
             else:
@@ -61,12 +65,18 @@ class ExpenseService:
                     fail(409, 'Expense changed; reload before saving', 'version_conflict',
                          current=expense_payload(existing))
                 self.expenses.update_expense({**values, 'version': existing.version + 1, 'deleted_at': None})
+                self.log(gid, me.id, 'expense.edited', input.id, {'merchant': values['merchant'], 'amountMinor': input.amount_minor,
+                         'previousMerchant': existing.merchant, 'previousAmountMinor': existing.amount_minor}, values['updated_at'])
         else:
             if input.version is not None:
                 fail(409, 'Expense missing; reload before saving', 'not_found')
             self.expenses.insert_expense({**values, 'version': 1})
+            self.log(gid, me.id, 'expense.added', input.id, {'merchant': values['merchant'], 'amountMinor': input.amount_minor}, values['updated_at'])
         self.groups.bump_version(gid)
         return expense_payload(self.expenses.expense(input.id))
+
+    def log(self, group_id: UUID, actor_id: UUID, kind: str, subject_id: UUID, data: dict, at: datetime) -> None:
+        self.activity.record(group_id, actor_id, kind, subject_id, data, at)
 
     @staticmethod
     def same_content(row: Row, values: dict) -> bool:
@@ -78,11 +88,13 @@ class ExpenseService:
 
     def delete_expense(self, group_id: str, expense_id: str, user_id: str) -> None:
         gid = UUID(group_id)
-        self.guard.require(gid, UUID(user_id))
+        me = self.guard.require(gid, UUID(user_id))
         existing = self.expenses.expense(UUID(expense_id), lock=True)
         if existing is None or existing.deleted_at is not None:
             return
         if existing.group_id != gid:
             fail(404, 'Expense not found')
-        self.expenses.tombstone_expense(existing.id, datetime.now(timezone.utc))
+        now = datetime.now(timezone.utc)
+        self.expenses.tombstone_expense(existing.id, now)
+        self.log(gid, me.id, 'expense.deleted', existing.id, {'merchant': existing.merchant, 'amountMinor': existing.amount_minor}, now)
         self.groups.bump_version(gid)

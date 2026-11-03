@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.errors import APIError
+from app.repositories.activity import ActivityRepository
 from app.repositories.expenses import ExpenseRepository
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
@@ -25,7 +26,8 @@ class TestExpenseService:
         self.members.member_of.return_value = self.me
         self.members.member_ids.return_value = {self.me.id, self.other}
         self.expenses.expense.return_value = None
-        self.service = ExpenseService(self.expenses, self.members, self.groups, MembershipGuard(self.members))
+        self.activity = MagicMock(spec_set=ActivityRepository)
+        self.service = ExpenseService(self.expenses, self.members, self.groups, MembershipGuard(self.members), self.activity)
 
     def expense_input(self, **changes) -> ExpenseInput:
         body = {'id': str(uuid4()), 'merchant': 'Dinner', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 1001,
@@ -155,3 +157,72 @@ class TestExpenseService:
         with pytest.raises(APIError) as caught:
             self.delete(uuid4())
         assert caught.value.status == 404
+
+
+class TestExpenseActivity:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.members = MagicMock(spec_set=MemberRepository)
+        self.groups = MagicMock(spec_set=GroupRepository)
+        self.expenses = MagicMock(spec_set=ExpenseRepository)
+        self.activity = MagicMock(spec_set=ActivityRepository)
+        self.me = member_row(name='Ada')
+        self.group_id, self.user_id = self.me.group_id, self.me.user_id
+        self.members.member_of.return_value = self.me
+        self.members.member_ids.return_value = {self.me.id}
+        self.service = ExpenseService(self.expenses, self.members, self.groups, MembershipGuard(self.members), self.activity)
+
+    def body(self, **changes) -> ExpenseInput:
+        base = {'id': str(uuid4()), 'merchant': 'Dinner', 'occurredAt': '2026-09-30T12:00:00Z', 'amountMinor': 16000,
+                'payerID': str(self.me.id), 'method': 'equal', 'participants': [str(self.me.id)]}
+        return ExpenseInput.model_validate({**base, **changes})
+
+    def save(self, body):
+        return self.service.save_expense(str(self.group_id), str(self.user_id), body)
+
+    def logged(self):
+        return [(c.args[1], c.args[2], c.args[4]) for c in self.activity.record.call_args_list]
+
+    def test_a_new_expense_is_logged_as_added_by_you_with_its_description_and_amount(self):
+        body = self.body()
+        self.expenses.expense.side_effect = [None, expense_row(id=body.id)]
+
+        self.save(body)
+
+        assert self.logged() == [(self.me.id, 'expense.added', {'merchant': 'Dinner', 'amountMinor': 16000})]
+        assert self.activity.record.call_args.args[3] == body.id
+
+    def test_changing_the_amount_is_logged_as_an_edit_with_the_old_amount(self):
+        body = self.body(amountMinor=16350, version=1)
+        self.expenses.expense.side_effect = [
+            expense_row(id=body.id, group_id=self.group_id, merchant='Dinner', amount_minor=16000, version=1),
+            expense_row(id=body.id)]
+
+        self.save(body)
+
+        assert self.logged() == [(self.me.id, 'expense.edited', {'merchant': 'Dinner', 'amountMinor': 16350, 'previousMerchant': 'Dinner', 'previousAmountMinor': 16000})]
+
+    def test_saving_the_same_thing_again_logs_nothing(self):
+        body = self.body()
+        self.expenses.expense.side_effect = [None, expense_row(id=body.id)]
+        self.save(body)
+        inserted = self.expenses.insert_expense.call_args.args[0]
+        self.expenses.expense.side_effect = None
+        self.expenses.expense.return_value = expense_row(**{k: v for k, v in inserted.items() if k != 'updated_at'})
+        self.activity.record.reset_mock()
+
+        self.save(body)
+
+        self.activity.record.assert_not_called()
+
+    def test_deleting_is_logged_once_and_deleting_again_logs_nothing(self):
+        stored = expense_row(group_id=self.group_id, merchant='Dinner', amount_minor=16000)
+        self.expenses.expense.return_value = stored
+
+        self.service.delete_expense(str(self.group_id), str(stored.id), str(self.user_id))
+        assert self.logged() == [(self.me.id, 'expense.deleted', {'merchant': 'Dinner', 'amountMinor': 16000})]
+
+        self.activity.record.reset_mock()
+        self.expenses.expense.return_value = expense_row(group_id=self.group_id, deleted_at=NOW)
+        self.service.delete_expense(str(self.group_id), str(stored.id), str(self.user_id))
+        self.activity.record.assert_not_called()
