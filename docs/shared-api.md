@@ -1,6 +1,6 @@
 # Shared expense API
 
-Base path: `/v1`. The OpenAPI schema is available at `/openapi.json`. Protected routes require `Authorization: Bearer <accessToken>`. Request and response JSON use camel case for shared expense fields. All money is an integer count of the group's minor currency unit: USD 1250 represents $12.50; JPY 1250 represents ¥1,250.
+Base path: `/v1`. Everyone in a group is a **member**: a person with a name who may or may not have an account. Member ids (not account ids) are what expenses, splits, balances and payments refer to. The OpenAPI schema is available at `/openapi.json`. Protected routes require `Authorization: Bearer <accessToken>`. Request and response JSON use camel case for shared expense fields. All money is an integer count of the group's minor currency unit: USD 1250 represents $12.50; JPY 1250 represents ¥1,250.
 
 ## Accounts and groups
 
@@ -8,12 +8,15 @@ Base path: `/v1`. The OpenAPI schema is available at `/openapi.json`. Protected 
 - `POST /auth/sessions` with `{email,password}` returns the same session shape. `DELETE /auth/sessions` revokes the current token. Tokens expire after 30 days.
 - `GET /me` returns the current account; `PATCH /me` changes its name.
 - `GET /healthz` (no login) returns `{"status":"ok"}` when the API can reach its database and `503 {"status":"unavailable"}` when it cannot, so the app can tell "server down" from "no connection". `/health` is an older alias.
-- `GET /groups` returns complete group snapshots for the member. `POST /groups` with `{name,currencyCode}` creates one. `GET /groups/{groupId}` returns its current snapshot. `PATCH /groups/{groupId}` changes its name.
-- `POST /groups/{groupId}/invitations` with `{email}` returns a private seven-day code. `POST /invitations/accept` with `{inviteToken}` joins only if the signed-in account has that email. The application displays the code for private sharing; it does not send email.
+- `GET /groups` returns complete group snapshots for the signed-in account. `GET /groups/{groupId}` returns its current snapshot. `PATCH /groups/{groupId}` changes its name.
+- A snapshot lists `members`: `{id, name, userID, email}`. `userID` and `email` are `null` for a person without an account. `meMemberID` is the member linked to the signed-in account (the app's "me"), and `ownerID` is the owner's member id.
+- `POST /groups` with `{name, currencyCode}` creates a group with the creator as its only member (`201`). Optional fields support uploading a group that already exists on a phone: `id` (a client UUID), `members: [{id, name}]` and `meMemberID` (which of those people is the signed-in account; required with `members`, up to 50 people). Repeating the same request returns `200` with the existing group and creates nothing; the same `id` with a different body, or an id that belongs to someone else's group, returns `409` (`code: "id_conflict"`). A member id already used elsewhere also returns `409` and nothing is created.
+- `PUT /groups/{groupId}/members/{memberId}` with `{name}` adds a person without an account, or renames one. The client chooses `memberId`, so repeating a request is safe; any member of the group may call it, names need not be unique, and the last write wins. Returns `200` with the member; the same id in another group returns `409`.
+- `POST /groups/{groupId}/invitations` with `{email, memberID?}` returns a private seven-day code. With `memberID` (an existing person who has no account), accepting the invitation links that person to the accepting account, so their past expenses and balance become the account's; without it, accepting adds a new member named after the account. `POST /invitations/accept` with `{inviteToken}` joins only if the signed-in account has that email, and returns `409` if the account is already in the group or the person was linked in the meantime. The application displays the code for private sharing; it does not send email.
 
 ## Expenses
 
-`PUT /groups/{groupId}/expenses/{expenseId}` creates or replaces one expense:
+`PUT /groups/{groupId}/expenses/{expenseId}` creates or replaces one expense. `payerID` and `participants` are member ids of that group:
 
 ```json
 {
@@ -37,7 +40,7 @@ For `exact`, `values` contains one string per participant with integer **minor u
 
 ## Settlements and receipts
 
-`POST /groups/{groupId}/settlements` accepts `{id,fromID,toID,amountMinor}` and returns `201` with the settlement. The signed-in member must be one of the participants. The payer must have a negative balance, the recipient a positive balance, and the amount cannot exceed either outstanding side. These checks run against the balances at the moment the request is applied, never against a group version, so a payment queued offline does not go stale (`groupVersion` is accepted and ignored for older clients). Repeating a request with the same `id` and the same payment returns `200` with the stored settlement and changes nothing; the same `id` with a different payment returns `409` (`code: "id_conflict"`). An amount above what is owed returns `422` with `code: "exceeds_balance"` and `maxAmountMinor`, the most that can be paid (`0` when nothing is owed in that direction).
+`POST /groups/{groupId}/settlements` accepts `{id,fromID,toID,amountMinor}` and returns `201` with the settlement. `fromID` and `toID` are member ids. The signed-in account must be linked to one of the two. The payer must have a negative balance, the recipient a positive balance, and the amount cannot exceed either outstanding side. These checks run against the balances at the moment the request is applied, never against a group version, so a payment queued offline does not go stale (`groupVersion` is accepted and ignored for older clients). Repeating a request with the same `id` and the same payment returns `200` with the stored settlement and changes nothing; the same `id` with a different payment returns `409` (`code: "id_conflict"`). An amount above what is owed returns `422` with `code: "exceeds_balance"` and `maxAmountMinor`, the most that can be paid (`0` when nothing is owed in that direction).
 
 `PUT /groups/{groupId}/expenses/{expenseId}/receipt` uploads raw JPEG or PNG bytes with the matching `Content-Type`. `GET` returns the image only to group members, and `DELETE` removes it. The 5 MB limit applies to uploads. The server decodes, caps image dimensions, and stores a normalized JPEG without source metadata. Receipt content is excluded from analytics.
 

@@ -60,8 +60,16 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 
 ### Backend gap list (v1 features SPEC needs that the API does not have yet; not built in step 4)
 1. Invite by code only (today invitations are bound to an email and accepted only by that account).
-2. Members who are not accounts (SYNC "named members until invited", migration upload). `payer_id` and group members reference `users` today. Needs a data-model decision before step 6.
+2. ~~Members who are not accounts~~ done in step 4b.
 3. Leave group (blocked while owed), delete group, archive when settled, removed-member read-only copy.
 4. Delete account (removes server data).
 5. `GET /groups/{id}/changes?since=` feed (SYNC phase 2), repeating expenses, push registration, exchange rates (v1.1).
 6. Tombstone purge policy (kept forever for now).
+
+## Step 4b: members who need no account — done
+- **Data model (approved):** `members` (id, group, optional account, name) replaces `group_members`. Expenses, settlements and the allocations inside expenses now point at member ids. Migration `0003` converts existing data (one member per old group member, every reference remapped, order of allocations kept) and reverses it when every member has an account; `0004` lets an invitation name a person. Both are tested with seeded data, up and down.
+- **Contract (approved, in `docs/shared-api.md`):** member objects `{id, name, userID, email}`; `meMemberID` and member-id `ownerID` in snapshots; `PUT /groups/{id}/members/{memberId}` to add or rename a person; `POST /groups` takes optional `id`, `members` and `meMemberID` and is repeatable; invitations take an optional `memberID` and accepting links that person to the account.
+- **Breaking:** the old iOS client sends account ids as payer and participants, so it no longer works against this API (accepted: it is reference only).
+- **Tests:** backend 104 (new: members, group create, linking by invitation, migrations with seeded data). Core and ui unchanged (core treats ids as opaque strings, so the shared fixtures did not change).
+- **Not done:** leave group, remove a member, delete or archive a group, delete account, invite by code only. They remain in the gap list above; the model supports them without another reference migration (a `removed_at` column will come with them).
+- **Open:** your Supabase `public` schema is at revision `0002`. `0003` and `0004` are not applied there yet; run `alembic upgrade head` from `backend/` when you want them (the tables are still empty, so it is safe).
