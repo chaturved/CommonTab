@@ -6,7 +6,7 @@ from sqlalchemy import inspect, text
 from app.core.db import create_db_engine
 from app.core.migrate import downgrade, upgrade
 
-TABLES = {'users', 'auth_tokens', 'expense_groups', 'group_members', 'invitations', 'expenses',
+TABLES = {'users', 'auth_tokens', 'expense_groups', 'members', 'invitations', 'expenses',
           'settlements', 'bill_sessions', 'event_counts', 'alembic_version'}
 
 
@@ -61,8 +61,60 @@ def test_tombstone_column_is_added_by_0002_and_removed_on_downgrade(scratch):
         upgrade(connection, '0001')
     assert 'deleted_at' not in names()
     with engine.begin() as connection:
-        upgrade(connection)
+        upgrade(connection, '0002')
     assert 'deleted_at' in names()
     with engine.begin() as connection:
         downgrade(connection, '0001')
     assert 'deleted_at' not in names()
+
+
+def test_0003_converts_existing_data_to_members_and_back(scratch):
+    """Seed rows the way 0002 stored them (account ids everywhere), migrate up, check, migrate down, check."""
+    engine, schema = scratch
+    ada, bob, group, expense, settlement = (uuid4() for _ in range(5))
+    with engine.begin() as connection:
+        upgrade(connection, '0002')
+        run = lambda sql, **p: connection.execute(text(sql), p)  # noqa: E731
+        for uid, name, email in ((ada, 'Ada', 'ada@x.com'), (bob, 'Bob', 'bob@x.com')):
+            run("INSERT INTO users VALUES (:i, :e, :n, 'h', now())", i=uid, e=email, n=name)
+        run("INSERT INTO expense_groups VALUES (:g, 'Trip', 'USD', :o, now(), 1)", g=group, o=ada)
+        for uid in (ada, bob):
+            run('INSERT INTO group_members VALUES (:g, :u)', g=group, u=uid)
+        run('''INSERT INTO expenses (id, group_id, merchant, occurred_at, category, notes, amount_minor, payer_id,
+                                     method, allocations, input_values, version, updated_at)
+               VALUES (:e, :g, 'Dinner', now(), 'dining', '', 1001, :a, 'equal',
+                       cast(:alloc as jsonb), '[]'::jsonb, 1, now())''',
+            e=expense, g=group, a=ada,
+            alloc=f'[{{"memberID": "{ada}", "minorUnits": 501}}, {{"memberID": "{bob}", "minorUnits": 500}}]')
+        run("INSERT INTO settlements VALUES (:s, :g, :f, :t, 500, now())", s=settlement, g=group, f=bob, t=ada)
+
+    with engine.begin() as connection:
+        upgrade(connection)
+        rows = connection.execute(text('SELECT id, user_id, name FROM members ORDER BY name')).fetchall()
+        assert [(r.user_id, r.name) for r in rows] == [(ada, 'Ada'), (bob, 'Bob')]
+        member = {r.user_id: r.id for r in rows}
+        payer, allocations = connection.execute(text('SELECT payer_id, allocations FROM expenses')).one()
+        assert payer == member[ada]
+        assert allocations == [{'memberID': str(member[ada]), 'minorUnits': 501},
+                               {'memberID': str(member[bob]), 'minorUnits': 500}]  # order preserved
+        paid = connection.execute(text('SELECT from_id, to_id FROM settlements')).one()
+        assert (paid.from_id, paid.to_id) == (member[bob], member[ada])
+
+    with engine.begin() as connection:
+        downgrade(connection, '0002')
+        assert connection.execute(text('SELECT payer_id FROM expenses')).scalar() == ada
+        assert connection.execute(text('SELECT allocations FROM expenses')).scalar()[1]['memberID'] == str(bob)
+        assert connection.execute(text('SELECT count(*) FROM group_members')).scalar() == 2
+
+
+def test_0003_downgrade_refuses_when_people_without_accounts_exist(scratch):
+    engine, schema = scratch
+    group, owner = uuid4(), uuid4()
+    with engine.begin() as connection:
+        upgrade(connection)
+        connection.execute(text("INSERT INTO users VALUES (:i, 'a@x.com', 'A', 'h', now())"), {'i': owner})
+        connection.execute(text("INSERT INTO expense_groups VALUES (:g, 'T', 'USD', :o, now(), 1)"), {'g': group, 'o': owner})
+        connection.execute(text("INSERT INTO members VALUES (:i, :g, NULL, 'Sam', now())"), {'i': uuid4(), 'g': group})
+    with pytest.raises(Exception, match='no account'):
+        with engine.begin() as connection:
+            downgrade(connection, '0002')

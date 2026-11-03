@@ -27,11 +27,14 @@ class GroupService:
         self.repository = repository or GroupRepository()
 
     # --- reading ------------------------------------------------------------
-    def require_member(self, db: Connection, group_id: UUID, user_id: UUID) -> None:
-        if not self.repository.is_member(db, group_id, user_id):
+    def require_member(self, db: Connection, group_id: UUID, user_id: UUID) -> Row:
+        """The member linked to this account. Accounts that are not in the group get 404 (it may not exist)."""
+        me = self.repository.member_of(db, group_id, user_id)
+        if me is None:
             fail(404, 'Group not found')
+        return me
 
-    def snapshot(self, db: Connection, group_id: UUID) -> dict:
+    def snapshot(self, db: Connection, group_id: UUID, user_id: UUID) -> dict:
         group = self.repository.group(db, group_id)
         members = self.repository.members(db, group_id)
         rows = self.repository.expenses(db, group_id)
@@ -39,10 +42,12 @@ class GroupService:
         deleted = [self.expense_payload(row) for row in rows if row.deleted_at is not None]
         settlements = [self.settlement_payload(row) for row in self.repository.settlements(db, group_id)]
         member_ids = [str(member.id) for member in members]
+        by_user = {m.user_id: m.id for m in members if m.user_id is not None}
         return {
             'id': str(group.id), 'name': group.name, 'currencyCode': group.currency_code,
-            'ownerID': str(group.owner_id), 'version': group.version,
-            'members': [{'id': str(m.id), 'name': m.name, 'email': m.email} for m in members],
+            'ownerID': str(by_user[group.owner_id]), 'meMemberID': str(by_user[user_id]), 'version': group.version,
+            'members': [{'id': str(m.id), 'name': m.name, 'userID': str(m.user_id) if m.user_id else None,
+                         'email': m.email} for m in members],
             'expenses': expenses, 'deletedExpenses': deleted, 'settlements': settlements,
             'balances': balances(member_ids, expenses, settlements),
         }
@@ -51,22 +56,24 @@ class GroupService:
         gid, uid = UUID(group_id), UUID(user_id)
         with self.db.transaction() as db:
             self.require_member(db, gid, uid)
-            return self.snapshot(db, gid)
+            return self.snapshot(db, gid, uid)
 
     def groups(self, user_id: str) -> list[dict]:
         uid = UUID(user_id)
         with self.db.transaction() as db:
-            return [self.snapshot(db, gid) for gid in self.repository.group_ids_for_user(db, uid)]
+            return [self.snapshot(db, gid, uid) for gid in self.repository.group_ids_for_user(db, uid)]
 
     # --- groups, invitations ------------------------------------------------
     def create_group(self, user_id: str, input: GroupInput) -> dict:
         if not input.name.strip():
             fail(422, 'Group name is required')
         group_id = uuid4()
+        uid = UUID(user_id)
+        now = datetime.now(timezone.utc)
         with self.db.transaction() as db:
-            self.repository.insert_group(db, group_id, input.name.strip(), input.currency_code, UUID(user_id),
-                                         datetime.now(timezone.utc))
-            return self.snapshot(db, group_id)
+            self.repository.insert_group(db, group_id, input.name.strip(), input.currency_code, uid, now)
+            self.repository.insert_member(db, uuid4(), group_id, uid, self.accounts.name_of(db, uid), now)
+            return self.snapshot(db, group_id, uid)
 
     def rename_group(self, group_id: str, user_id: str, name: str) -> dict:
         if not name.strip():
@@ -75,7 +82,7 @@ class GroupService:
         with self.db.transaction() as db:
             self.require_member(db, gid, UUID(user_id))
             self.repository.rename_group(db, gid, name.strip())
-            return self.snapshot(db, gid)
+            return self.snapshot(db, gid, UUID(user_id))
 
     def invite(self, group_id: str, user_id: str, email: str) -> dict:
         email = self.accounts.email(email)
@@ -100,10 +107,10 @@ class GroupService:
                 fail(404, 'Invitation missing or expired')
             if not hmac.compare_digest(row.email, email):
                 fail(403, 'Invitation belongs to a different email')
-            self.repository.add_member(db, row.group_id, uid)
+            self.repository.insert_member(db, uuid4(), row.group_id, uid, self.accounts.name_of(db, uid), now)
             self.repository.accept_invitation(db, token_hash, now)
             self.repository.bump_version(db, row.group_id)
-            return self.snapshot(db, row.group_id)
+            return self.snapshot(db, row.group_id, uid)
 
     # --- payloads -----------------------------------------------------------
     @staticmethod
@@ -196,11 +203,11 @@ class GroupService:
         """
         gid, uid = UUID(group_id), UUID(user_id)
         with self.db.transaction() as db:
-            self.require_member(db, gid, uid)
+            me = self.require_member(db, gid, uid)
             # Serialize writers on this group so two payments cannot both pass the balance check.
             self.repository.group(db, gid, lock=True)
             from_id, to_id = str(input.from_id), str(input.to_id)
-            if user_id not in (from_id, to_id):
+            if me.id not in (input.from_id, input.to_id):
                 fail(403, 'Only a settlement participant may record it')
             existing = self.repository.settlement(db, input.id)
             if existing is not None:
@@ -209,7 +216,7 @@ class GroupService:
                 if not same:
                     fail(409, 'Settlement ID already used for a different payment', 'id_conflict')
                 return self.settlement_payload(existing), False
-            group = self.snapshot(db, gid)
+            group = self.snapshot(db, gid, uid)
             balance = {item['memberID']: item['minorUnits'] for item in group['balances']}
             if from_id == to_id or from_id not in balance or to_id not in balance:
                 fail(422, 'Settlement members must be different group members')

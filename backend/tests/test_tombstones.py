@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from helpers import create_group, expense, headers, join, register
+from helpers import create_group, expense, headers, join, m, register
 
 
 def setup(database):
@@ -12,7 +12,7 @@ def setup(database):
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
     join(api, group, ada, bob)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     record = expense(group, aid, [aid, bid], amount=10000)
     url = f"/v1/groups/{group['id']}/expenses/{record['id']}"
     assert api.put(url, headers=headers(ada), json=record).status_code == 200
@@ -29,7 +29,7 @@ def balances(snap):
 
 def test_delete_leaves_a_tombstone_other_members_can_see_and_updates_balances(database):
     api, ada, bob, group, record, url = setup(database)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     before = snapshot(api, group, bob)
     assert balances(before) == {aid: 5000, bid: -5000}
 
@@ -86,7 +86,7 @@ def test_edit_after_delete_conflicts_and_returns_the_tombstone(database):
 
 def test_restore_puts_the_expense_back_on_top_of_the_tombstone(database):
     api, ada, bob, group, record, url = setup(database)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     api.delete(url, headers=headers(ada))
     restore = {**record, 'version': 2, 'amountMinor': 12000}  # tombstone version, Bob's edited content
     response = api.put(url, headers=headers(bob), json=restore)

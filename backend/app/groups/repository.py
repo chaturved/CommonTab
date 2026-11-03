@@ -17,24 +17,26 @@ class GroupRepository:
     """SQL only. Rules, conflicts and payloads live in GroupService."""
 
     # --- groups and members -------------------------------------------------
-    def is_member(self, db: Connection, group_id: UUID, user_id: UUID) -> bool:
-        return db.execute(text('SELECT 1 FROM group_members WHERE group_id=:g AND user_id=:u'),
-                          {'g': group_id, 'u': user_id}).fetchone() is not None
+    def member_of(self, db: Connection, group_id: UUID, user_id: UUID) -> Row | None:
+        """The member linked to this account in this group, if any."""
+        return db.execute(text('SELECT id, name FROM members WHERE group_id=:g AND user_id=:u'),
+                          {'g': group_id, 'u': user_id}).fetchone()
 
     def group(self, db: Connection, group_id: UUID, lock: bool = False) -> Row:
         sql = 'SELECT * FROM expense_groups WHERE id=:g' + (' FOR UPDATE' if lock else '')
         return db.execute(text(sql), {'g': group_id}).fetchone()
 
     def members(self, db: Connection, group_id: UUID) -> list[Row]:
-        return db.execute(text('''SELECT u.id, u.name, u.email FROM users u JOIN group_members m ON m.user_id=u.id
-                                  WHERE m.group_id=:g ORDER BY u.name, u.id'''), {'g': group_id}).fetchall()
+        return db.execute(text('''SELECT m.id, m.user_id, m.name, u.email FROM members m
+                                  LEFT JOIN users u ON u.id = m.user_id
+                                  WHERE m.group_id=:g ORDER BY m.name, m.id'''), {'g': group_id}).fetchall()
 
     def member_ids(self, db: Connection, group_id: UUID) -> set[UUID]:
-        rows = db.execute(text('SELECT user_id FROM group_members WHERE group_id=:g'), {'g': group_id}).fetchall()
-        return {row.user_id for row in rows}
+        rows = db.execute(text('SELECT id FROM members WHERE group_id=:g'), {'g': group_id}).fetchall()
+        return {row.id for row in rows}
 
     def group_ids_for_user(self, db: Connection, user_id: UUID) -> list[UUID]:
-        rows = db.execute(text('SELECT group_id FROM group_members WHERE user_id=:u ORDER BY group_id'),
+        rows = db.execute(text('SELECT group_id FROM members WHERE user_id=:u ORDER BY group_id'),
                           {'u': user_id}).fetchall()
         return [row.group_id for row in rows]
 
@@ -43,11 +45,14 @@ class GroupRepository:
         db.execute(text('''INSERT INTO expense_groups (id, name, currency_code, owner_id, created_at, version)
                            VALUES (:id, :name, :currency, :owner, :created_at, 1)'''),
                    {'id': group_id, 'name': name, 'currency': currency, 'owner': owner, 'created_at': created_at})
-        self.add_member(db, group_id, owner)
 
-    def add_member(self, db: Connection, group_id: UUID, user_id: UUID) -> None:
-        db.execute(text('INSERT INTO group_members (group_id, user_id) VALUES (:g, :u) ON CONFLICT DO NOTHING'),
-                   {'g': group_id, 'u': user_id})
+    def insert_member(self, db: Connection, member_id: UUID, group_id: UUID, user_id: UUID | None, name: str,
+                      created_at: datetime) -> bool:
+        """False when the id is taken or the account is already a member of the group."""
+        result = db.execute(text('''INSERT INTO members (id, group_id, user_id, name, created_at)
+                                    VALUES (:id, :g, :u, :name, :created_at) ON CONFLICT DO NOTHING'''),
+                            {'id': member_id, 'g': group_id, 'u': user_id, 'name': name, 'created_at': created_at})
+        return result.rowcount == 1
 
     def rename_group(self, db: Connection, group_id: UUID, name: str) -> None:
         db.execute(text('UPDATE expense_groups SET name=:name, version=version+1 WHERE id=:g'),
@@ -58,8 +63,8 @@ class GroupRepository:
 
     # --- invitations --------------------------------------------------------
     def is_member_email(self, db: Connection, group_id: UUID, email: str) -> bool:
-        return db.execute(text('''SELECT 1 FROM group_members gm JOIN users u ON u.id=gm.user_id
-                                  WHERE gm.group_id=:g AND u.email=:email'''),
+        return db.execute(text('''SELECT 1 FROM members m JOIN users u ON u.id=m.user_id
+                                  WHERE m.group_id=:g AND u.email=:email'''),
                           {'g': group_id, 'email': email}).fetchone() is not None
 
     def insert_invitation(self, db: Connection, token_hash: str, group_id: UUID, email: str, expires_at: datetime) -> None:

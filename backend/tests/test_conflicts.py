@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 
-from helpers import create_group, expense, headers, join, register
+from helpers import create_group, expense, headers, join, m, register
 
 
 def setup(database):
@@ -13,7 +13,7 @@ def setup(database):
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
     join(api, group, ada, bob)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     record = expense(group, aid, [aid, bid], amount=10001)
     url = f"/v1/groups/{group['id']}/expenses/{record['id']}"
     assert api.put(url, headers=headers(ada), json=record).status_code == 200
@@ -48,7 +48,7 @@ def test_create_over_existing_with_different_content_is_a_conflict_with_current(
 
 def test_other_conflicts_have_a_code_but_no_current_record(database):
     api, ada, bob, group, record, url = setup(database)
-    missing = expense(group, ada['user']['id'], [ada['user']['id']])
+    missing = expense(group, m(ada, group), [m(ada, group)])
     missing['version'] = 3
     response = api.put(f"/v1/groups/{group['id']}/expenses/{missing['id']}", headers=headers(ada), json=missing)
     assert response.status_code == 409

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 
-from helpers import create_group, expense, headers, join, register
+from helpers import create_group, expense, headers, join, m, register
 
 
 def client(database):
@@ -34,7 +34,7 @@ def test_allocation_balance_settlement_and_versions(database):
     bob = register(api, 'bob@example.com', 'Bob')
     group = create_group(api, ada)
     join(api, group, ada, bob)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     payload = expense(group, aid, [aid, bid])
     url = f"/v1/groups/{group['id']}/expenses/{payload['id']}"
     saved = api.put(url, headers=headers(ada), json=payload)
@@ -65,7 +65,7 @@ def test_exact_percentage_and_receipt_access(database):
     outsider = register(api, 'eve@example.com', 'Eve')
     group = create_group(api, ada)
     join(api, group, ada, bob)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     record = expense(group, aid, [aid, bid], 'percentage', ['33.33', '66.67'])
     url = f"/v1/groups/{group['id']}/expenses/{record['id']}"
     response = api.put(url, headers=headers(ada), json=record)
@@ -126,10 +126,10 @@ def test_shared_expense_validation_and_persistence_after_restart(database):
     ada = register(api, 'ada@example.com', 'Ada')
     outsider = register(api, 'eve@example.com', 'Eve')
     group = create_group(api, ada)
-    aid = ada['user']['id']
+    aid = m(ada, group)
     record = expense(group, aid, [aid], amount=4250)
     url = f"/v1/groups/{group['id']}/expenses/{record['id']}"
-    assert api.put(url, headers=headers(ada), json={**record, 'payerID': outsider['user']['id']}).status_code == 422
+    assert api.put(url, headers=headers(ada), json={**record, 'payerID': str(uuid4())}).status_code == 422
     assert api.put(url, headers=headers(ada), json={**record, 'participants': [aid, aid]}).status_code == 422
     assert api.put(url, headers=headers(ada), json={**record, 'occurredAt': '2026-09-30T12:00:00'}).status_code == 422
     assert api.put(url, headers=headers(outsider), json=record).status_code == 404
@@ -156,7 +156,7 @@ def test_settlement_checks_permissions_and_overpayment(database):
     group = create_group(api, ada)
     join(api, group, ada, bob)
     join(api, group, ada, eve)
-    aid, bid = ada['user']['id'], bob['user']['id']
+    aid, bid = m(ada, group), m(bob, group)
     record = expense(group, aid, [aid, bid], amount=1000)
     assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}",
                    headers=headers(ada), json=record).status_code == 200

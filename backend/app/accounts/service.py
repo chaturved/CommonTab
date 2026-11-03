@@ -82,6 +82,9 @@ class AccountService:
     def email_of(self, db, user_id: UUID) -> str:
         return self.repository.user_by_id(db, user_id).email
 
+    def name_of(self, db, user_id: UUID) -> str:
+        return self.repository.user_by_id(db, user_id).name
+
     def rename_me(self, user_id: str, name: str) -> dict:
         if not name.strip():
             fail(422, 'Name is required')
