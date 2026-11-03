@@ -1,35 +1,34 @@
-from fastapi import APIRouter, Header, Response
+from __future__ import annotations
 
-from app.api.auth import bearer_token, current_user
+from fastapi import APIRouter, Response
+
+from app.api.deps import AccountsDep, CurrentUser, Token
 from app.schemas.accounts import AccountInput, LoginInput, UpdateProfileInput
-from app.services.accounts import AccountService
+
+router = APIRouter(prefix='/v1')
 
 
-def router_for(accounts: AccountService) -> APIRouter:
-    router = APIRouter(prefix='/v1')
+@router.post('/accounts', status_code=201)
+def register(input: AccountInput, accounts: AccountsDep):
+    return accounts.register(input)
 
-    def user(authorization: str | None) -> str:
-        return current_user(accounts, authorization)
 
-    @router.post('/accounts', status_code=201)
-    def register(input: AccountInput):
-        return accounts.register(input)
+@router.post('/auth/sessions')
+def login(input: LoginInput, accounts: AccountsDep):
+    return accounts.login(input.email, input.password)
 
-    @router.post('/auth/sessions')
-    def login(input: LoginInput):
-        return accounts.login(input.email, input.password)
 
-    @router.delete('/auth/sessions', status_code=204)
-    def logout(authorization: str | None = Header(default=None)):
-        accounts.logout(bearer_token(authorization))
-        return Response(status_code=204)
+@router.delete('/auth/sessions', status_code=204)
+def logout(token: Token, accounts: AccountsDep):
+    accounts.logout(token)
+    return Response(status_code=204)
 
-    @router.get('/me')
-    def me(authorization: str | None = Header(default=None)):
-        return accounts.me(user(authorization))
 
-    @router.patch('/me')
-    def update_me(input: UpdateProfileInput, authorization: str | None = Header(default=None)):
-        return accounts.rename_me(user(authorization), input.name)
+@router.get('/me')
+def me(user: CurrentUser, accounts: AccountsDep):
+    return accounts.me(user)
 
-    return router
+
+@router.patch('/me')
+def update_me(input: UpdateProfileInput, user: CurrentUser, accounts: AccountsDep):
+    return accounts.rename_me(user, input.name)
