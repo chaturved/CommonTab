@@ -112,6 +112,16 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - `httpx` is now a runtime dependency. Needed from you before real emails: `RESEND_API_KEY` and `MAIL_FROM` on a domain verified in Resend (the default sender only reaches your own Resend account email).
 - Test engines use small connection pools so four parallel workers stay under Supabase's 15-client session limit.
 
+## Step 6a: app foundation — done
+- **Core:** `PersistentStorage` (any `StorageDriver`: load rows, commit a batch atomically) wraps the in-memory store; a failed commit changes neither disk nor what the app reads. `HttpApi` has a cookie mode (sends credentials, plus `X-CommonTab-Client` on writes) and calls for `me`, password reset (request, confirm), invite code and join by code. `AuthSession.restore` checks the saved session at launch: a 401 signs out, no network keeps the cached user.
+- **App:** SQLite driver (iOS/Android) and IndexedDB driver (web) in `apps/app/src/platform`; access token in the secure store on native, and on web the httpOnly cookie (no token kept across reloads). `AppProvider` builds the services, restores the session, and syncs at launch, on app foreground and when the browser comes back online. Expo Router guards: signed-out users see `(auth)`, signed-in users see `(app)`. Sign-out clears local data.
+- **Placeholder screens:** `(auth)/index` and `(app)/index` are plain stand-ins to prove the plumbing; 6b and 6c replace them.
+- **Smoke test against the real backend:** `SMOKE_API_URL=http://localhost:8000 npx jest smoke` (in `packages/core`, skipped otherwise). Two flows pass: offline create group and expense, sync, read back on a second device; edit then delete. The sync client and the real API agree on the contract; no mismatches found. It creates `smoke-*@example.com` users in whatever database the API points at.
+- **Checked in a browser (web, API on Supabase):** sign up, reload (still signed in through the cookie, group still there from IndexedDB, chip "Synced"), sign out (IndexedDB emptied), sign in (group pulled back). iOS and Android bundles build; not run on a device or simulator.
+- **Web fix:** NativeWind's dev server throws "Cannot manually set color scheme" when its stylesheet arrives after the page script; `apps/app/public/index.html` sets the dark-mode flag up front.
+- Not done yet: sign-out warning about waiting changes (6e), network-status events beyond sync failures.
+- Run locally: `uvicorn app.main:app` in `backend`, then `EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web` in `frontend/apps/app`.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.

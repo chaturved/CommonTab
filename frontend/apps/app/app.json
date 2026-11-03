@@ -7,10 +7,23 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true },
-    "web": { "bundler": "metro", "output": "single" },
-    "ios": { "bundleIdentifier": "app.commontab.mobile" },
-    "android": { "package": "app.commontab.mobile" }
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "ios": {
+      "bundleIdentifier": "app.commontab.mobile"
+    },
+    "android": {
+      "package": "app.commontab.mobile"
+    }
   }
 }
