@@ -10,7 +10,7 @@ import pytest
 from app.core.errors import APIError
 from app.domain.rules import allocation
 
-FIXTURES = Path(__file__).resolve().parents[2] / 'fixtures' / 'money'
+FIXTURES = Path(__file__).resolve().parents[3] / 'fixtures' / 'money'
 
 
 def cases():
