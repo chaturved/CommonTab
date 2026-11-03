@@ -1,56 +1,70 @@
+from unittest.mock import create_autospec
 from uuid import uuid4
 
 import pytest
 
 from app.core.errors import APIError
+from app.repositories.groups import GroupRepository
+from app.repositories.members import MemberRepository
+from app.repositories.settlements import SettlementRepository
+from app.schemas.groups import SettlementInput
+from app.services.access import MembershipGuard
 from app.services.settlements import SettlementService
-from mocks import make_repos
-from rows import payment, settlement_row
+from app.services.snapshots import SnapshotBuilder
+from rows import member_row, settlement_row
 
 
 class TestSettlementService:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         """Bob (the signed-in member) owes Ada 500."""
-        self.repos = make_repos()
-        self.repos.bob, self.repos.ada = self.repos.me.id, uuid4()
-        self.repos.snapshots.build.return_value = {'balances': [
-            {'memberID': str(self.repos.bob), 'minorUnits': -500},
-            {'memberID': str(self.repos.ada), 'minorUnits': 500}]}
-        self.repos.settlements.settlement.return_value = None
-        self.service = SettlementService(self.repos.settlements, self.repos.groups, self.repos.guard,
-                                         self.repos.snapshots)
+        self.members = create_autospec(MemberRepository, instance=True)
+        self.groups = create_autospec(GroupRepository, instance=True)
+        self.settlements = create_autospec(SettlementRepository, instance=True)
+        self.snapshots = create_autospec(SnapshotBuilder, instance=True)
+        me = member_row(name='Bob')
+        self.bob, self.ada = me.id, uuid4()
+        self.group_id, self.user_id = me.group_id, me.user_id
+        self.members.member_of.return_value = me
+        self.snapshots.build.return_value = {'balances': [{'memberID': str(self.bob), 'minorUnits': -500},
+                                                          {'memberID': str(self.ada), 'minorUnits': 500}]}
+        self.settlements.settlement.return_value = None
+        self.service = SettlementService(self.settlements, self.groups, MembershipGuard(self.members), self.snapshots)
+
+    def payment(self, amount, frm=None, to=None, id=None) -> SettlementInput:
+        return SettlementInput.model_validate({'id': str(id or uuid4()), 'fromID': str(frm or self.bob),
+                                               'toID': str(to or self.ada), 'amountMinor': amount})
 
     def settle(self, body):
-        return self.service.settle(str(self.repos.group_id), str(self.repos.user_id), body)
+        return self.service.settle(str(self.group_id), str(self.user_id), body)
 
     def test_records_a_payment_up_to_the_balance(self):
         body = payment(self.repos, 500)
-        self.repos.settlements.settlement.side_effect = [None, settlement_row(id=body.id, amount_minor=500)]
+        self.settlements.settlement.side_effect = [None, settlement_row(id=body.id, amount_minor=500)]
         settlement, created = self.settle(body)
         assert created and settlement['amountMinor'] == 500
-        self.repos.settlements.insert_settlement.assert_called_once()
-        assert self.repos.settlements.insert_settlement.call_args.args[:5] == (body.id, self.repos.group_id, self.repos.bob, self.repos.ada, 500)
-        self.repos.groups.bump_version.assert_called_once_with(self.repos.group_id)
+        self.settlements.insert_settlement.assert_called_once()
+        assert self.settlements.insert_settlement.call_args.args[:5] == (body.id, self.group_id, self.bob, self.ada, 500)
+        self.groups.bump_version.assert_called_once_with(self.group_id)
 
     def test_takes_the_group_lock_before_checking_balances(self):
-        self.repos.settlements.settlement.side_effect = [None, settlement_row()]
+        self.settlements.settlement.side_effect = [None, settlement_row()]
         self.settle(payment(self.repos, 100))
-        self.repos.groups.group.assert_called_once_with(self.repos.group_id, lock=True)
+        self.groups.group.assert_called_once_with(self.group_id, lock=True)
 
     def test_repeating_the_same_payment_returns_it_without_a_second_write(self):
         body = payment(self.repos, 200)
-        self.repos.settlements.settlement.return_value = settlement_row(
-            id=body.id, group_id=self.repos.group_id, from_id=self.repos.bob, to_id=self.repos.ada, amount_minor=200)
+        self.settlements.settlement.return_value = settlement_row(
+            id=body.id, group_id=self.group_id, from_id=self.bob, to_id=self.ada, amount_minor=200)
         settlement, created = self.settle(body)
         assert not created and settlement['amountMinor'] == 200
-        self.repos.settlements.insert_settlement.assert_not_called()
-        self.repos.groups.bump_version.assert_not_called()
+        self.settlements.insert_settlement.assert_not_called()
+        self.groups.bump_version.assert_not_called()
 
     def test_the_same_id_with_a_different_amount_is_an_id_conflict(self):
         body = payment(self.repos, 300)
-        self.repos.settlements.settlement.return_value = settlement_row(
-            id=body.id, group_id=self.repos.group_id, from_id=self.repos.bob, to_id=self.repos.ada, amount_minor=200)
+        self.settlements.settlement.return_value = settlement_row(
+            id=body.id, group_id=self.group_id, from_id=self.bob, to_id=self.ada, amount_minor=200)
         with pytest.raises(APIError) as caught:
             self.settle(body)
         assert (caught.value.status, caught.value.code) == (409, 'id_conflict')
@@ -59,11 +73,11 @@ class TestSettlementService:
         with pytest.raises(APIError) as caught:
             self.settle(payment(self.repos, 501))
         assert caught.value.status == 422 and caught.value.extra['maxAmountMinor'] == 500
-        self.repos.settlements.insert_settlement.assert_not_called()
+        self.settlements.insert_settlement.assert_not_called()
 
     def test_paying_in_the_wrong_direction_says_nothing_is_owed(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 100, frm=self.repos.ada, to=self.repos.bob))  # Ada owes Bob nothing
+            self.settle(payment(self.repos, 100, frm=self.ada, to=self.bob))  # Ada owes Bob nothing
         assert caught.value.status == 422 and caught.value.extra['maxAmountMinor'] == 0
 
     def test_a_member_who_is_not_in_the_group_cannot_be_paid(self):
@@ -73,6 +87,6 @@ class TestSettlementService:
 
     def test_only_a_participant_may_record_it(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 100, frm=uuid4(), to=self.repos.ada))
+            self.settle(payment(self.repos, 100, frm=uuid4(), to=self.ada))
         assert caught.value.status == 403
-        self.repos.snapshots.build.assert_not_called()
+        self.snapshots.build.assert_not_called()

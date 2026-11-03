@@ -55,7 +55,7 @@ Two folders, run separately:
 .venv/bin/python -m pytest tests/integration   # route -> service -> repository -> real Postgres
 ```
 
-- `tests/unit`: services against `unittest.mock` repositories (`create_autospec`, so a wrong method name or argument fails; mocks built in `tests/unit/mocks.py`, rows in `rows.py`; each test class sets itself up with an `autouse` fixture), plus the pure rules, rate limiter and config. Tests are grouped in `Test…` classes.
+- `tests/unit`: services against `unittest.mock` repositories (`create_autospec`, so a wrong method name or argument fails; each test class creates the mocks it needs in an `autouse` `setup` fixture; rows are built in `tests/unit/rows.py`), plus the pure rules, rate limiter and config. Tests are grouped in `Test…` classes.
 - `tests/integration`: the HTTP API on a real Postgres. Install one locally (`brew install postgresql@16 && brew services start postgresql@16`), run `createdb commontab_test`, and set `TEST_DATABASE_URL=postgresql://localhost:5432/commontab_test` in `backend/.env`. They never read `DATABASE_URL`, and skip if `TEST_DATABASE_URL` is unset. Each test worker creates a throwaway `test_<random>` schema, migrates it, and drops it at the end; workers run in parallel (`-n 4`).
 
 Shared money fixtures in `../fixtures/money` are also run by the TypeScript core.
