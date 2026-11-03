@@ -104,3 +104,8 @@ node_modules/
 frontend/apps/app/dist*/
 frontend/apps/app/.expo/
 .playwright-mcp/
+
+# Local secrets
+.env
+.env.*
+!.env.example
