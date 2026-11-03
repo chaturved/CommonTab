@@ -1,0 +1,124 @@
+[
+  {
+    "name": "10.01 as 5.00 / 5.00 / 0.01 (Swift golden)",
+    "input": {
+      "method": "exact",
+      "amount": 1001,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "500",
+        "500",
+        "1"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 500
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 500
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 1
+      }
+    ]
+  },
+  {
+    "name": "one member owes nothing",
+    "input": {
+      "method": "exact",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "0",
+        "1000"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 0
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 1000
+      }
+    ]
+  },
+  {
+    "name": "shares do not add up",
+    "input": {
+      "method": "exact",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "500",
+        "500",
+        "100"
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "shares exceed total",
+    "input": {
+      "method": "exact",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "600",
+        "600"
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "fractional minor units rejected",
+    "input": {
+      "method": "exact",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "500.5",
+        "499.5"
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "negative share rejected",
+    "input": {
+      "method": "exact",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "1100",
+        "-100"
+      ]
+    },
+    "error": true
+  }
+]

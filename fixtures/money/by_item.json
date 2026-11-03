@@ -1,0 +1,148 @@
+[
+  {
+    "name": "tax and tip follow each person's subtotal (Swift golden)",
+    "input": {
+      "people": ["alice", "bob"],
+      "items": [
+        { "name": "Pasta", "priceCents": 2000, "assignedTo": ["alice"] },
+        { "name": "Salad", "priceCents": 1000, "assignedTo": ["bob"] }
+      ],
+      "taxCents": 300,
+      "tipPercent": "20"
+    },
+    "expect": {
+      "subtotal": 3000, "tax": 300, "tip": 600, "total": 3900,
+      "shares": [
+        { "personID": "alice", "subtotal": 2000, "tax": 200, "tip": 400, "total": 2600 },
+        { "personID": "bob", "subtotal": 1000, "tax": 100, "tip": 200, "total": 1300 }
+      ]
+    }
+  },
+  {
+    "name": "shared item with remainders still adds up (Swift golden)",
+    "input": {
+      "people": ["p1", "p2", "p3"],
+      "items": [{ "name": "Fries", "priceCents": 1001, "assignedTo": ["p1", "p2", "p3"] }],
+      "taxCents": 99,
+      "tipPercent": "15"
+    },
+    "expect": {
+      "subtotal": 1001, "tax": 99, "tip": 150, "total": 1250,
+      "shares": [
+        { "personID": "p1", "subtotal": 334, "tax": 33, "tip": 50, "total": 417 },
+        { "personID": "p2", "subtotal": 334, "tax": 33, "tip": 50, "total": 417 },
+        { "personID": "p3", "subtotal": 333, "tax": 33, "tip": 50, "total": 416 }
+      ]
+    }
+  },
+  {
+    "name": "shared and private items, equal remainders go to the first person",
+    "input": {
+      "people": ["a", "b"],
+      "items": [
+        { "name": "Soda", "priceCents": 500, "assignedTo": ["a", "b"] },
+        { "name": "Burger", "priceCents": 1500, "assignedTo": ["a"] }
+      ],
+      "taxCents": 100,
+      "tipPercent": "18"
+    },
+    "expect": {
+      "subtotal": 2000, "tax": 100, "tip": 360, "total": 2460,
+      "shares": [
+        { "personID": "a", "subtotal": 1750, "tax": 88, "tip": 315, "total": 2153 },
+        { "personID": "b", "subtotal": 250, "tax": 12, "tip": 45, "total": 307 }
+      ]
+    }
+  },
+  {
+    "name": "odd shared item: extra cent goes to first assignee in person order",
+    "input": {
+      "people": ["a", "b", "c"],
+      "items": [{ "name": "Starter", "priceCents": 101, "assignedTo": ["c", "a"] }],
+      "taxCents": 10,
+      "tipPercent": "10"
+    },
+    "expect": {
+      "subtotal": 101, "tax": 10, "tip": 10, "total": 121,
+      "shares": [
+        { "personID": "a", "subtotal": 51, "tax": 5, "tip": 5, "total": 61 },
+        { "personID": "b", "subtotal": 0, "tax": 0, "tip": 0, "total": 0 },
+        { "personID": "c", "subtotal": 50, "tax": 5, "tip": 5, "total": 60 }
+      ]
+    }
+  },
+  {
+    "name": "tip rounds half up",
+    "input": {
+      "people": ["a"],
+      "items": [{ "name": "Gum", "priceCents": 25, "assignedTo": ["a"] }],
+      "taxCents": 0,
+      "tipPercent": "10"
+    },
+    "expect": {
+      "subtotal": 25, "tax": 0, "tip": 3, "total": 28,
+      "shares": [{ "personID": "a", "subtotal": 25, "tax": 0, "tip": 3, "total": 28 }]
+    }
+  },
+  {
+    "name": "all-zero subtotals: tax is split equally",
+    "input": {
+      "people": ["a", "b"],
+      "items": [{ "name": "Free sample", "priceCents": 0, "assignedTo": ["a"] }],
+      "taxCents": 7,
+      "tipPercent": "0"
+    },
+    "expect": {
+      "subtotal": 0, "tax": 7, "tip": 0, "total": 7,
+      "shares": [
+        { "personID": "a", "subtotal": 0, "tax": 4, "tip": 0, "total": 4 },
+        { "personID": "b", "subtotal": 0, "tax": 3, "tip": 0, "total": 3 }
+      ]
+    }
+  },
+  {
+    "name": "item with nobody assigned",
+    "input": {
+      "people": ["a", "b"],
+      "items": [{ "name": "Mystery", "priceCents": 500, "assignedTo": [] }],
+      "taxCents": 0,
+      "tipPercent": "0"
+    },
+    "error": true
+  },
+  {
+    "name": "item assigned to someone who is not on the bill",
+    "input": {
+      "people": ["a"],
+      "items": [{ "name": "Tea", "priceCents": 300, "assignedTo": ["zed"] }],
+      "taxCents": 0,
+      "tipPercent": "0"
+    },
+    "error": true
+  },
+  {
+    "name": "no items",
+    "input": { "people": ["a"], "items": [], "taxCents": 0, "tipPercent": "0" },
+    "error": true
+  },
+  {
+    "name": "no people",
+    "input": {
+      "people": [],
+      "items": [{ "name": "Tea", "priceCents": 300, "assignedTo": [] }],
+      "taxCents": 0,
+      "tipPercent": "0"
+    },
+    "error": true
+  },
+  {
+    "name": "tip over 100 percent",
+    "input": {
+      "people": ["a"],
+      "items": [{ "name": "Tea", "priceCents": 300, "assignedTo": ["a"] }],
+      "taxCents": 0,
+      "tipPercent": "101"
+    },
+    "error": true
+  }
+]

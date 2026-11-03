@@ -1,0 +1,218 @@
+[
+  {
+    "name": "0.05 at 34/33/33 (Swift golden)",
+    "input": {
+      "method": "percent",
+      "amount": 5,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "34",
+        "33",
+        "33"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 2
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 2
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 1
+      }
+    ]
+  },
+  {
+    "name": "10000 at 33.33/33.33/33.34",
+    "input": {
+      "method": "percent",
+      "amount": 10000,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "33.33",
+        "33.33",
+        "33.34"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 3333
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 3333
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 3334
+      }
+    ]
+  },
+  {
+    "name": "1 cent at 50/50: tie goes to first member",
+    "input": {
+      "method": "percent",
+      "amount": 1,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "50",
+        "50"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 1
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 0
+      }
+    ]
+  },
+  {
+    "name": "10001 at 33.333/33.333/33.334",
+    "input": {
+      "method": "percent",
+      "amount": 10001,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "33.333",
+        "33.333",
+        "33.334"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 3334
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 3333
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 3334
+      }
+    ]
+  },
+  {
+    "name": "single member at 100",
+    "input": {
+      "method": "percent",
+      "amount": 777,
+      "participants": [
+        "m1"
+      ],
+      "values": [
+        "100"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 777
+      }
+    ]
+  },
+  {
+    "name": "largest remainder wins, ties by index",
+    "input": {
+      "method": "percent",
+      "amount": 100,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": [
+        "33.5",
+        "33.5",
+        "33"
+      ]
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 34
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 33
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 33
+      }
+    ]
+  },
+  {
+    "name": "percentages total 99",
+    "input": {
+      "method": "percent",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "50",
+        "49"
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "percentages total 101",
+    "input": {
+      "method": "percent",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "50",
+        "51"
+      ]
+    },
+    "error": true
+  },
+  {
+    "name": "negative percentage rejected",
+    "input": {
+      "method": "percent",
+      "amount": 1000,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": [
+        "110",
+        "-10"
+      ]
+    },
+    "error": true
+  }
+]

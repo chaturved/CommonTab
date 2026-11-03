@@ -1,0 +1,140 @@
+[
+  {
+    "name": "no activity: everyone at zero",
+    "input": { "members": ["m1", "m2"], "expenses": [], "settlements": [] },
+    "expect": [{ "memberID": "m1", "minorUnits": 0 }, { "memberID": "m2", "minorUnits": 0 }]
+  },
+  {
+    "name": "10.01 groceries paid by Alex, equal split (Swift golden)",
+    "input": {
+      "members": ["m1", "m2", "m3"],
+      "expenses": [{
+        "id": "e1", "amount": 1001, "payerID": "m1",
+        "allocations": [
+          { "memberID": "m1", "minorUnits": 334 },
+          { "memberID": "m2", "minorUnits": 334 },
+          { "memberID": "m3", "minorUnits": 333 }
+        ]
+      }],
+      "settlements": []
+    },
+    "expect": [
+      { "memberID": "m1", "minorUnits": 667 },
+      { "memberID": "m2", "minorUnits": -334 },
+      { "memberID": "m3", "minorUnits": -333 }
+    ]
+  },
+  {
+    "name": "settlement moves both balances toward zero (Swift golden)",
+    "input": {
+      "members": ["m1", "m2", "m3"],
+      "expenses": [{
+        "id": "e1", "amount": 1001, "payerID": "m1",
+        "allocations": [
+          { "memberID": "m1", "minorUnits": 334 },
+          { "memberID": "m2", "minorUnits": 334 },
+          { "memberID": "m3", "minorUnits": 333 }
+        ]
+      }],
+      "settlements": [{ "id": "s1", "fromID": "m2", "toID": "m1", "minorUnits": 334 }]
+    },
+    "expect": [
+      { "memberID": "m1", "minorUnits": 333 },
+      { "memberID": "m2", "minorUnits": 0 },
+      { "memberID": "m3", "minorUnits": -333 }
+    ]
+  },
+  {
+    "name": "edited expense (20.01) after a settlement (Swift golden)",
+    "input": {
+      "members": ["m1", "m2", "m3"],
+      "expenses": [{
+        "id": "e1", "amount": 2001, "payerID": "m1",
+        "allocations": [
+          { "memberID": "m1", "minorUnits": 667 },
+          { "memberID": "m2", "minorUnits": 667 },
+          { "memberID": "m3", "minorUnits": 667 }
+        ]
+      }],
+      "settlements": [{ "id": "s1", "fromID": "m2", "toID": "m1", "minorUnits": 334 }]
+    },
+    "expect": [
+      { "memberID": "m1", "minorUnits": 1000 },
+      { "memberID": "m2", "minorUnits": -333 },
+      { "memberID": "m3", "minorUnits": -667 }
+    ]
+  },
+  {
+    "name": "itemized dinner saved as exact shares (Swift golden)",
+    "input": {
+      "members": ["blair", "alex"],
+      "expenses": [{
+        "id": "e1", "amount": 3900, "payerID": "alex",
+        "allocations": [
+          { "memberID": "blair", "minorUnits": 1300 },
+          { "memberID": "alex", "minorUnits": 2600 }
+        ]
+      }],
+      "settlements": []
+    },
+    "expect": [{ "memberID": "blair", "minorUnits": -1300 }, { "memberID": "alex", "minorUnits": 1300 }]
+  },
+  {
+    "name": "payer is not part of the split",
+    "input": {
+      "members": ["m1", "m2", "m3"],
+      "expenses": [{
+        "id": "e1", "amount": 3000, "payerID": "m1",
+        "allocations": [{ "memberID": "m2", "minorUnits": 1500 }, { "memberID": "m3", "minorUnits": 1500 }]
+      }],
+      "settlements": []
+    },
+    "expect": [
+      { "memberID": "m1", "minorUnits": 3000 },
+      { "memberID": "m2", "minorUnits": -1500 },
+      { "memberID": "m3", "minorUnits": -1500 }
+    ]
+  },
+  {
+    "name": "allocations do not add up to the expense",
+    "input": {
+      "members": ["m1", "m2"],
+      "expenses": [{
+        "id": "e1", "amount": 1000, "payerID": "m1",
+        "allocations": [{ "memberID": "m1", "minorUnits": 400 }, { "memberID": "m2", "minorUnits": 500 }]
+      }],
+      "settlements": []
+    },
+    "error": true
+  },
+  {
+    "name": "allocation to someone outside the group",
+    "input": {
+      "members": ["m1", "m2"],
+      "expenses": [{
+        "id": "e1", "amount": 1000, "payerID": "m1",
+        "allocations": [{ "memberID": "m1", "minorUnits": 500 }, { "memberID": "ghost", "minorUnits": 500 }]
+      }],
+      "settlements": []
+    },
+    "error": true
+  },
+  {
+    "name": "settlement from a member to themselves",
+    "input": {
+      "members": ["m1", "m2"],
+      "expenses": [],
+      "settlements": [{ "id": "s1", "fromID": "m1", "toID": "m1", "minorUnits": 100 }]
+    },
+    "error": true
+  },
+  {
+    "name": "settlement of zero",
+    "input": {
+      "members": ["m1", "m2"],
+      "expenses": [],
+      "settlements": [{ "id": "s1", "fromID": "m1", "toID": "m2", "minorUnits": 0 }]
+    },
+    "error": true
+  }
+]
