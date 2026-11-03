@@ -139,13 +139,14 @@ class GroupService:
             }
             if existing:
                 if existing.group_id != gid:
-                    fail(409, 'Expense ID belongs to another group')
+                    fail(409, 'Expense ID belongs to another group', 'id_conflict')
                 if input.version != existing.version:
-                    fail(409, 'Expense changed; reload before saving')
+                    fail(409, 'Expense changed; reload before saving', 'version_conflict',
+                         current=self.expense_payload(existing))
                 self.repository.update_expense(db, {**values, 'version': existing.version + 1})
             else:
                 if input.version is not None:
-                    fail(409, 'Expense missing; reload before saving')
+                    fail(409, 'Expense missing; reload before saving', 'not_found')
                 self.repository.insert_expense(db, {**values, 'version': 1})
             self.repository.bump_version(db, gid)
             return self.expense_payload(self.repository.expense(db, input.id))

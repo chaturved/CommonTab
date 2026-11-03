@@ -29,7 +29,7 @@ def create_app(database: Database | None = None, lifetime_seconds: int = 7 * 24 
 
     @app.exception_handler(APIError)
     def api_error_handler(_request: Request, error: APIError):
-        return JSONResponse(status_code=error.status, content={'detail': error.message})
+        return JSONResponse(status_code=error.status, content=error.body())
 
     app.include_router(account_routes(accounts))
     app.include_router(group_routes(groups, accounts))
