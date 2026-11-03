@@ -2,15 +2,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check, Ellipsis } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { byNewest, expenseRow, formatCurrency } from '@commontab/core';
-import { BackButton, Button, Card, Icon, Text } from '@commontab/ui';
+import { BackButton, Banner, Button, Card, Icon, Text } from '@commontab/ui';
 import { BalanceHero } from '../../../../src/components/BalanceHero';
 import { ConnectionBanner } from '../../../../src/components/ConnectionBanner';
 import { ExpenseRow } from '../../../../src/components/ExpenseRow';
 import { SectionHeader } from '../../../../src/components/Section';
 import { Screen } from '../../../../src/components/Screen';
 import { SyncStatusChip } from '../../../../src/components/SyncStatusChip';
+import { ClosedGroupBody } from '../../../../src/components/ClosedGroup';
 import { GroupDesktop } from '../../../../src/components/GroupDesktop';
 import { BalancesList, PaymentsList } from '../../../../src/components/GroupParts';
+import { useGroupActions } from '../../../../src/groupActions';
 import { useGroup } from '../../../../src/data';
 import { useIsDesktop } from '../../../../src/layout';
 
@@ -19,6 +21,7 @@ export default function GroupDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, data } = useGroup(id);
   const desktop = useIsDesktop();
+  const lifecycle = useGroupActions(id ?? '');
 
   const header = (
     <View className="min-h-touch flex-row items-center justify-between gap-3">
@@ -56,6 +59,21 @@ export default function GroupDetail() {
   }
 
   const { group, expenses, settlements, summary } = data;
+  const closedHeader = summary.closed ? (
+    <View className="min-h-touch flex-row items-center justify-between gap-3">
+      <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <Text variant="screen-title" accessibilityRole="header" numberOfLines={1} className="min-w-0 flex-1 text-center">{group.name}</Text>
+      <View className="w-11" />
+    </View>
+  ) : null;
+  if (summary.closed) {
+    return (
+      <Screen wide>
+        {closedHeader}
+        <ClosedGroupBody data={data} />
+      </Screen>
+    );
+  }
   const rows = expenses.filter((e) => !e.deletedAt).map((e) => expenseRow(e, group)).sort(byNewest);
   const currency = summary.currencyCode;
   const count = `${summary.expenseCount} ${summary.expenseCount === 1 ? 'expense' : 'expenses'} · ${formatCurrency(summary.totalMinor, currency)} total · ${currency}`;
@@ -106,7 +124,21 @@ export default function GroupDetail() {
           ))}
         </Card>
       )}
-      <Button label="Add expense" onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
+      {summary.archived ? (
+        <>
+          <Banner tone="info" message="This group is archived. Add an expense to bring it back, or unarchive it." />
+          <Button label="Unarchive group" variant="secondary" loading={lifecycle.busy} onPress={() => void lifecycle.unarchive()} />
+        </>
+      ) : null}
+      {summary.status === 'settled' && !summary.archived ? (
+        <Text variant="body-small" tone="muted" className="px-1 text-[13px] leading-[18px]">
+          Archiving moves this group out of your list. You can still open it from Groups and add expenses to bring it back.
+        </Text>
+      ) : null}
+      <View className="gap-2.5">
+        <Button label="Add expense" onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
+        {summary.status === 'settled' && !summary.archived ? <Button label="Archive group" variant="secondary" loading={lifecycle.busy} onPress={() => void lifecycle.archive()} /> : null}
+      </View>
     </Screen>
   );
 }

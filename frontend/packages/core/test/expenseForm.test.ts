@@ -19,6 +19,13 @@ describe('newExpenseForm', () => {
   });
 });
 
+describe('a new expense does not include people who left', () => {
+  test('they are not pre-selected', () => {
+    const left = { ...group, members: group.members.map((m) => (m.id === 'riya' ? { ...m, removedAt: '2026-11-02T10:00:00Z' } : m)) };
+    expect(newExpenseForm(left, NOW).participants).toEqual(['me', 'sam']);
+  });
+});
+
 describe('evaluateForm', () => {
   test('an equal split of $163.50 gives each person $54.50', () => {
     const result = evaluateForm(filled(), 'USD');

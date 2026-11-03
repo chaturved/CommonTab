@@ -2,12 +2,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { byNewest, expenseRow, formatCurrency, type LocalExpense } from '@commontab/core';
-import { Button, Card, Icon, Text } from '@commontab/ui';
+import { Banner, Button, Card, Icon, Text } from '@commontab/ui';
 import { Plus } from 'lucide-react-native';
 import type { GroupData } from '../data';
 import { useSyncStatus } from '../useSyncStatus';
+import { GroupActionRows } from './GroupDangerRows';
+import { DeleteGroupSheet, LeaveGroupSheet, RemoveMemberSheet } from './GroupSheets';
 import { HistoryList, MembersList, NetBalancesList } from './GroupParts';
+import { useGroupActions } from '../groupActions';
 import { ConnectionBanner } from './ConnectionBanner';
+import { ClosedGroupBody } from './ClosedGroup';
 import { ExpenseDetailContent } from './ExpenseDetail';
 import { ExpenseRow } from './ExpenseRow';
 import { PageHeader } from './PageHeader';
@@ -21,7 +25,18 @@ export function GroupDesktop({ data }: { data: GroupData }) {
   const status = useSyncStatus();
   const { group, expenses, summary } = data;
   const [tab, setTab] = useState<Tab>((TABS as readonly string[]).includes(params.tab ?? '') ? (params.tab as Tab) : 'Expenses');
+  const [sheet, setSheet] = useState<'leave' | 'delete' | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const lifecycle = useGroupActions(data.group.id);
   const [selectedId, setSelectedId] = useState<string | null>(params.expense ?? null);
+  if (summary.closed) {
+    return (
+      <>
+        <PageHeader title={group.name} subtitle="Read-only copy" />
+        <ClosedGroupBody data={data} />
+      </>
+    );
+  }
   const currency = summary.currencyCode;
   const live = expenses.filter((e) => !e.deletedAt);
   const rows = live.map((e) => expenseRow(e, group)).sort(byNewest);
@@ -39,6 +54,7 @@ export function GroupDesktop({ data }: { data: GroupData }) {
         subtitle={subtitle}
         actions={
           <>
+            {summary.status === 'settled' && !summary.archived ? <Button label="Archive group" variant="secondary" size="small" loading={lifecycle.busy} onPress={() => void lifecycle.archive()} /> : null}
             <Button label="Invite" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/invite', params: { id: group.id } })} />
             {summary.status === 'needsSettling' ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/settle', params: { id: group.id } })} /> : null}
             <Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
@@ -46,6 +62,12 @@ export function GroupDesktop({ data }: { data: GroupData }) {
         }
       />
       <ConnectionBanner />
+      {summary.archived ? (
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1"><Banner tone="info" message="This group is archived. Add an expense to bring it back, or unarchive it." /></View>
+          <Button label="Unarchive" variant="secondary" size="small" loading={lifecycle.busy} onPress={() => void lifecycle.unarchive()} />
+        </View>
+      ) : null}
       <View accessibilityRole="tablist" className="flex-row gap-1.5 border-b border-divider">
         {TABS.map((name) => {
           const active = name === tab;
@@ -79,7 +101,15 @@ export function GroupDesktop({ data }: { data: GroupData }) {
         )
       ) : null}
       {tab === 'Balances' ? <NetBalancesList data={data} /> : null}
-      {tab === 'Members' ? <MembersList data={data} contact /> : null}
+      {tab === 'Members' ? (
+        <>
+          <MembersList data={data} contact onRemove={group.ownerID === group.meMemberID ? setRemoving : undefined} />
+          <GroupActionRows data={data} onLeave={() => setSheet('leave')} onDelete={() => setSheet('delete')} />
+        </>
+      ) : null}
+      <LeaveGroupSheet visible={sheet === 'leave'} onClose={() => setSheet(null)} data={data} />
+      <DeleteGroupSheet visible={sheet === 'delete'} onClose={() => setSheet(null)} data={data} />
+      <RemoveMemberSheet visible={removing !== null} onClose={() => setRemoving(null)} data={data} memberId={removing} />
       {tab === 'History' ? <HistoryList data={data} /> : null}
     </>
   );

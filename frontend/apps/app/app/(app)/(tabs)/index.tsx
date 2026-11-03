@@ -36,8 +36,9 @@ export default function Home() {
   const { ready, groups } = useGroups();
   const status = useSyncStatus();
   const offline = status !== null && status.connectivity !== 'online' && status.connectivity !== 'sessionExpired';
-  const totals = overallTotals(groups.map((g) => g.summary));
-  const recent = groups
+  const live = groups.filter((g) => g.summary.active);
+  const totals = overallTotals(live.map((g) => g.summary));
+  const recent = live
     .flatMap((g) => g.expenses.filter((e) => !e.deletedAt).map((e) => ({ row: expenseRow(e, g.group), currencyCode: g.group.currencyCode })))
     .sort((a, b) => byNewest(a.row, b.row))
     .slice(0, 5);
@@ -100,7 +101,7 @@ export default function Home() {
                 action={<Button label="Create group" variant="ghost" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="accent" />} onPress={() => router.push('/create-group')} />}
               />
               <View className="gap-2.5">
-                {sortForList(groups.map((g) => g.summary)).map((s) => groups.find((g) => g.group.id === s.id)!).map((g) => (
+                {sortForList(live.map((g) => g.summary)).map((s) => groups.find((g) => g.group.id === s.id)!).map((g) => (
                   <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.group.id } })} />
                 ))}
               </View>

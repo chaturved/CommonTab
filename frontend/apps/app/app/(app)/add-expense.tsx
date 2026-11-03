@@ -13,7 +13,8 @@ export default function AddExpense() {
   const router = useRouter();
   const desktop = useIsDesktop();
   const { group: groupParam, amount } = useLocalSearchParams<{ group?: string; amount?: string }>();
-  const { ready, groups } = useGroups();
+  const { ready, groups: all } = useGroups();
+  const groups = all.filter((g) => !g.summary.closed);
   const [picked, setPicked] = useState<string | null>(null);
   const id = picked ?? groupParam ?? (groups.length === 1 ? groups[0]!.group.id : null);
   const data = groups.find((g) => g.group.id === id);

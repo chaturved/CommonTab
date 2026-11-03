@@ -29,7 +29,11 @@ export function GroupCard({ data, offline, onPress, detail }: { data: GroupData;
             <Text variant="caption" tone="muted" className="text-[13px]" numberOfLines={1}>{subtitle}</Text>
           )}
         </View>
-        {summary.status === 'settled' ? (
+        {summary.closed ? (
+          <Pill label={summary.closed.status === 'deleted' ? 'Deleted' : 'Left'} tone="neutral" />
+        ) : summary.archived ? (
+          <Pill label="Archived" tone="neutral" />
+        ) : summary.status === 'settled' ? (
           <Pill label="Settled" tone="accent" icon={<Icon icon={Check} size={13} strokeWidth={2.6} tone="on-tint" />} />
         ) : (
           <AmountText minorUnits={summary.myBalance} currency={summary.currencyCode} />

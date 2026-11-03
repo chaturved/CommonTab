@@ -39,6 +39,13 @@ describe('summarizeGroup', () => {
     expect(summarizeGroup(group(), [], []).status).toBe('new');
   });
 
+  test('people who left are not counted as members and a closed or archived group is not active', () => {
+    const left = group({ members: [...group().members.slice(0, 2), { ...group().members[2]!, removedAt: '2026-11-02T10:00:00Z' }] });
+    expect(summarizeGroup(left, [], [])).toMatchObject({ memberCount: 2, memberNames: ['You', 'Sam'], active: true, archived: false, closed: null });
+    expect(summarizeGroup({ ...left, archived: true }, [], [])).toMatchObject({ archived: true, active: false });
+    expect(summarizeGroup({ ...left, closed: { status: 'removed', since: 'x' } }, [], [])).toMatchObject({ active: false, closed: { status: 'removed' } });
+  });
+
   test('deleted expenses are ignored', () => {
     const s = summarizeGroup(group(), [{ ...dinner, deletedAt: '2026-11-01T00:00:00Z', syncState: 'pending' }], []);
     expect(s).toMatchObject({ expenseCount: 0, myBalance: 0, waiting: 1 });

@@ -51,6 +51,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const [problem, setProblem] = useState<string | null>(null);
   const evaluated = useMemo(() => evaluateForm(form, currency), [form, currency]);
   const memberIds = group.members.map((m) => m.id);
+  const people = group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID);
   const nameOf = (id: string) => {
     const member = group.members.find((m) => m.id === id);
     return member ? displayName(member, group.meMemberID) : 'Someone';
@@ -89,8 +90,8 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     <>
       <Sheet visible={sheet === 'payer'} onClose={() => setSheet(null)} title="Paid by">
         <View className="overflow-hidden rounded-2xl bg-background">
-          {group.members.map((m, i) => (
-            <ListRow key={m.id} title={displayName(m, group.meMemberID)} divider={i < group.members.length - 1} accessibilityLabel={`${displayName(m, group.meMemberID)}${m.id === form.payerID ? ', selected' : ''}`} onPress={() => { patch({ payerID: m.id }); setSheet(null); }} />
+          {people.map((m, i) => (
+            <ListRow key={m.id} title={displayName(m, group.meMemberID)} divider={i < people.length - 1} accessibilityLabel={`${displayName(m, group.meMemberID)}${m.id === form.payerID ? ', selected' : ''}`} onPress={() => { patch({ payerID: m.id }); setSheet(null); }} />
           ))}
         </View>
       </Sheet>
@@ -107,7 +108,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       </Sheet>
       <Sheet visible={sheet === 'item'} onClose={() => setSheet(null)} title="Split by item">
         <ScrollView className="max-h-[460px]" keyboardShouldPersistTaps="handled">
-          <ItemizedEditor people={group.members.map((m) => ({ id: m.id, name: displayName(m, group.meMemberID) }))} currencyCode={currency} onResult={setItemResult} />
+          <ItemizedEditor people={people.map((m) => ({ id: m.id, name: displayName(m, group.meMemberID) }))} currencyCode={currency} onResult={setItemResult} />
         </ScrollView>
         <Button label="Use this split" disabled={!itemResult} onPress={() => { if (itemResult) setForm((f) => applyItemized(f, itemResult, currency)); setSheet(null); }} />
       </Sheet>
@@ -145,11 +146,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         onChange={(key) => (key === 'item' ? setSheet('item') : setForm((f) => switchMethod(f, key as FormMethod, currency)))}
       />
       <FieldGroup>
-        {group.members.map((member, i) => {
+        {people.map((member, i) => {
           const checked = form.participants.includes(member.id);
           const share = shareOf(member.id);
           const label = displayName(member, group.meMemberID);
-          const last = i === group.members.length - 1;
+          const last = i === people.length - 1;
           const shareText = checked && share !== undefined && evaluated.amountMinor !== null ? formatCurrency(share, currency) : undefined;
           return (
             <CheckRow
@@ -216,11 +217,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         onChange={(key) => (key === 'item' ? setSheet('item') : setForm((f) => switchMethod(f, key as FormMethod, currency)))}
       />
       <View className="overflow-hidden rounded-card bg-card">
-        {group.members.map((member, i) => {
+        {people.map((member, i) => {
           const checked = form.participants.includes(member.id);
           const share = shareOf(member.id);
           const label = displayName(member, group.meMemberID);
-          const last = i === group.members.length - 1;
+          const last = i === people.length - 1;
           const shareText = checked && share !== undefined && evaluated.amountMinor !== null ? formatCurrency(share, currency) : undefined;
           return (
             <CheckRow

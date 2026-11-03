@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { formatCurrency, longDate, shortDate } from '@commontab/core';
 import { Avatar, Button, Card, Pill, Text } from '@commontab/ui';
 import type { GroupData } from '../data';
@@ -60,7 +60,7 @@ export function NetBalancesList({ data }: { data: GroupData }) {
   );
 }
 
-export function MembersList({ data, contact }: { data: GroupData; contact?: boolean }) {
+export function MembersList({ data, contact, onRemove }: { data: GroupData; contact?: boolean; onRemove?: (memberId: string) => void }) {
   const { group, summary } = data;
   return (
     <Card className="overflow-hidden">
@@ -69,15 +69,22 @@ export function MembersList({ data, contact }: { data: GroupData; contact?: bool
         const you = member.id === group.meMemberID;
         const owner = member.id === group.ownerID;
         const amount = formatCurrency(Math.abs(balance), group.currencyCode);
-        const words = balance > 0 ? `Owed ${amount}` : balance < 0 ? `Owes ${amount}` : 'Settled up';
+        const words = member.removedAt ? 'Left the group' : balance > 0 ? `Owed ${amount}` : balance < 0 ? `Owes ${amount}` : 'Settled up';
+        const canRemove = Boolean(onRemove) && !you && !member.removedAt;
+        const remove = canRemove ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${member.name}`} hitSlop={8} onPress={() => onRemove!(member.id)} className="min-h-touch justify-center active:opacity-80">
+            <Text variant="body-small" tone="owe" className="text-sm font-bold">Remove</Text>
+          </Pressable>
+        ) : null;
         if (contact) {
           return (
             <View key={member.id} accessible accessibilityLabel={`${you ? 'You' : member.name}${owner ? ', owner' : ''}, ${member.email ?? 'no account yet'}`} className={`h-[68px] flex-row items-center gap-3.5 px-5 ${i < group.members.length - 1 ? 'border-b border-divider' : ''}`}>
               <Avatar name={member.name} id={member.id} size="md" />
               <View className="flex-1">
                 <Text variant="body" className="text-base font-semibold">{you ? 'You' : member.name}{owner ? ' · owner' : ''}</Text>
-                <Text variant="caption" tone="muted" className="text-[13px]">{member.email ?? (member.userID ? 'Has an account' : 'No account yet')}</Text>
+                <Text variant="caption" tone="muted" className="text-[13px]">{member.removedAt ? 'Left the group' : (member.email ?? (member.userID ? 'Has an account' : 'No account yet'))}</Text>
               </View>
+              {remove}
             </View>
           );
         }
@@ -89,8 +96,9 @@ export function MembersList({ data, contact }: { data: GroupData; contact?: bool
                 <Text variant="body" className="font-semibold">{you ? 'You' : member.name}</Text>
                 {owner ? <Pill label="Owner" tone="neutral" /> : null}
               </View>
-              <Text variant="caption" tone={balance < 0 ? 'owe' : balance > 0 ? 'accent' : 'muted'} className="text-[13px]">{words}</Text>
+              <Text variant="caption" tone={member.removedAt ? 'muted' : balance < 0 ? 'owe' : balance > 0 ? 'accent' : 'muted'} className="text-[13px]">{words}</Text>
             </View>
+            {remove}
           </View>
         );
       })}

@@ -26,6 +26,9 @@ export interface GroupSummary {
   totalMinor: number;
   waiting: number;
   status: 'needsSettling' | 'settled' | 'new';
+  archived: boolean;
+  closed: { status: 'removed' | 'deleted'; since: string } | null;
+  active: boolean;
 }
 
 const live = (e: LocalExpense) => !e.deletedAt;
@@ -55,8 +58,8 @@ export function summarizeGroup(group: LocalGroup, expenses: readonly LocalExpens
     id: group.id,
     name: group.name,
     currencyCode: group.currencyCode,
-    memberCount: group.members.length,
-    memberNames: [...group.members].sort((a, b) => Number(b.id === group.meMemberID) - Number(a.id === group.meMemberID)).map((m) => displayName(m, group.meMemberID)),
+    memberCount: group.members.filter((m) => !m.removedAt).length,
+    memberNames: group.members.filter((m) => !m.removedAt).sort((a, b) => Number(b.id === group.meMemberID) - Number(a.id === group.meMemberID)).map((m) => displayName(m, group.meMemberID)),
     balances,
     myBalance: balances.find((b) => b.memberID === group.meMemberID)?.minorUnits ?? 0,
     counterparts,
@@ -64,6 +67,9 @@ export function summarizeGroup(group: LocalGroup, expenses: readonly LocalExpens
     totalMinor: active.reduce((sum, e) => sum + e.amountMinor, 0),
     waiting,
     status: unsettled ? 'needsSettling' : hasActivity ? 'settled' : 'new',
+    archived: group.archived ?? false,
+    closed: group.closed ?? null,
+    active: !group.closed && !group.archived,
   };
 }
 

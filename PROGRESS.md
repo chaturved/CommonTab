@@ -198,12 +198,17 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **App (phone and web):** Account > Profile has **Change name** and **Change password** (current and new, the 15-character meter, "Other devices are signed out"), and Session and data has a red **Delete account** (explains what happens, asks for your password, then signs you out and clears this device). A wrong password shows "That password isn't right." and does not look like an ended session. Core: `renameMe`, `changePassword`, `deleteAccount`, and error wording, with tests (core 297).
 - **Checked in a browser** against the real API with a throwaway account: rename, wrong then right current password, delete (signed out; neither password works afterwards). Backend running with the new routes.
 
-## Step 6f part 2: group lifecycle — backend done, app next
+## Step 6f part 2: group lifecycle — done
 - **Data model (approved):** migration `0007`: `expense_groups.archived_at` and `deleted_at`, `members.removed_at`. Tested up and down.
 - **API:** leave (blocked while owed or owing, with the amount), remove a member (owner), archive and unarchive, delete a group (owner, only when settled); `GET /groups` lists stubs for groups you lost access to; snapshots carry `archived` and `removedAt`. Details in `docs/shared-api.md`.
 - **Decisions:** removing a person keeps their balance in the group (the design's "You owed $18.00" read-only copy); a lone owner cannot leave and is told to delete the group; any member can archive a settled group and adding an expense unarchives it.
 - **Found by a test:** a deleted group was still readable by direct URL; the membership check now ignores deleted groups.
-- **Tests:** backend 495 passing (unit 318).
+- **Tests:** backend 495 passing (unit 318); core 307.
+- **Core:** closed-group stubs from the server mark the local copy closed (read-only, with the date) and are ignored for groups the device never had; the archived flag follows the server; `deleteLocalCopy` removes a group with its expenses, payments and queued changes (also from the saved data); people who left are not counted as members and are not pre-selected in new expenses.
+- **App (phone and web):** Members has **Leave group** and (owner) **Delete group** and **Remove** on each other person; **Leave blocked** ("Settle up before leaving", who owes whom, "Go to settle up") when your balance is not zero; leaving keeps a read-only copy shown as **Group removed** ("You're no longer in this group", "Your balance when you left", "Delete my copy"); a settled group offers **Archive group**, an archived one a banner with **Unarchive** (adding an expense also brings it back); Groups has Archived and Left sections and archived or closed groups leave Home, the sidebar and the Active and Settled tabs. Group deleted by the owner shows as "This group was deleted" to everyone else.
+- **Checked in a browser** with two throwaway accounts: leave blocked while owing $10.00, settle, leave (copy kept, "Left" tab), delete my copy (stays gone after sync), then as the owner: member shown as left, archive, unarchive banner, delete the group.
+- **Not built:** the design's "1 change you made offline couldn't be sent. Review it" link in the removed view (the count shows, without the link); a transfer-ownership screen (leaving hands it on automatically); removing a person who has an account is allowed even while they owe, as in the design.
+
 
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.

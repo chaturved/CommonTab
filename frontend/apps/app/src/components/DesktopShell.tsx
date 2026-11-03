@@ -24,7 +24,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const { user } = useApp();
   const { groups } = useGroups();
   const status = useSyncStatus();
-  const ordered = sortForList(groups.map((g) => g.summary));
+  const ordered = sortForList(groups.map((g) => g.summary).filter((s) => s.active));
   const activeGroup = path.startsWith('/group/') ? path.split('/')[2] : null;
   const dot = (balance: number, settled: boolean) => (settled || balance === 0 ? colors.muted : balance > 0 ? colors.accent : colors.owe);
 

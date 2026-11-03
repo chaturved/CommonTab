@@ -19,21 +19,28 @@ export default function Groups() {
   const { ready, groups } = useGroups();
   const status = useSyncStatus();
   const offline = status !== null && status.connectivity === 'offline';
-  const [tab, setTab] = useState<'active' | 'settled'>('active');
-  const active = sortForList(groups.map((g) => g.summary)).filter((s) => s.status !== 'settled');
-  const settled = sortForList(groups.map((g) => g.summary)).filter((s) => s.status === 'settled');
-  const shown = (tab === 'active' ? active : settled).map((s) => groups.find((g) => g.group.id === s.id)!);
+  type Tab = 'active' | 'settled' | 'archived' | 'closed';
+  const [tab, setTab] = useState<Tab>('active');
+  const ordered = sortForList(groups.map((g) => g.summary));
+  const active = ordered.filter((s) => s.active && s.status !== 'settled');
+  const settled = ordered.filter((s) => s.active && s.status === 'settled');
+  const archived = ordered.filter((s) => s.archived && !s.closed);
+  const closed = ordered.filter((s) => s.closed);
+  const byId = (list: typeof ordered) => list.map((s) => groups.find((g) => g.group.id === s.id)!);
+  const shown = byId({ active, settled, archived, closed }[tab]);
 
   const open = (id: string) => router.push({ pathname: '/group/[id]', params: { id } });
 
   if (desktop) {
-    const settledGroups = settled.map((s) => groups.find((g) => g.group.id === s.id)!);
-    const activeGroups = active.map((s) => groups.find((g) => g.group.id === s.id)!);
+    const settledGroups = byId(settled);
+    const activeGroups = byId(active);
+    const archivedGroups = byId(archived);
+    const closedGroups = byId(closed);
     return (
       <Screen wide>
         <PageHeader
           title="Groups"
-          subtitle={`${active.length} active, ${settled.length} settled`}
+          subtitle={`${active.length} active, ${settled.length} settled${archived.length ? `, ${archived.length} archived` : ''}`}
           actions={
             <>
               <Button label="Join with a code" variant="secondary" size="small" onPress={() => router.push('/join')} />
@@ -62,6 +69,18 @@ export default function Groups() {
             <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => open(g.group.id)} />
           ))}
         </View>
+        {archivedGroups.length > 0 ? <Eyebrow>ARCHIVED</Eyebrow> : null}
+        <View className="gap-2.5">
+          {archivedGroups.map((g) => (
+            <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => open(g.group.id)} />
+          ))}
+        </View>
+        {closedGroups.length > 0 ? <Eyebrow>NO LONGER IN</Eyebrow> : null}
+        <View className="gap-2.5">
+          {closedGroups.map((g) => (
+            <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => open(g.group.id)} />
+          ))}
+        </View>
       </Screen>
     );
   }
@@ -76,20 +95,20 @@ export default function Groups() {
       </View>
       <ConnectionBanner />
       <SegmentedControl
-        options={[{ key: 'active', label: `Active · ${active.length}` }, { key: 'settled', label: `Settled · ${settled.length}` }]}
+        options={[{ key: 'active', label: `Active · ${active.length}` }, { key: 'settled', label: `Settled · ${settled.length}` }, ...(archived.length ? [{ key: 'archived', label: `Archived · ${archived.length}` }] : []), ...(closed.length ? [{ key: 'closed', label: `Left · ${closed.length}` }] : [])]}
         value={tab}
-        onChange={(key) => setTab(key as 'active' | 'settled')}
+        onChange={(key) => setTab(key as Tab)}
       />
       {ready && shown.length === 0 ? (
         <View className="items-center gap-3 px-6 py-10">
-          <Text variant="section" className="text-center">{tab === 'active' ? 'No groups yet' : 'Nothing settled yet'}</Text>
+          <Text variant="section" className="text-center">{tab === 'active' ? 'No groups yet' : tab === 'settled' ? 'Nothing settled yet' : 'Nothing here'}</Text>
           <Text tone="muted" className="text-center">
-            {tab === 'active' ? 'Create a group to start splitting costs.' : 'Groups where everyone is even show up here.'}
+            {tab === 'active' ? 'Create a group to start splitting costs.' : tab === 'settled' ? 'Groups where everyone is even show up here.' : 'Groups show up here after you archive them or leave.'}
           </Text>
           {tab === 'active' ? <Button label="Create a group" onPress={() => router.push('/create-group')} /> : null}
         </View>
       ) : null}
-      {shown.length > 0 ? <Eyebrow>{tab === 'active' ? 'NEEDS SETTLING' : 'SETTLED'}</Eyebrow> : null}
+      {shown.length > 0 ? <Eyebrow>{{ active: 'NEEDS SETTLING', settled: 'SETTLED', archived: 'ARCHIVED', closed: 'NO LONGER IN' }[tab]}</Eyebrow> : null}
       <View className="gap-2.5">
         {shown.map((g) => (
           <GroupCard key={g.group.id} data={g} detail offline={offline} onPress={() => open(g.group.id)} />

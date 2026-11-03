@@ -59,7 +59,7 @@ export function localDate(nowMs: number): string {
 export function newExpenseForm(group: LocalGroup, nowMs: number): ExpenseForm {
   return {
     merchant: '', amountText: '', payerID: group.meMemberID, date: localDate(nowMs), category: 'dining', notes: '',
-    method: 'equal', participants: group.members.map((m) => m.id), amounts: {}, percents: {},
+    method: 'equal', participants: group.members.filter((m) => !m.removedAt).map((m) => m.id), amounts: {}, percents: {},
   };
 }
 
