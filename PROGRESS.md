@@ -122,6 +122,15 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - Not done yet: sign-out warning about waiting changes (6e), network-status events beyond sync failures.
 - Run locally: `uvicorn app.main:app` in `backend`, then `EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web` in `frontend/apps/app`.
 
+## Step 6b: auth screens — done
+- **Screens** (`apps/app/app/(auth)`): Welcome, Create account (name, email, password with the 15-character meter), Sign in (with the "WELCOME BACK" card, offline banner and "Try again", forgot-password link), and the **Session expired** sheet over the signed-in app (opens when the sync engine gets a 401; changes stay safe and sync after sign-in; "Not now" dismisses).
+- **Forgot password, two new screens designed from DESIGN.md** (no design files existed): *Reset your password* (email, "Send code") and *Enter your code* (code, new password with the meter, "Send a new code", wrong-code error). Success returns to Sign in with an info banner and the email filled in. Wording never says whether the email has an account. **Please review these two against what you want.**
+- **Core:** `passwordProgress`, `looksLikeEmail`, `describeAuthFailure` (offline, wrong password, email taken, wrong code, rate limited with seconds to wait, server down) with tests. **UI:** `FieldRow`/`FieldGroup`, `BackButton`, `PasswordMeter` with tests.
+- **Checked in a browser at 390px** (API on Supabase, mail logged instead of sent): Welcome, Create account, Sign in wrong password, offline, the full reset (wrong code, then the logged code typed with a space and lower case, then sign in with the new password), session expired then sign in again (the waiting change synced), dark mode. iOS and Android bundles build; not run on a device.
+- Not done: the "Have an invite code? Join a group" link on Welcome (comes with the Join screen in 6e); Terms and Privacy are plain text until the website (step 7) has pages. Disabled buttons use the kit's faded teal, not the design's grey (#C9D3D5).
+- **Known gap:** signing out while offline on web cannot clear the cookie on the server, so the browser can still be signed in next time. The sign-out flow in 6e should say so.
+- The Resend sandbox returned 422 for a message to `example.com`; the API logged it and still answered 202, as designed.
+
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
 - **Routes:** plain module-level `APIRouter`s, one module per resource (accounts, groups, invitations, expenses, settlements, receipts, bill sessions, analytics, health). Authentication is a dependency.
