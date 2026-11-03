@@ -3,18 +3,18 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .accounts.routes import router_for as account_routes
-from .accounts.service import AccountService
-from .analytics.repository import AnalyticsRepository
-from .analytics.routes import router_for as analytics_routes
-from .bill_sessions.routes import router_for as bill_session_routes
-from .bill_sessions.service import BillSessionService
-from .core.config import Settings, load_settings
-from .core.db import Database, create_db_engine
-from .core.ratelimit import install_rate_limits
-from .errors import APIError
-from .groups.routes import router_for as group_routes
-from .groups.service import GroupService
+from app.api.routes.accounts import router_for as account_routes
+from app.services.accounts import AccountService
+from app.repositories.analytics import AnalyticsRepository
+from app.api.routes.analytics import router_for as analytics_routes
+from app.api.routes.bill_sessions import router_for as bill_session_routes
+from app.services.bill_sessions import BillSessionService
+from app.core.config import Settings, load_settings
+from app.core.db import Database, create_db_engine
+from app.core.ratelimit import install_rate_limits
+from app.core.errors import APIError
+from app.api.routes.groups import router_for as group_routes
+from app.services.groups import GroupService
 
 
 def create_app(database: Database | None = None, lifetime_seconds: int = 7 * 24 * 60 * 60,

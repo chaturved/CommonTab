@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import text
 
-from ..core.db import Database
+from app.core.db import Database
 
 
 class AnalyticsRepository:

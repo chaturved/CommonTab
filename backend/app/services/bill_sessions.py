@@ -9,9 +9,9 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Row
 
-from ..core.db import Database
-from .models import Bill
-from .repository import BillSessionRepository
+from app.core.db import Database
+from app.schemas.bill_sessions import Bill
+from app.repositories.bill_sessions import BillSessionRepository
 
 
 class SessionMissing(Exception):

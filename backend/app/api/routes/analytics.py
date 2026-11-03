@@ -5,9 +5,9 @@ import secrets
 
 from fastapi import APIRouter, Header, HTTPException
 
-from ..accounts.auth import bearer_token
-from .models import ProductEvent
-from .repository import AnalyticsRepository
+from app.api.auth import bearer_token
+from app.schemas.analytics import ProductEvent
+from app.repositories.analytics import AnalyticsRepository
 
 
 def router_for(repository: AnalyticsRepository) -> APIRouter:

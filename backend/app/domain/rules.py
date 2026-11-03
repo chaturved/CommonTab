@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
-from ..errors import fail
+from app.core.errors import fail
 
 
 def parse_utc(value: str) -> datetime:

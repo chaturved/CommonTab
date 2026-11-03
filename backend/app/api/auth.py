@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from .service import AccountService
+from app.services.accounts import AccountService
 
 
 def bearer_token(authorization: str | None) -> str:

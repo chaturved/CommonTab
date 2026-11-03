@@ -5,11 +5,11 @@ from uuid import UUID
 from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import Response as RawResponse
 
-from ..accounts.auth import current_user
-from ..accounts.service import AccountService
-from .models import (AcceptInvitation, ExpenseInput, GroupInput, InvitationInput, MemberInput, RenameGroupInput,
+from app.api.auth import current_user
+from app.services.accounts import AccountService
+from app.schemas.groups import (AcceptInvitation, ExpenseInput, GroupInput, InvitationInput, MemberInput, RenameGroupInput,
                      SettlementInput)
-from .service import GroupService
+from app.services.groups import GroupService
 
 
 def router_for(service: GroupService, accounts: AccountService) -> APIRouter:

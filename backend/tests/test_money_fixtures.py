@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from app.errors import APIError
-from app.groups.rules import allocation
+from app.core.errors import APIError
+from app.domain.rules import allocation
 
 FIXTURES = Path(__file__).resolve().parents[2] / 'fixtures' / 'money'
 

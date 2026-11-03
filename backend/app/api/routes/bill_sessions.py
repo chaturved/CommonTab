@@ -4,8 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Header, HTTPException, status
 
-from .models import CreateSession, CreatedSession, Session, UpdateSession
-from .service import BillSessionService, SessionExpired, SessionMissing, VersionConflict
+from app.schemas.bill_sessions import CreateSession, CreatedSession, Session, UpdateSession
+from app.services.bill_sessions import BillSessionService, SessionExpired, SessionMissing, VersionConflict
 
 
 def router_for(store: BillSessionService) -> APIRouter:

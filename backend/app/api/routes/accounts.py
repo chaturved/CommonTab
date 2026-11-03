@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Header, Response
 
-from .auth import bearer_token, current_user
-from .models import AccountInput, LoginInput, UpdateProfileInput
-from .service import AccountService
+from app.api.auth import bearer_token, current_user
+from app.schemas.accounts import AccountInput, LoginInput, UpdateProfileInput
+from app.services.accounts import AccountService
 
 
 def router_for(accounts: AccountService) -> APIRouter:

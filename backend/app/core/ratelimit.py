@@ -8,7 +8,7 @@ from typing import Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .config import Settings
+from app.core.config import Settings
 
 AUTH_PATHS = {'/v1/accounts', '/v1/auth/sessions'}
 EXEMPT_PATHS = {'/healthz', '/health'}
