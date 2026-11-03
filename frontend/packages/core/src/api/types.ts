@@ -15,6 +15,9 @@ export interface Api {
   login(input: { email: string; password: string }): Promise<Session>;
   logout(): Promise<void>;
   me(): Promise<Profile>;
+  renameMe(name: string): Promise<Profile>;
+  changePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
   requestPasswordReset(email: string): Promise<void>;
   confirmPasswordReset(input: { email: string; code: string; newPassword: string }): Promise<void>;
   healthy(): Promise<boolean>;

@@ -23,10 +23,10 @@ export function passwordProgress(password: string): PasswordProgress {
 
 export const looksLikeEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
-export type AuthAction = 'signIn' | 'register' | 'resetRequest' | 'resetConfirm';
+export type AuthAction = 'signIn' | 'register' | 'resetRequest' | 'resetConfirm' | 'changePassword' | 'deleteAccount' | 'rename';
 
 export interface AuthFailure {
-  kind: 'offline' | 'wrongCredentials' | 'emailTaken' | 'wrongCode' | 'rateLimited' | 'invalid' | 'unavailable' | 'unknown';
+  kind: 'offline' | 'wrongPassword' | 'wrongCredentials' | 'emailTaken' | 'wrongCode' | 'rateLimited' | 'invalid' | 'unavailable' | 'unknown';
   title?: string;
   message: string;
 }
@@ -39,7 +39,9 @@ export function describeAuthFailure(error: unknown, action: AuthAction): AuthFai
       title: "You're offline",
       message: action === 'signIn' || action === 'register'
         ? 'Signing in the first time needs an internet connection. After that, CommonTab works offline.'
-        : 'Resetting a password needs an internet connection.',
+        : action === 'changePassword' || action === 'deleteAccount' || action === 'rename'
+          ? 'This needs an internet connection. Try again when you are back online.'
+          : 'Resetting a password needs an internet connection.',
     };
   }
   if (error.status === 429) {
@@ -47,6 +49,9 @@ export function describeAuthFailure(error: unknown, action: AuthAction): AuthFai
     return { kind: 'rateLimited', message: `Too many tries. Wait ${seconds} ${seconds === 1 ? 'second' : 'seconds'} and try again.` };
   }
   if (error.status >= 500) return { kind: 'unavailable', message: "CommonTab can't be reached right now. Try again in a moment." };
+  if ((action === 'changePassword' || action === 'deleteAccount') && error.code === 'wrong_password') {
+    return { kind: 'wrongPassword', message: "That password isn't right." };
+  }
   if (action === 'signIn' && error.status === 401) return { kind: 'wrongCredentials', message: "That email and password don't match." };
   if (action === 'register' && error.status === 409) return { kind: 'emailTaken', message: 'An account with this email already exists. Try signing in.' };
   if (action === 'resetConfirm' && error.code === 'invalid_code') {

@@ -79,6 +79,9 @@ export class FakeServer {
         if (!user) throw new ApiError(401, 'Not signed in');
         return { id: user.id, email: user.email, name: user.name };
       },
+      renameMe: notSimulated,
+      changePassword: notSimulated,
+      deleteAccount: notSimulated,
       requestPasswordReset: notSimulated,
       confirmPasswordReset: notSimulated,
       createInviteCode: notSimulated,

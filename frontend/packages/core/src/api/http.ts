@@ -56,6 +56,9 @@ export class HttpApi implements Api {
   login = (input: { email: string; password: string }) => this.call<Session>('POST', '/auth/sessions', input, false);
   logout = () => this.call<void>('DELETE', '/auth/sessions');
   me = () => this.call<Profile>('GET', '/me');
+  renameMe = (name: string) => this.call<Profile>('PATCH', '/me', { name });
+  changePassword = (input: { currentPassword: string; newPassword: string }) => this.call<void>('POST', '/me/password', input);
+  deleteAccount = (password: string) => this.call<void>('POST', '/me/delete', { password });
   requestPasswordReset = (email: string) => this.call<void>('POST', '/auth/password-reset', { email }, false);
   confirmPasswordReset = (input: { email: string; code: string; newPassword: string }) =>
     this.call<void>('POST', '/auth/password-reset/confirm', input, false);

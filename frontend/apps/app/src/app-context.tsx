@@ -12,6 +12,9 @@ interface AppValue {
   signOut(): Promise<void>;
   setPendingJoinCode(code: string | null): void;
   resetLocalData(): Promise<void>;
+  renameMe(name: string): Promise<void>;
+  changePassword(currentPassword: string, newPassword: string): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
 }
 
 const AppContext = createContext<AppValue | null>(null);
@@ -68,6 +71,13 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     }
   }, [services]);
 
+  const leave = useCallback(async () => {
+    await services!.auth.signOut();
+    await services!.clearLocalData();
+    setServices(await createServices());
+    setUser(null);
+  }, [services]);
+
   const value = useMemo<AppValue | null>(() => services && {
     services,
     user,
@@ -83,13 +93,19 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
       if (keep.currency) await fresh.setPref('currency', keep.currency);
       setServices(fresh);
     },
-    signOut: async () => {
-      await services.auth.signOut();
-      await services.clearLocalData();
-      setServices(await createServices());
-      setUser(null);
+    signOut: leave,
+    renameMe: async (name) => {
+      const profile = await services.api.renameMe(name);
+      const next = { ...user!, name: profile.name };
+      await services.rememberUser(next);
+      setUser(next);
     },
-  }, [services, user, accept]);
+    changePassword: (currentPassword, newPassword) => services.api.changePassword({ currentPassword, newPassword }),
+    deleteAccount: async (password) => {
+      await services.api.deleteAccount(password);
+      await leave();
+    },
+  }, [services, user, accept, leave]);
 
   return value ? <AppContext.Provider value={value}>{children}</AppContext.Provider> : <>{fallback}</>;
 }

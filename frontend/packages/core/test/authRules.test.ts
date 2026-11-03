@@ -52,6 +52,15 @@ describe('describeAuthFailure', () => {
     expect(describeAuthFailure(fail(401), 'register').kind).toBe('unknown');
   });
 
+  test('a wrong current password says so, and is not treated as a session problem', () => {
+    expect(describeAuthFailure(fail(403, 'wrong_password'), 'changePassword')).toEqual({ kind: 'wrongPassword', message: "That password isn't right." });
+    expect(describeAuthFailure(fail(403, 'wrong_password'), 'deleteAccount').kind).toBe('wrongPassword');
+  });
+
+  test('changing the password offline says it needs a connection', () => {
+    expect(describeAuthFailure(fail(0), 'changePassword').message).toMatch(/needs an internet connection/);
+  });
+
   test('anything else is the generic message', () => {
     expect(describeAuthFailure(new Error('boom'), 'signIn')).toMatchObject({ kind: 'unknown' });
   });

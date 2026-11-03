@@ -154,6 +154,14 @@ describe('HttpApi in cookie mode', () => {
     expect(calls[1]!.headers['Authorization']).toBeUndefined();
   });
 
+  test('rename, change password and delete account hit their routes with their bodies', async () => {
+    const { api, calls } = cookieClient([{ status: 200, body: {} }, { status: 204 }, { status: 204 }]);
+    await api.renameMe('Ada L');
+    await api.changePassword({ currentPassword: 'old', newPassword: 'a new long password' });
+    await api.deleteAccount('pw');
+    expect(calls.map((c) => `${c.method} ${c.url.replace('https://api.test/v1', '')}`)).toEqual(['PATCH /me', 'POST /me/password', 'POST /me/delete']);
+  });
+
   test('password reset, invite code, join and me hit their routes', async () => {
     const { api, calls } = cookieClient([{ status: 202, body: {} }, { status: 204 }, { status: 201, body: { code: 'ABCD-2345' } }, { status: 200, body: {} }, { status: 200, body: {} }]);
     await api.requestPasswordReset('a@b.c');

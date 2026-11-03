@@ -7,11 +7,12 @@ import { PageHeader } from '../../../src/components/PageHeader';
 import { Eyebrow } from '../../../src/components/Section';
 import { Screen } from '../../../src/components/Screen';
 import { SettingsPanel } from '../../../src/components/SettingsPanel';
+import { ChangeNameSheet, ChangePasswordSheet, DeleteAccountSheet } from '../../../src/components/AccountSheets';
 import { useIsDesktop } from '../../../src/layout';
 import { syncLabel } from '../../../src/syncLabel';
 import { useSyncStatus } from '../../../src/useSyncStatus';
 
-function SettingRow({ title, detail, label, onPress, divider, desktop }: { title: string; detail: string; label?: string; onPress?: () => void; divider?: boolean; desktop?: boolean }) {
+function SettingRow({ title, detail, label, onPress, divider, desktop, danger }: { title: string; detail: string; label?: string; onPress?: () => void; divider?: boolean; desktop?: boolean; danger?: boolean }) {
   return (
     <View className={`min-h-row-tall flex-row items-center gap-3.5 px-4 py-3 ${desktop ? 'px-5' : ''} ${divider ? 'border-b border-divider' : ''}`}>
       <View className="flex-1">
@@ -21,10 +22,10 @@ function SettingRow({ title, detail, label, onPress, divider, desktop }: { title
       {label && onPress ? (
         desktop ? (
           <Pressable accessibilityRole="button" accessibilityLabel={`${label}: ${title}`} onPress={onPress} hitSlop={8} className="min-h-touch justify-center active:opacity-80">
-            <Text variant="body-small" tone="accent" className="text-sm font-bold">{label}</Text>
+            <Text variant="body-small" tone={danger ? 'owe' : 'accent'} className="text-sm font-bold">{label}</Text>
           </Pressable>
         ) : (
-          <Button label={label} variant="secondary" size="small" accessibilityLabel={`${label}: ${title}`} onPress={onPress} />
+          <Button label={label} variant="secondary" size="small" accessibilityLabel={`${label}: ${title}`} onPress={onPress} className={danger ? 'border-owe' : ''} />
         )
       ) : null}
     </View>
@@ -37,6 +38,7 @@ export default function Account() {
   const { user, signOut } = useApp();
   const status = useSyncStatus();
   const [confirming, setConfirming] = useState(false);
+  const [dialog, setDialog] = useState<'name' | 'password' | 'delete' | null>(null);
   const unsynced = (status?.waiting ?? 0) + (status?.failed ?? 0) + (status?.conflicts ?? 0);
   const requestSignOut = () => (unsynced > 0 ? setConfirming(true) : void signOut());
 
@@ -58,12 +60,23 @@ export default function Account() {
     </Card>
   );
 
+  const profileRows = (
+    <>
+      <Eyebrow>PROFILE</Eyebrow>
+      <Card className="overflow-hidden">
+        <SettingRow desktop={desktop} title="Change name" detail={user?.name ?? ''} label="Edit" onPress={() => setDialog('name')} divider />
+        <SettingRow desktop={desktop} title="Change password" detail="Other devices are signed out" label="Change" onPress={() => setDialog('password')} />
+      </Card>
+    </>
+  );
+
   const session = (
     <>
       <Eyebrow>SESSION AND DATA</Eyebrow>
       <Card className="overflow-hidden">
         <SettingRow desktop={desktop} title="Sync status" detail={syncLabel(status, Date.now())} divider />
-        <SettingRow desktop={desktop} title="Sign out" detail="Warns first if changes are unsynced" label="Sign out" onPress={requestSignOut} />
+        <SettingRow desktop={desktop} title="Sign out" detail="Warns first if changes are unsynced" label="Sign out" onPress={requestSignOut} divider />
+        <SettingRow desktop={desktop} title="Delete account" detail="Removes your data from our servers" label="Delete" onPress={() => setDialog('delete')} danger />
       </Card>
     </>
   );
@@ -90,6 +103,7 @@ export default function Account() {
         <View className="flex-row items-start gap-[22px]">
           <View className="min-w-0 flex-1 gap-4">
             {profile}
+            {profileRows}
             {session}
           </View>
           <View className="min-w-0 flex-1 gap-4">
@@ -100,6 +114,7 @@ export default function Account() {
       ) : (
         <>
           {profile}
+          {profileRows}
           <Eyebrow>SETTINGS</Eyebrow>
           <Card className="overflow-hidden">
             <SettingRow title="Settings" detail="Appearance, currency and data" label="Open" onPress={() => router.push('/settings')} />
@@ -108,6 +123,9 @@ export default function Account() {
           {session}
         </>
       )}
+      <ChangeNameSheet visible={dialog === 'name'} onClose={() => setDialog(null)} />
+      <ChangePasswordSheet visible={dialog === 'password'} onClose={() => setDialog(null)} />
+      <DeleteAccountSheet visible={dialog === 'delete'} onClose={() => setDialog(null)} />
       <Sheet visible={confirming} onClose={() => setConfirming(false)} title="Sign out with unsynced changes?">
         <Text variant="body-small" tone="fg-soft" className="leading-[22px]">
           {unsynced} {unsynced === 1 ? 'change has' : 'changes have'} not synced yet. Signing out removes them from this device, and they will be lost.
