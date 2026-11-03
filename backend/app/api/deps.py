@@ -15,6 +15,7 @@ from app.services.expenses import ExpenseService
 from app.services.groups import GroupService
 from app.services.invitations import InvitationService
 from app.services.password_resets import PasswordResetService
+from app.services.rates import RatesService
 from app.services.receipts import ReceiptService
 from app.services.settlements import SettlementService
 
@@ -28,6 +29,7 @@ ReceiptsDep = Annotated[ReceiptService, Depends(ReceiptService)]
 BillSessionsDep = Annotated[BillSessionService, Depends(BillSessionService)]
 AnalyticsDep = Annotated[AnalyticsService, Depends(AnalyticsService)]
 ActivityDep = Annotated[ActivityService, Depends(ActivityService)]
+RatesDep = Annotated[RatesService, Depends(RatesService)]
 
 
 def enforce_rate_limit(request: Request, limiters: Annotated[RateLimiters, Depends(get_rate_limiters)]) -> None:

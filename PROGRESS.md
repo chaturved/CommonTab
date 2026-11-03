@@ -224,7 +224,8 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 
 ## Step 6f part 5: foreign-currency expenses
 - **Approved plan:** rates go through the backend (cached there), not from the apps; the app keeps the last rate per pair for offline.
-- **Commit 1 (server):** migration `0009` (`currency_code`, `original_minor`, `rate_micros`, all or none); the server checks `amountMinor` = converted original (`fixtures/money/convert.json`, shared with core `convertMinorUnits`). Not yet applied to Supabase.
+- **Commit 1 (server):** migration `0009` (`currency_code`, `original_minor`, `rate_micros`, all or none); the server checks `amountMinor` = converted original (`fixtures/money/convert.json`, shared with core `convertMinorUnits`). Applied to Supabase.
+- **Commit 2 (rates):** `GET /v1/rates?base=&quote=` from Frankfurter, cached an hour per pair on the server, stale if the source is down (`app/integrations/rates.py`, `app/services/rates.py`). Backend unit tests 385.
 
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.
