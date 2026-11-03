@@ -41,7 +41,9 @@ class ExpenseInput(BaseModel):
 
 class SettlementInput(BaseModel):
     id: UUID
-    group_version: int = Field(ge=1, alias="groupVersion")
+    # Accepted and ignored: settlements are checked against balances when applied, so a payment queued
+    # offline does not go stale when the group changes.
+    group_version: int | None = Field(default=None, ge=1, alias="groupVersion")
     from_id: UUID = Field(alias="fromID")
     to_id: UUID = Field(alias="toID")
     amount_minor: int = Field(gt=0, le=100_000_000_000, alias="amountMinor")

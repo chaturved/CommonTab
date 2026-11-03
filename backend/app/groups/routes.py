@@ -56,8 +56,12 @@ def router_for(service: GroupService, accounts: AccountService) -> APIRouter:
         return Response(status_code=204)
 
     @router.post('/groups/{group_id}/settlements', status_code=201)
-    def settle(group_id: UUID, input: SettlementInput, authorization: str | None = Header(default=None)):
-        return service.settle(str(group_id), user(authorization), input)
+    def settle(group_id: UUID, input: SettlementInput, response: Response,
+               authorization: str | None = Header(default=None)):
+        settlement, created = service.settle(str(group_id), user(authorization), input)
+        if not created:
+            response.status_code = 200  # the same request was already applied
+        return settlement
 
     @router.put('/groups/{group_id}/expenses/{expense_id}/receipt')
     async def put_receipt(group_id: UUID, expense_id: UUID, request: Request,

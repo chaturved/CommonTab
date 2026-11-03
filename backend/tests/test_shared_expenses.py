@@ -50,8 +50,7 @@ def test_allocation_balance_settlement_and_versions(database):
     payload['amountMinor'] = 10000
     assert api.put(url, headers=headers(bob), json=payload).json()['version'] == 2
     settled = api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(bob), json={
-        'id': str(uuid4()), 'groupVersion': api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()['version'],
-        'fromID': bid, 'toID': aid, 'amountMinor': 5000
+        'id': str(uuid4()), 'fromID': bid, 'toID': aid, 'amountMinor': 5000
     })
     assert settled.status_code == 201, settled.text
     assert all(v['minorUnits'] == 0 for v in api.get(f"/v1/groups/{group['id']}",
@@ -149,7 +148,7 @@ def test_shared_expense_validation_and_persistence_after_restart(database):
     assert restarted.get(receipt_url, headers=headers(ada)).status_code == 404
 
 
-def test_settlement_rejects_stale_group_and_overpayment(database):
+def test_settlement_checks_permissions_and_overpayment(database):
     api = client(database)
     ada = register(api, 'ada@example.com', 'Ada')
     bob = register(api, 'bob@example.com', 'Bob')
@@ -161,14 +160,13 @@ def test_settlement_rejects_stale_group_and_overpayment(database):
     record = expense(group, aid, [aid, bid], amount=1000)
     assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}",
                    headers=headers(ada), json=record).status_code == 200
-    state = api.get(f"/v1/groups/{group['id']}", headers=headers(bob)).json()
-    settlement = {'id': str(uuid4()), 'groupVersion': state['version'],
-                  'fromID': bid, 'toID': aid, 'amountMinor': 500}
+    settlement = {'id': str(uuid4()), 'fromID': bid, 'toID': aid, 'amountMinor': 500}
     endpoint = f"/v1/groups/{group['id']}/settlements"
     assert api.post(endpoint, headers=headers(eve), json=settlement).status_code == 403
     assert api.post(endpoint, headers=headers(bob), json={**settlement, 'amountMinor': 501}).status_code == 422
     assert api.patch(f"/v1/groups/{group['id']}", headers=headers(ada), json={'name': 'Renamed'}).status_code == 200
-    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 409
-    settlement['groupVersion'] += 1
+    # The group changed since the payment was made: that no longer matters.
     assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 201
-    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 422
+    assert api.post(endpoint, headers=headers(bob), json=settlement).status_code == 200  # replay
+    # ...and a new payment on top of a paid-up balance is an overpayment.
+    assert api.post(endpoint, headers=headers(bob), json={**settlement, 'id': str(uuid4())}).status_code == 422
