@@ -35,3 +35,33 @@ Not verified yet, so SPEC items stay open:
 - The screen designs use fixed `height: 72px` rows; components use `min-h` instead (per CLAUDE.md).
 
 Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Keep mine" / "Keep theirs"), not the wording in `Conflict.dc.html`.
+
+## Step 4: backend — done
+- **Postgres + Alembic.** Supabase (Session pooler) is the hosting choice; the code only needs `DATABASE_URL` (`backend/.env`, gitignored). Migrations `0001` (schema) and `0002` (tombstones) are tested up and down. SQLAlchemy 2 + psycopg 3.
+- **Layers.** `routes` / `service` / `repository` per area (accounts, groups, bill sessions); analytics has a repository only. Analytics, bill sessions and accounts moved off SQLite too.
+- **Contract changes (all approved, documented in `docs/shared-api.md`):** 409 body `{detail, code, current}`; replaying an identical expense PUT returns 200; tombstones (`deletedExpenses`, `deletedAt`), delete wins and is repeatable, restore via the tombstone's version; settlements need no `groupVersion`, replay returns 200, same id + different payment is 409, overpayment is 422 with `maxAmountMinor`; `GET /healthz`.
+- **Rate limiting** (added at your request): sign-in and sign-up per IP, other calls per session, 429 with `Retry-After`. In memory, so one API instance only.
+- **Concurrency.** Settlements lock the group row; a test races two payments for the same balance and exactly one wins.
+- **Tests.** Backend 75 (Postgres, each worker in its own throwaway schema, run 4 in parallel), core 126, ui 104. CI: new `backend` job with a Postgres 16 service, plus the frontend job.
+- **Other fixes:** receipt bytes are no longer loaded for every expense in a snapshot; settlement check-then-insert race closed.
+
+### SPEC acceptance checks for this step
+- A settlement queued offline never fails with a version error; an overpayment is rejected with a clear message: tested.
+- Deleting an expense updates balances for all members and appears in group history (`deletedExpenses`): tested.
+- Reconnect after a lost response syncs once, no duplicates and no self-conflict: tested at the API (replay of create, edit, delete, restore, settlement). The client-side half comes with the sync engine (step 5).
+
+### Not done / open
+- **`alembic upgrade head` has not been run against your Supabase `public` schema.** Tests only use throwaway `test_*` schemas, so the database is still empty. Run it when you are ready (it creates nine tables), or tell me to.
+- The Alembic **CLI** path is untested against a real database (tests call the same migrations through the Python API). The `uvicorn ... --factory` start was checked: `/healthz` answered `ok` against Supabase.
+- The **Dockerfile** and the new **CI backend job** have not been run.
+- Tests take about a minute because each statement is a ~65 ms round trip to Supabase from here; near the database it would be much faster.
+- `SYNC_ARCHITECTURE.md` says expense retries are already safe. They were not: a retry of an applied write got a 409 for its own change. Fixed server-side, as above. The doc could be updated.
+- Legacy iOS client: unchanged request shapes still work, except it no longer gets a 409 for deleting with a stale version.
+
+### Backend gap list (v1 features SPEC needs that the API does not have yet; not built in step 4)
+1. Invite by code only (today invitations are bound to an email and accepted only by that account).
+2. Members who are not accounts (SYNC "named members until invited", migration upload). `payer_id` and group members reference `users` today. Needs a data-model decision before step 6.
+3. Leave group (blocked while owed), delete group, archive when settled, removed-member read-only copy.
+4. Delete account (removes server data).
+5. `GET /groups/{id}/changes?since=` feed (SYNC phase 2), repeating expenses, push registration, exchange rates (v1.1).
+6. Tombstone purge policy (kept forever for now).
