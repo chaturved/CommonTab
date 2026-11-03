@@ -1,0 +1,5 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": { "strict": true, "noEmit": true, "jsxImportSource": "nativewind" },
+  "include": ["src", "test", "../../apps/app/nativewind-env.d.ts"]
+}
