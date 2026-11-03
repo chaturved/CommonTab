@@ -39,7 +39,7 @@ class TestSettlementService:
         return self.service.settle(str(self.group_id), str(self.user_id), body)
 
     def test_records_a_payment_up_to_the_balance(self):
-        body = payment(self.repos, 500)
+        body = self.payment(500)
         self.settlements.settlement.side_effect = [None, settlement_row(id=body.id, amount_minor=500)]
         settlement, created = self.settle(body)
         assert created and settlement['amountMinor'] == 500
@@ -49,11 +49,11 @@ class TestSettlementService:
 
     def test_takes_the_group_lock_before_checking_balances(self):
         self.settlements.settlement.side_effect = [None, settlement_row()]
-        self.settle(payment(self.repos, 100))
+        self.settle(self.payment(100))
         self.groups.group.assert_called_once_with(self.group_id, lock=True)
 
     def test_repeating_the_same_payment_returns_it_without_a_second_write(self):
-        body = payment(self.repos, 200)
+        body = self.payment(200)
         self.settlements.settlement.return_value = settlement_row(
             id=body.id, group_id=self.group_id, from_id=self.bob, to_id=self.ada, amount_minor=200)
         settlement, created = self.settle(body)
@@ -62,7 +62,7 @@ class TestSettlementService:
         self.groups.bump_version.assert_not_called()
 
     def test_the_same_id_with_a_different_amount_is_an_id_conflict(self):
-        body = payment(self.repos, 300)
+        body = self.payment(300)
         self.settlements.settlement.return_value = settlement_row(
             id=body.id, group_id=self.group_id, from_id=self.bob, to_id=self.ada, amount_minor=200)
         with pytest.raises(APIError) as caught:
@@ -71,22 +71,22 @@ class TestSettlementService:
 
     def test_paying_more_than_is_owed_reports_the_maximum(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 501))
+            self.settle(self.payment(501))
         assert caught.value.status == 422 and caught.value.extra['maxAmountMinor'] == 500
         self.settlements.insert_settlement.assert_not_called()
 
     def test_paying_in_the_wrong_direction_says_nothing_is_owed(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 100, frm=self.ada, to=self.bob))  # Ada owes Bob nothing
+            self.settle(self.payment(100, frm=self.ada, to=self.bob))  # Ada owes Bob nothing
         assert caught.value.status == 422 and caught.value.extra['maxAmountMinor'] == 0
 
     def test_a_member_who_is_not_in_the_group_cannot_be_paid(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 100, to=uuid4()))
+            self.settle(self.payment(100, to=uuid4()))
         assert caught.value.status == 422
 
     def test_only_a_participant_may_record_it(self):
         with pytest.raises(APIError) as caught:
-            self.settle(payment(self.repos, 100, frm=uuid4(), to=self.ada))
+            self.settle(self.payment(100, frm=uuid4(), to=self.ada))
         assert caught.value.status == 403
         self.snapshots.build.assert_not_called()
