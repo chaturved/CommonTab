@@ -7,7 +7,8 @@ from fastapi.responses import Response as RawResponse
 
 from ..accounts.auth import current_user
 from ..accounts.service import AccountService
-from .models import AcceptInvitation, ExpenseInput, GroupInput, InvitationInput, RenameGroupInput, SettlementInput
+from .models import (AcceptInvitation, ExpenseInput, GroupInput, InvitationInput, MemberInput, RenameGroupInput,
+                     SettlementInput)
 from .service import GroupService
 
 
@@ -32,6 +33,11 @@ def router_for(service: GroupService, accounts: AccountService) -> APIRouter:
     @router.patch('/groups/{group_id}')
     def rename_group(group_id: UUID, input: RenameGroupInput, authorization: str | None = Header(default=None)):
         return service.rename_group(str(group_id), user(authorization), input.name)
+
+    @router.put('/groups/{group_id}/members/{member_id}')
+    def put_member(group_id: UUID, member_id: UUID, input: MemberInput,
+                   authorization: str | None = Header(default=None)):
+        return service.put_member(str(group_id), str(member_id), user(authorization), input.name)
 
     @router.post('/groups/{group_id}/invitations', status_code=201)
     def invite(group_id: UUID, input: InvitationInput, authorization: str | None = Header(default=None)):

@@ -46,8 +46,7 @@ class GroupService:
         return {
             'id': str(group.id), 'name': group.name, 'currencyCode': group.currency_code,
             'ownerID': str(by_user[group.owner_id]), 'meMemberID': str(by_user[user_id]), 'version': group.version,
-            'members': [{'id': str(m.id), 'name': m.name, 'userID': str(m.user_id) if m.user_id else None,
-                         'email': m.email} for m in members],
+            'members': [self.member_payload(m) for m in members],
             'expenses': expenses, 'deletedExpenses': deleted, 'settlements': settlements,
             'balances': balances(member_ids, expenses, settlements),
         }
@@ -83,6 +82,33 @@ class GroupService:
             self.require_member(db, gid, UUID(user_id))
             self.repository.rename_group(db, gid, name.strip())
             return self.snapshot(db, gid, UUID(user_id))
+
+    def put_member(self, group_id: str, member_id: str, user_id: str, name: str) -> dict:
+        """
+        Add a person to the group or rename one (the client chooses the id, so repeating a request is safe).
+        A new person has no account until an invitation links one. Names need not be unique; last write wins.
+        """
+        name = name.strip()
+        if not name:
+            fail(422, 'Name is required')
+        gid, mid = UUID(group_id), UUID(member_id)
+        with self.db.transaction() as db:
+            self.require_member(db, gid, UUID(user_id))
+            existing = self.repository.member(db, mid, lock=True)
+            if existing is None:
+                self.repository.insert_member(db, mid, gid, None, name, datetime.now(timezone.utc))
+                self.repository.bump_version(db, gid)
+            elif existing.group_id != gid:
+                fail(409, 'Member ID belongs to another group', 'id_conflict')
+            elif existing.name != name:
+                self.repository.rename_member(db, mid, name)
+                self.repository.bump_version(db, gid)
+            return self.member_payload(self.repository.member(db, mid))
+
+    @staticmethod
+    def member_payload(row: Row) -> dict:
+        return {'id': str(row.id), 'name': row.name, 'userID': str(row.user_id) if row.user_id else None,
+                'email': row.email}
 
     def invite(self, group_id: str, user_id: str, email: str) -> dict:
         email = self.accounts.email(email)

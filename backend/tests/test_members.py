@@ -1,7 +1,9 @@
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from helpers import create_group, headers, join, m, register
+from helpers import create_group, expense, headers, join, m, register
 
 
 def two_people(database):
@@ -48,3 +50,91 @@ def test_groups_list_carries_me_member_id_for_each_group(database):
     other = create_group(api, ada)
     listed = {g['id']: g['meMemberID'] for g in api.get('/v1/groups', headers=headers(ada)).json()}
     assert listed == {group['id']: m(ada, group), other['id']: other['meMemberID']}
+
+
+# --- people without an account ---------------------------------------------------
+
+def add_person(api, group, user, name='Sam', member_id=None):
+    member_id = member_id or str(uuid4())
+    response = api.put(f"/v1/groups/{group['id']}/members/{member_id}", headers=headers(user), json={'name': name})
+    return member_id, response
+
+
+def test_add_a_person_who_has_no_account(database):
+    api, ada, bob, group = two_people(database)
+    before = snapshot(api, group, ada)['version']
+    sam, response = add_person(api, group, ada)
+    assert response.status_code == 200, response.text
+    assert response.json() == {'id': sam, 'name': 'Sam', 'userID': None, 'email': None}
+    snap = snapshot(api, group, bob)  # visible to everyone in the group
+    assert {'id': sam, 'name': 'Sam', 'userID': None, 'email': None} in snap['members']
+    assert snap['version'] == before + 1
+
+
+def test_repeating_the_same_request_changes_nothing(database):
+    api, ada, bob, group = two_people(database)
+    sam, _ = add_person(api, group, ada)
+    version = snapshot(api, group, ada)['version']
+    _, again = add_person(api, group, ada, 'Sam', sam)
+    assert again.status_code == 200
+    assert snapshot(api, group, ada)['version'] == version
+    assert len([x for x in snapshot(api, group, ada)['members'] if x['name'] == 'Sam']) == 1
+
+
+def test_rename_a_person_last_write_wins(database):
+    api, ada, bob, group = two_people(database)
+    sam, _ = add_person(api, group, ada)
+    version = snapshot(api, group, ada)['version']
+    add_person(api, group, bob, 'Samuel', sam)
+    snap = snapshot(api, group, ada)
+    assert [x['name'] for x in snap['members'] if x['id'] == sam] == ['Samuel']
+    assert snap['version'] == version + 1
+
+
+def test_two_people_may_share_a_name(database):
+    api, ada, bob, group = two_people(database)
+    add_person(api, group, ada, 'Sam')
+    add_person(api, group, ada, 'Sam')
+    assert len([x for x in snapshot(api, group, ada)['members'] if x['name'] == 'Sam']) == 2
+
+
+def test_member_ids_cannot_cross_groups(database):
+    api, ada, bob, group = two_people(database)
+    other = create_group(api, ada)
+    sam, _ = add_person(api, other, ada)
+    _, response = add_person(api, group, ada, 'Sam', sam)
+    assert response.status_code == 409 and response.json()['code'] == 'id_conflict'
+    assert sam not in [x['id'] for x in snapshot(api, group, ada)['members']]
+
+
+def test_only_group_members_can_add_people_and_names_are_validated(database):
+    api, ada, bob, group = two_people(database)
+    eve = register(api, 'eve@example.com', 'Eve')
+    assert add_person(api, group, eve)[1].status_code == 404
+    assert add_person(api, group, ada, '   ')[1].status_code == 422
+    assert add_person(api, group, ada, 'x' * 81)[1].status_code == 422
+    assert api.put(f"/v1/groups/{group['id']}/members/{uuid4()}", json={'name': 'Sam'}).status_code == 401
+
+
+def test_an_unlinked_person_can_pay_and_share_expenses_and_be_paid_back(database):
+    api, ada, bob, group = two_people(database)
+    sam, _ = add_person(api, group, ada)
+    aid, bid = m(ada, group), m(bob, group)
+    record = expense(group, sam, [aid, bid, sam], amount=9000)  # Sam paid for everyone
+    assert api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record).status_code == 200
+    balances = {b['memberID']: b['minorUnits'] for b in snapshot(api, group, ada)['balances']}
+    assert balances == {sam: 6000, aid: -3000, bid: -3000}
+    pay = {'id': str(uuid4()), 'fromID': aid, 'toID': sam, 'amountMinor': 3000}
+    assert api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(ada), json=pay).status_code == 201
+    # Bob is not a party to a payment between Ada and Sam.
+    other = {'id': str(uuid4()), 'fromID': aid, 'toID': sam, 'amountMinor': 1}
+    assert api.post(f"/v1/groups/{group['id']}/settlements", headers=headers(bob), json=other).status_code == 403
+
+
+def test_expenses_cannot_use_a_person_from_another_group(database):
+    api, ada, bob, group = two_people(database)
+    other = create_group(api, ada)
+    stranger, _ = add_person(api, other, ada)
+    record = expense(group, m(ada, group), [m(ada, group), stranger])
+    response = api.put(f"/v1/groups/{group['id']}/expenses/{record['id']}", headers=headers(ada), json=record)
+    assert response.status_code == 422

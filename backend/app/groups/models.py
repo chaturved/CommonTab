@@ -49,6 +49,10 @@ class SettlementInput(BaseModel):
     amount_minor: int = Field(gt=0, le=100_000_000_000, alias="amountMinor")
 
 
+class MemberInput(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
 class RenameGroupInput(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 

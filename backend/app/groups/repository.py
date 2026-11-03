@@ -54,6 +54,14 @@ class GroupRepository:
                             {'id': member_id, 'g': group_id, 'u': user_id, 'name': name, 'created_at': created_at})
         return result.rowcount == 1
 
+    def member(self, db: Connection, member_id: UUID, lock: bool = False) -> Row | None:
+        sql = '''SELECT m.id, m.group_id, m.user_id, m.name, u.email FROM members m
+                 LEFT JOIN users u ON u.id = m.user_id WHERE m.id=:id''' + (' FOR UPDATE OF m' if lock else '')
+        return db.execute(text(sql), {'id': member_id}).fetchone()
+
+    def rename_member(self, db: Connection, member_id: UUID, name: str) -> None:
+        db.execute(text('UPDATE members SET name=:name WHERE id=:id'), {'name': name, 'id': member_id})
+
     def rename_group(self, db: Connection, group_id: UUID, name: str) -> None:
         db.execute(text('UPDATE expense_groups SET name=:name, version=version+1 WHERE id=:g'),
                    {'name': name, 'g': group_id})
