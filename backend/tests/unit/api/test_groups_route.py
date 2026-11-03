@@ -93,3 +93,38 @@ class TestGroupsRoute:
 
         assert self.client.get('/v1/groups').status_code == 401
         self.service.list_groups.assert_not_called()
+
+
+class TestGroupLifecycleRoutes:
+    @pytest.fixture(autouse=True)
+    def setup(self, client, overrides) -> None:
+        self.client = client
+        self.service = MagicMock(spec_set=GroupService)
+        overrides[GroupService] = lambda: self.service
+
+    @pytest.mark.parametrize('method, suffix, call', [
+        ('post', '/leave', 'leave'),
+        ('post', '/archive', 'archive'),
+        ('post', '/unarchive', 'unarchive'),
+        ('delete', '', 'delete_group'),
+    ])
+    def test_each_action_is_204_for_the_signed_in_account(self, method, suffix, call):
+        response = getattr(self.client, method)(f'/v1/groups/{GROUP}{suffix}')
+
+        assert (response.status_code, response.content) == (204, b'')
+        getattr(self.service, call).assert_called_once_with(GROUP, USER_ID)
+
+    def test_removing_a_member_names_group_and_member(self):
+        member = str(uuid4())
+
+        response = self.client.delete(f'/v1/groups/{GROUP}/members/{member}')
+
+        assert response.status_code == 204
+        self.service.remove_member.assert_called_once_with(GROUP, member, USER_ID)
+
+    def test_a_refusal_keeps_its_code_and_extra_fields(self):
+        self.service.leave.side_effect = APIError(409, 'Settle up before leaving', 'owes_balance', {'balanceMinor': -1800})
+
+        response = self.client.post(f'/v1/groups/{GROUP}/leave')
+
+        assert (response.status_code, response.json()) == (409, {'detail': 'Settle up before leaving', 'code': 'owes_balance', 'balanceMinor': -1800})

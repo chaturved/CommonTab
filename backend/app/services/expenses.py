@@ -35,6 +35,8 @@ class ExpenseService:
         participants = [str(member) for member in input.participants]
         allocations = allocation(input.amount_minor, input.method, participants, input.values)
         self.guard.require(gid, uid)
+        if self.groups.group(gid).archived_at is not None:
+            self.groups.unarchive(gid)
         members = self.members.member_ids(gid)
         if input.payer_id not in members or not set(input.participants).issubset(members):
             fail(422, 'Payer and participants must belong to the group')

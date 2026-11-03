@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from fastapi import Depends
 
 from app.core.errors import fail
+from app.domain.rules import format_utc
 from app.repositories.groups import GroupRepository
 from app.repositories.members import MemberRepository
 from app.repositories.users import UserRepository
@@ -32,7 +33,10 @@ class GroupService:
 
     def list_groups(self, user_id: str) -> list[dict]:
         uid = UUID(user_id)
-        return [self.snapshots.build(gid, uid) for gid in self.groups.group_ids_for_user(uid)]
+        active = [self.snapshots.build(gid, uid) for gid in self.groups.group_ids_for_user(uid)]
+        closed = [{'id': str(row.id), 'name': row.name, 'status': row.status, 'since': format_utc(row.since)}
+                  for row in self.groups.closed_for_user(uid)]
+        return active + closed
 
     def create_group(self, user_id: str, input: GroupInput) -> tuple[dict, bool]:
         name = input.name.strip()
@@ -87,3 +91,58 @@ class GroupService:
             self.members.rename_member(mid, name)
             self.groups.bump_version(gid)
         return member_payload(self.members.member(mid))
+
+    def _my_balance(self, snapshot: dict, member_id: UUID) -> int:
+        return next(item['minorUnits'] for item in snapshot['balances'] if item['memberID'] == str(member_id))
+
+    def _require_settled(self, snapshot: dict) -> None:
+        if any(item['minorUnits'] != 0 for item in snapshot['balances']):
+            fail(409, 'Everyone needs to be settled up first', 'not_settled')
+
+    def _require_owner(self, gid: UUID, uid: UUID) -> None:
+        if self.groups.group(gid, lock=True).owner_id != uid:
+            fail(403, 'Only the owner can do this', 'not_owner')
+
+    def leave(self, group_id: str, user_id: str) -> None:
+        gid, uid = UUID(group_id), UUID(user_id)
+        me = self.guard.require(gid, uid)
+        balance = self._my_balance(self.snapshots.build(gid, uid), me.id)
+        if balance != 0:
+            fail(409, 'Settle up before leaving', 'owes_balance', balanceMinor=balance)
+        if self.groups.group(gid, lock=True).owner_id == uid:
+            others = self.members.other_user_ids(gid, uid)
+            if not others:
+                fail(409, 'You are the only person with an account here. Delete the group instead.', 'last_account')
+            self.groups.set_owner(gid, others[0])
+        self.members.remove_member(me.id, datetime.now(timezone.utc))
+        self.groups.bump_version(gid)
+
+    def remove_member(self, group_id: str, member_id: str, user_id: str) -> None:
+        gid, uid, mid = UUID(group_id), UUID(user_id), UUID(member_id)
+        self.guard.require(gid, uid)
+        self._require_owner(gid, uid)
+        target = self.members.member(mid, lock=True)
+        if target is None or target.group_id != gid or target.removed_at is not None:
+            fail(404, 'Member not found')
+        if target.user_id == uid:
+            fail(409, 'Use Leave group to remove yourself', 'use_leave')
+        self.members.remove_member(mid, datetime.now(timezone.utc))
+        self.groups.bump_version(gid)
+
+    def archive(self, group_id: str, user_id: str) -> None:
+        gid, uid = UUID(group_id), UUID(user_id)
+        self.guard.require(gid, uid)
+        self._require_settled(self.snapshots.build(gid, uid))
+        self.groups.archive(gid, datetime.now(timezone.utc))
+
+    def unarchive(self, group_id: str, user_id: str) -> None:
+        gid = UUID(group_id)
+        self.guard.require(gid, UUID(user_id))
+        self.groups.unarchive(gid)
+
+    def delete_group(self, group_id: str, user_id: str) -> None:
+        gid, uid = UUID(group_id), UUID(user_id)
+        self.guard.require(gid, uid)
+        self._require_owner(gid, uid)
+        self._require_settled(self.snapshots.build(gid, uid))
+        self.groups.soft_delete(gid, datetime.now(timezone.utc))

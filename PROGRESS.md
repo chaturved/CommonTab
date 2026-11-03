@@ -198,6 +198,13 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **App (phone and web):** Account > Profile has **Change name** and **Change password** (current and new, the 15-character meter, "Other devices are signed out"), and Session and data has a red **Delete account** (explains what happens, asks for your password, then signs you out and clears this device). A wrong password shows "That password isn't right." and does not look like an ended session. Core: `renameMe`, `changePassword`, `deleteAccount`, and error wording, with tests (core 297).
 - **Checked in a browser** against the real API with a throwaway account: rename, wrong then right current password, delete (signed out; neither password works afterwards). Backend running with the new routes.
 
+## Step 6f part 2: group lifecycle — backend done, app next
+- **Data model (approved):** migration `0007`: `expense_groups.archived_at` and `deleted_at`, `members.removed_at`. Tested up and down.
+- **API:** leave (blocked while owed or owing, with the amount), remove a member (owner), archive and unarchive, delete a group (owner, only when settled); `GET /groups` lists stubs for groups you lost access to; snapshots carry `archived` and `removedAt`. Details in `docs/shared-api.md`.
+- **Decisions:** removing a person keeps their balance in the group (the design's "You owed $18.00" read-only copy); a lone owner cannot leave and is told to delete the group; any member can archive a settled group and adding an expense unarchives it.
+- **Found by a test:** a deleted group was still readable by direct URL; the membership check now ignores deleted groups.
+- **Tests:** backend 495 passing (unit 318).
+
 ### Plan from here
 6f the gap list: changes feed (Activity), delete account, change password, export CSV, leave, delete and archive group. 6f needs new API endpoints; ask before building them.
 

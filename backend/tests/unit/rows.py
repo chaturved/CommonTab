@@ -8,7 +8,7 @@ NOW = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc)
 
 
 def member_row(**changes) -> SimpleNamespace:
-    return SimpleNamespace(**{'id': uuid4(), 'group_id': uuid4(), 'user_id': uuid4(), 'name': 'Ada', 'email': None, **changes})
+    return SimpleNamespace(**{'id': uuid4(), 'group_id': uuid4(), 'user_id': uuid4(), 'name': 'Ada', 'email': None, 'removed_at': None, **changes})
 
 
 def user_row(**changes) -> SimpleNamespace:
@@ -36,4 +36,4 @@ def invitation_row(**changes) -> SimpleNamespace:
 
 def group_row(**changes) -> SimpleNamespace:
     return SimpleNamespace(**{'id': uuid4(), 'name': 'Trip', 'currency_code': 'USD', 'owner_id': uuid4(), 'version': 1,
-                              **changes})
+                              'archived_at': None, 'deleted_at': None, **changes})

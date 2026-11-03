@@ -17,9 +17,18 @@ class GroupRepository:
         return self.connection.execute(text(sql), {'g': group_id}).fetchone()
 
     def group_ids_for_user(self, user_id: UUID) -> list[UUID]:
-        rows = self.connection.execute(text('SELECT group_id FROM members WHERE user_id=:u ORDER BY group_id'),
-                          {'u': user_id}).fetchall()
+        rows = self.connection.execute(text('''SELECT m.group_id FROM members m JOIN expense_groups g ON g.id = m.group_id
+                                  WHERE m.user_id=:u AND m.removed_at IS NULL AND g.deleted_at IS NULL
+                                  ORDER BY m.group_id'''), {'u': user_id}).fetchall()
         return [row.group_id for row in rows]
+
+    def closed_for_user(self, user_id: UUID) -> list[Row]:
+        return self.connection.execute(text('''
+            SELECT g.id, g.name, CASE WHEN g.deleted_at IS NOT NULL THEN 'deleted' ELSE 'removed' END AS status,
+                   COALESCE(g.deleted_at, m.removed_at) AS since
+            FROM members m JOIN expense_groups g ON g.id = m.group_id
+            WHERE m.user_id=:u AND (m.removed_at IS NOT NULL OR g.deleted_at IS NOT NULL)
+            ORDER BY g.id'''), {'u': user_id}).fetchall()
 
     def insert_group(self, group_id: UUID, name: str, currency: str, owner: UUID,
                      created_at: datetime) -> bool:
@@ -44,3 +53,15 @@ class GroupRepository:
         for table in ('settlements', 'expenses', 'invitations', 'members'):
             self.connection.execute(text(f'DELETE FROM {table} WHERE group_id=:g'), {'g': group_id})
         self.connection.execute(text('DELETE FROM expense_groups WHERE id=:g'), {'g': group_id})
+
+    def archive(self, group_id: UUID, now: datetime) -> None:
+        self.connection.execute(text('UPDATE expense_groups SET archived_at=:now, version=version+1 WHERE id=:g'),
+                                {'now': now, 'g': group_id})
+
+    def unarchive(self, group_id: UUID) -> None:
+        self.connection.execute(text('UPDATE expense_groups SET archived_at=NULL, version=version+1 WHERE id=:g'),
+                                {'g': group_id})
+
+    def soft_delete(self, group_id: UUID, now: datetime) -> None:
+        self.connection.execute(text('UPDATE expense_groups SET deleted_at=:now, version=version+1 WHERE id=:g'),
+                                {'now': now, 'g': group_id})

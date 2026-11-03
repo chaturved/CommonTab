@@ -66,9 +66,9 @@ class TestMembers:
         before = snapshot(api, group, ada)['version']
         sam, response = add_person(api, group, ada)
         assert response.status_code == 200, response.text
-        assert response.json() == {'id': sam, 'name': 'Sam', 'userID': None, 'email': None}
+        assert response.json() == {'id': sam, 'name': 'Sam', 'userID': None, 'email': None, 'removedAt': None}
         snap = snapshot(api, group, bob)
-        assert {'id': sam, 'name': 'Sam', 'userID': None, 'email': None} in snap['members']
+        assert {'id': sam, 'name': 'Sam', 'userID': None, 'email': None, 'removedAt': None} in snap['members']
         assert snap['version'] == before + 1
 
     def test_repeating_the_same_request_changes_nothing(self, database):

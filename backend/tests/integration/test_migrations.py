@@ -159,3 +159,16 @@ class TestMigrations:
         with engine.begin() as connection:
             downgrade(connection, '0005')
         assert 'password_resets' not in tables(engine, schema)
+
+    def test_group_lifecycle_columns_exist_from_0007_and_go_on_downgrade(self, scratch):
+        engine, schema = scratch
+        columns = lambda table: {c['name'] for c in inspect(engine).get_columns(table, schema=schema)}  # noqa: E731
+        with engine.begin() as connection:
+            upgrade(connection, '0006')
+        assert 'archived_at' not in columns('expense_groups') and 'removed_at' not in columns('members')
+        with engine.begin() as connection:
+            upgrade(connection)
+        assert {'archived_at', 'deleted_at'} <= columns('expense_groups') and 'removed_at' in columns('members')
+        with engine.begin() as connection:
+            downgrade(connection, '0006')
+        assert 'deleted_at' not in columns('expense_groups') and 'removed_at' not in columns('members')

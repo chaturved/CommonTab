@@ -39,6 +39,15 @@ class TestSnapshotBuilder:
         assert [m['name'] for m in snapshot['members']] == ['Ada', 'Sam']
         assert snapshot['members'][1]['userID'] is None
 
+    def test_a_member_who_left_is_still_listed_with_when_and_the_group_says_if_it_is_archived(self):
+        self.sam.removed_at = NOW
+        self.groups.group.return_value = group_row(id=self.group_id, owner_id=self.user_id, archived_at=NOW)
+
+        snapshot = self.builder.build(self.group_id, self.user_id)
+
+        assert [m['removedAt'] for m in snapshot['members']] == [None, '2026-09-30T12:00:00Z']
+        assert snapshot['archived'] is True
+
     def test_balances_follow_who_paid_and_who_shares(self):
         self.expenses.expenses.return_value = [self.dinner()]
 

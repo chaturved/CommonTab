@@ -13,11 +13,12 @@ class MemberRepository:
         self.connection = connection
 
     def member_of(self, group_id: UUID, user_id: UUID) -> Row | None:
-        return self.connection.execute(text('SELECT id, name FROM members WHERE group_id=:g AND user_id=:u'),
+        return self.connection.execute(text('''SELECT m.id, m.name FROM members m JOIN expense_groups g ON g.id = m.group_id
+                                  WHERE m.group_id=:g AND m.user_id=:u AND m.removed_at IS NULL AND g.deleted_at IS NULL'''),
                           {'g': group_id, 'u': user_id}).fetchone()
 
     def members(self, group_id: UUID) -> list[Row]:
-        return self.connection.execute(text('''SELECT m.id, m.user_id, m.name, u.email FROM members m
+        return self.connection.execute(text('''SELECT m.id, m.user_id, m.name, u.email, m.removed_at FROM members m
                                   LEFT JOIN users u ON u.id = m.user_id
                                   WHERE m.group_id=:g ORDER BY m.name, m.id'''), {'g': group_id}).fetchall()
 
@@ -33,7 +34,7 @@ class MemberRepository:
         return result.rowcount == 1
 
     def member(self, member_id: UUID, lock: bool = False) -> Row | None:
-        sql = '''SELECT m.id, m.group_id, m.user_id, m.name, u.email FROM members m
+        sql = '''SELECT m.id, m.group_id, m.user_id, m.name, u.email, m.removed_at FROM members m
                  LEFT JOIN users u ON u.id = m.user_id WHERE m.id=:id''' + (' FOR UPDATE OF m' if lock else '')
         return self.connection.execute(text(sql), {'id': member_id}).fetchone()
 
@@ -45,14 +46,17 @@ class MemberRepository:
 
     def is_member_email(self, group_id: UUID, email: str) -> bool:
         return self.connection.execute(text('''SELECT 1 FROM members m JOIN users u ON u.id=m.user_id
-                                  WHERE m.group_id=:g AND u.email=:email'''),
+                                  WHERE m.group_id=:g AND u.email=:email AND m.removed_at IS NULL'''),
                           {'g': group_id, 'email': email}).fetchone() is not None
 
     def other_user_ids(self, group_id: UUID, user_id: UUID) -> list[UUID]:
         rows = self.connection.execute(text('''SELECT user_id FROM members
-                                  WHERE group_id=:g AND user_id IS NOT NULL AND user_id<>:u
+                                  WHERE group_id=:g AND user_id IS NOT NULL AND user_id<>:u AND removed_at IS NULL
                                   ORDER BY created_at, id'''), {'g': group_id, 'u': user_id}).fetchall()
         return [row.user_id for row in rows]
 
     def unlink_user(self, user_id: UUID) -> None:
         self.connection.execute(text('UPDATE members SET user_id=NULL WHERE user_id=:u'), {'u': user_id})
+
+    def remove_member(self, member_id: UUID, now: datetime) -> None:
+        self.connection.execute(text('UPDATE members SET removed_at=:now WHERE id=:id'), {'now': now, 'id': member_id})

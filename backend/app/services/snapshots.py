@@ -15,7 +15,7 @@ from app.repositories.settlements import SettlementRepository
 
 def member_payload(row: Row) -> dict:
     return {'id': str(row.id), 'name': row.name, 'userID': str(row.user_id) if row.user_id else None,
-            'email': row.email}
+            'email': row.email, 'removedAt': format_utc(row.removed_at) if row.removed_at else None}
 
 
 def expense_payload(row: Row) -> dict:
@@ -54,6 +54,7 @@ class SnapshotBuilder:
         return {
             'id': str(group.id), 'name': group.name, 'currencyCode': group.currency_code,
             'ownerID': str(by_user[group.owner_id]), 'meMemberID': str(by_user[user_id]), 'version': group.version,
+            'archived': group.archived_at is not None,
             'members': [member_payload(m) for m in members],
             'expenses': expenses, 'deletedExpenses': deleted, 'settlements': settlements,
             'balances': balances(member_ids, expenses, settlements),
