@@ -39,11 +39,11 @@ The API must list the site's address in `ALLOWED_ORIGINS` (CORS, in `backend/.en
 `.github/workflows/web.yml` builds the web app and publishes it when `frontend/` changes on `main` (or when you run it by hand from the Actions tab). It runs the type check and tests first, builds with `EXPO_PUBLIC_API_URL` set from the repository variable `API_URL`, copies `index.html` to `404.html`, and uploads `frontend/apps/app/dist`. One-time setup:
 
 1. **Settings > Pages > Build and deployment > Source:** GitHub Actions.
-2. **Settings > Secrets and variables > Actions > Variables:** add `API_URL`, the address of the deployed API (the build stops with a message if it is missing).
+2. **Settings > Secrets and variables > Actions > Variables:** add `API_URL`, the address of the deployed API. Until it is set, the workflow is skipped (it shows as skipped, not failed), so nothing is built or deployed.
 3. **Settings > Pages > Custom domain:** `commontab.chaturved-sumanth-lakkaraju.com`, and at your DNS provider a `CNAME` record for `commontab` pointing to `chaturved.github.io`. Turn on "Enforce HTTPS" once the certificate is ready.
 4. In `backend/.env` for the API, set `ALLOWED_ORIGINS=https://commontab.chaturved-sumanth-lakkaraju.com`.
 
-Not decided yet: where the API is hosted. The workflow cannot succeed in a useful way until it is, because the build needs `API_URL`.
+Not decided yet: where the API is hosted. Set `API_URL` only once it is, because the build bakes that address into the site.
 
 ### SEO and link previews
 
