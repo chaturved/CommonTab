@@ -255,6 +255,12 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **CI fix:** the backend integration job failed on the foreign-currency commit because the expense repository's SQL needed `currency_code`, `original_minor` and `rate_micros` for every insert and update, and the repository tests (and the receipt and group repository tests) do not pass them. They are optional parameters now (empty for ordinary expenses). Full backend run: 579 passed. Under four parallel workers against the shared Supabase pooler the migration tests can fail with connection errors; run them serially (`pytest tests/integration/test_migrations.py`) if that happens. CI runs serially.
 - **Docs:** `docs/architecture.md` starts with the high-level design (Mermaid flowcharts: components, saving an expense offline-first, opening the app and routes); the legacy iOS notes moved below it. The root `README.md` is rewritten for the rebuild (what it does, layout, run, tests, deploy); the long legacy iOS feature and endpoint notes are gone from it (the endpoint list is in `docs/shared-api.md`).
 
+## Deploying the API to Render (prepared)
+- **Added:** `render.yaml` (Docker web service from `backend/Dockerfile`, free plan, region Virginia, health check `/healthz`, start command `alembic upgrade head && uvicorn ... --port $PORT`, `ALLOWED_ORIGINS` set to the site, secrets left for the dashboard) and the steps in `backend/README.md`.
+- **Checked locally:** built the image and ran it with that start command against the dev database: migrations ran, the server bound to `$PORT`, `/healthz` answered 200, and CORS allowed `https://commontab.chaturved-sumanth-lakkaraju.com` with credentials. Not checked: the blueprint on Render itself (no Render account access from here).
+- **Still to do (needs you):** rotate the Supabase password, create the Render service from the blueprint with `DATABASE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, add the `api.` DNS record, then set `API_URL`, enable Pages and add the site's DNS record.
+- **Legacy removal** waits until the app and API are deployed and running.
+
 ## Step 5c: backend structure
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

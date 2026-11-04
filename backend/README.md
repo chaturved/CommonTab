@@ -28,6 +28,23 @@ cp .env.example .env        # then put your Postgres URL in DATABASE_URL
 
 `GET /healthz` should answer `{"status":"ok"}`. The OpenAPI schema is at `/openapi.json`.
 
+## Deploy on Render
+
+`render.yaml` at the repository root describes the service: it builds `backend/Dockerfile`, runs `alembic upgrade head` and then the server on Render's `$PORT`, checks `/healthz`, and redeploys when `backend/` changes on `main`. It runs one instance (the rate limiter is in memory, so do not scale out) on the free plan; a free service may sleep when idle, so the first request after a quiet period can be slow (check Render's current terms, or change `plan`).
+
+Steps:
+
+1. **Rotate the database password** in Supabase (Project Settings > Database), then update your local `backend/.env`.
+2. In Render: **New > Blueprint**, connect the `chaturved/CommonTab` repository. Render reads `render.yaml` and asks for the values marked `sync: false`:
+   - `DATABASE_URL`: Supabase **Connect > Session pooler** URL (port 5432), with special characters in the password URL-encoded.
+   - `RESEND_API_KEY` and `MAIL_FROM`: from resend.com. Verify your sending domain there and use an address on it, for example `CommonTab <no-reply@yourdomain>`. With the default `onboarding@resend.dev` sender, Resend only delivers to your own account's address.
+3. When the deploy finishes, open `https://<service>.onrender.com/healthz`: it should answer `{"status":"ok"}`.
+4. **Custom domain:** in the service's Settings > Custom Domains add `api.chaturved-sumanth-lakkaraju.com`, and at your DNS provider add the `CNAME` Render shows. Wait for the certificate. Use a sibling subdomain of the site because the session cookie is `SameSite=Lax`.
+5. Point the web app at it: set the GitHub repository variable `API_URL` to `https://api.chaturved-sumanth-lakkaraju.com` and enable Pages (see `frontend/apps/app/README.md`).
+6. Smoke test on the real site: create an account, create a group, add an expense, make an invite code, ask for a password reset.
+
+`ALLOWED_ORIGINS` is set in `render.yaml` to the site's address; change it there if the site moves. The Dockerfile does not run migrations by itself; the start command in `render.yaml` does, once per start.
+
 ## Configuration
 
 Environment variables win over `backend/.env` (which is gitignored; never commit it).
