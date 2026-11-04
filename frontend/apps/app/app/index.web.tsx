@@ -3,7 +3,8 @@ import { useSession } from '../src/app-context';
 import { Landing } from '../src/landing/Landing';
 
 export default function Root() {
-  const { user, justSignedIn } = useSession();
+  const { ready, user, justSignedIn } = useSession();
+  if (!ready) return null;
   if (user && justSignedIn) return <Redirect href="/home" />;
   return <Landing signedIn={user !== null} />;
 }

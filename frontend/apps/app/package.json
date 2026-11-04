@@ -6,7 +6,7 @@
   "scripts": {
     "start": "expo start",
     "web": "expo start --web",
-    "export:web": "expo export --platform web && node scripts/inject-meta.mjs dist",
+    "export:web": "expo export --platform web",
     "export:ios": "expo export --platform ios",
     "export:android": "expo export --platform android",
     "typecheck": "tsc --noEmit"

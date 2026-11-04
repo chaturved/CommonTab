@@ -1,8 +1,6 @@
 import '../global.css';
-import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { AppProvider, useSession } from '../src/app-context';
-import { markHydrated } from '../src/layout';
 
 function Routes() {
   const { ready, user } = useSession();
@@ -20,7 +18,6 @@ function Routes() {
 }
 
 export default function RootLayout() {
-  useEffect(markHydrated, []);
   return (
     <AppProvider>
       <Routes />

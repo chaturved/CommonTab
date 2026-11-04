@@ -241,13 +241,13 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Copy changes from the design:** "Scan the receipt" (not in v1) is replaced by "Any currency"; the closing button is "Get started free" (or "Open the app" when signed in) because the store badges have no listings yet and are left out.
 - **Not done:** Privacy and Terms in the footer (and on Welcome) are plain text: there are no pages yet; the "Download" nav item only scrolls to the closing section.
 
-## Step 7 part 3: static web export and the old website removed
-- **Static export:** `web.output` is `static`. `npm run export:web` (in `frontend/apps/app`) writes one HTML file per route; the landing page is rendered into `index.html`. `scripts/inject-meta.mjs` adds titles and link-preview tags (`og:`/Twitter; image `public/og.png`, 1200x630, made from the landing page) after the export; the invite page gets its own wording, app pages are `noindex`. Hosting needs clean URLs and rewrites for the dynamic routes: table in `frontend/apps/app/README.md`. `EXPO_PUBLIC_SITE_URL` (default `https://commontab.app`) sets the absolute preview addresses.
-- **Session loading:** the session provider now always renders its children (`useSession()`); only the signed-in and signed-out route groups wait for the session (`useApp()` is for those). That is what lets `/` and `/join/CODE` be real routes in the static HTML. A custom `app/+html.tsx` keeps the NativeWind dark-mode setting (a raw `<style>`) and renders Expo's `headNodes`/`bodyNodes`; `public/index.html` is gone.
-- **Hydration:** `useIsDesktop` reports "not desktop" until the app has hydrated, so the static HTML (phone layout) matches the first client render. Desktop browsers show the phone layout of the landing page for a moment before it switches (a layout shift).
-- **React:** `react` and `react-dom` are both 19.3.1 (the lockfile had 19.3.1 and 19.3.0, which the server renderer rejects).
+## Step 7 part 3: simple web build and the old website removed
+- **Decision:** the web build stays a single-page app (`web.output: single`). A static export was tried first (landing page in the HTML, link-preview tags, a post-build script, a custom HTML template, rewrite rules for dynamic routes) and then dropped as more than the project needs. It would add link previews and a faster first paint; it can be added later without redoing the page. Details of what it needed are in git history (commit `0d23296`).
+- **Web build:** `npm run export:web` in `frontend/apps/app` writes `dist/`. Hosting needs one rule: every path to `index.html` (README in `frontend/apps/app` has Netlify, Cloudflare and GitHub Pages notes).
+- **Session loading:** the session provider now always renders its children (`useSession()`); only the signed-in and signed-out route groups wait for the session (`useApp()` is for those). The web `/` shows nothing until the session is known, then the landing page.
+- **React:** `react` and `react-dom` are both 19.3.1 (the lockfile had 19.3.1 and 19.3.0, which the server renderer rejects; kept because the mismatch is a real bug).
 - **Removed:** `website/` (old static site, demo and calculator web app) and `.github/workflows/website.yml` (it published `website/` to GitHub Pages: that site is no longer updated and there is no deployment for the new web build yet). CLAUDE.md, README and docs/architecture.md updated.
-- **Not done:** hosting and a deploy workflow; Privacy and Terms pages; `expo-router/head` tags only work in the browser (not at build), which is why the script writes them; the dev `gallery` route is also exported.
+- **Not done:** hosting and a deploy workflow; Privacy and Terms pages; link previews; the dev `gallery` route is also exported.
 
 ## Step 5c: backend structure
 ## Step 5c: backend structure (SOLID clean-up) — done

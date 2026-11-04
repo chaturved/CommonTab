@@ -17,7 +17,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "ios": {
       "bundleIdentifier": "app.commontab.mobile"

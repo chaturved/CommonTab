@@ -20,30 +20,20 @@ The API address comes from `EXPO_PUBLIC_API_URL` (default `http://localhost:8000
 ## Web export
 
 ```sh
-EXPO_PUBLIC_API_URL=https://api.example.com EXPO_PUBLIC_SITE_URL=https://example.com npm run export:web
+EXPO_PUBLIC_API_URL=https://api.example.com npm run export:web
 ```
 
-This writes the static site to `dist/`: one HTML file per route, the JavaScript and CSS under `_expo/`, `og.png` and `robots.txt` from `public/`. `scripts/inject-meta.mjs` runs after the export and puts the page titles and link-preview tags (`og:` and Twitter) into the HTML: the landing page gets its own, `/join/*` gets the invite wording, and every app page is `noindex`. `EXPO_PUBLIC_SITE_URL` is used for the absolute `og:url` and `og:image` addresses.
-
-The landing page is rendered into `index.html`, so link previews and search engines see it without running JavaScript.
+This writes a single-page app to `dist/`: one `index.html`, the JavaScript and CSS under `_expo/`, and `robots.txt`. The browser loads `index.html` for every address, and the app reads the address to decide what to show, so the page is blank until the JavaScript has loaded.
 
 ### Hosting
 
-Any static host works, but it must do two things:
+Any static file host works if it sends every path that is not a file (`/sign-in`, `/home`, `/join/ABCD-2345`, `/group/...`) to `index.html`:
 
-1. Serve `/sign-in` from `sign-in.html` and so on (clean URLs).
-2. Rewrite the dynamic routes to their template files, with status 200:
+- Netlify and Cloudflare Pages: a `_redirects` file with `/*  /index.html  200`.
+- GitHub Pages: no rewrite rules, so make `404.html` a copy of `index.html`. Pages answers unknown paths with that file (status 404, but the app still loads and shows the right screen). The site must be served from a domain root (a custom domain or `username.github.io`), not a `/CommonTab/` sub-path.
 
-| Request | Serve |
-| --- | --- |
-| `/join/*` | `/join/[code].html` |
-| `/group/*/invite` | `/group/[id]/invite.html` |
-| `/group/*/settle` | `/group/[id]/settle.html` |
-| `/group/*/members` | `/group/[id]/members.html` |
-| `/group/*` | `/group/[id].html` |
-| `/expense/*/edit` | `/expense/[id]/edit.html` |
-| `/expense/*` | `/expense/[id].html` |
-
-The API must list the site's address in `ALLOWED_ORIGINS` (CORS, in `backend/.env`). The web app has a `gallery` route for design review that is exported too; it holds no data.
+The API must list the site's address in `ALLOWED_ORIGINS` (CORS, in `backend/.env`). The sign-in cookie is `SameSite=Lax`, so the site and the API should share a registrable domain (for example `app.example.com` and `api.example.com`). The web app has a `gallery` route for design review that is exported too; it holds no data.
 
 Not decided yet: where this is hosted. The old GitHub Pages workflow for the static `website/` folder was removed with that folder.
+
+Link previews (the card a chat app shows for a pasted link) are not set up: the single-page build has no page text or preview tags in its HTML. A static export would add them; see PROGRESS.md.

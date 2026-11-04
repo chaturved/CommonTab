@@ -7,7 +7,7 @@ Read before building: `docs/design/SPEC.md` (scope and acceptance criteria), `do
 ## Target layout
 - `frontend/` one npm-workspaces TypeScript workspace: `packages/core` (pure TS: money in cents, splitter, ledger, outbox, sync, API client), `packages/ui` (tokens, components), `apps/app` (Expo + Expo Router, iOS/Android/web, NativeWind).
 - `backend/` FastAPI (package `app`), Postgres + Alembic, routes/service/repository layers.
-- The marketing landing page is part of `apps/app`: it is the web `/` (`src/landing`, designs in `docs/design/screens/Landing*.dc.html`), Home is `/home`, and native `/` redirects to `/home` or `/welcome`. The web build is a static export (`npm run export:web`); see `frontend/apps/app/README.md` for hosting. The old static `website/` is gone.
+- The marketing landing page is part of `apps/app`: it is the web `/` (`src/landing`, designs in `docs/design/screens/Landing*.dc.html`), Home is `/home`, and native `/` redirects to `/home` or `/welcome`. The web build is a single-page app (`npm run export:web`); see `frontend/apps/app/README.md` for hosting. The old static `website/` is gone.
 - `legacy/ios` (old SwiftUI app) is reference only.
 - Today's repo still has `services/api`, `apps/ios`, `apps/web`, `apps/react-native`; migrate per SYNC_ARCHITECTURE.md.
 
