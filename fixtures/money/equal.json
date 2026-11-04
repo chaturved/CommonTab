@@ -1,0 +1,228 @@
+[
+  {
+    "name": "SPEC: $100.00 split 3 ways",
+    "input": {
+      "method": "equal",
+      "amount": 10000,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 3334
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 3333
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 3333
+      }
+    ]
+  },
+  {
+    "name": "10.01 split 3 ways (Swift golden)",
+    "input": {
+      "method": "equal",
+      "amount": 1001,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 334
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 334
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 333
+      }
+    ]
+  },
+  {
+    "name": "1 cent among 3",
+    "input": {
+      "method": "equal",
+      "amount": 1,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 1
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 0
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 0
+      }
+    ]
+  },
+  {
+    "name": "single participant",
+    "input": {
+      "method": "equal",
+      "amount": 12345,
+      "participants": [
+        "m1"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 12345
+      }
+    ]
+  },
+  {
+    "name": "7 cents among 4",
+    "input": {
+      "method": "equal",
+      "amount": 7,
+      "participants": [
+        "m1",
+        "m2",
+        "m3",
+        "m4"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 2
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 2
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 2
+      },
+      {
+        "memberID": "m4",
+        "minorUnits": 1
+      }
+    ]
+  },
+  {
+    "name": "exact division",
+    "input": {
+      "method": "equal",
+      "amount": 9000,
+      "participants": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 3000
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 3000
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 3000
+      }
+    ]
+  },
+  {
+    "name": "JPY 123 split 2 (zero-decimal currency, same units)",
+    "input": {
+      "method": "equal",
+      "amount": 123,
+      "participants": [
+        "m1",
+        "m2"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 62
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 61
+      }
+    ]
+  },
+  {
+    "name": "large amount 999,999,999.99 among 7",
+    "input": {
+      "method": "equal",
+      "amount": 99999999999,
+      "participants": [
+        "m1",
+        "m2",
+        "m3",
+        "m4",
+        "m5",
+        "m6",
+        "m7"
+      ],
+      "values": []
+    },
+    "expect": [
+      {
+        "memberID": "m1",
+        "minorUnits": 14285714286
+      },
+      {
+        "memberID": "m2",
+        "minorUnits": 14285714286
+      },
+      {
+        "memberID": "m3",
+        "minorUnits": 14285714286
+      },
+      {
+        "memberID": "m4",
+        "minorUnits": 14285714286
+      },
+      {
+        "memberID": "m5",
+        "minorUnits": 14285714285
+      },
+      {
+        "memberID": "m6",
+        "minorUnits": 14285714285
+      },
+      {
+        "memberID": "m7",
+        "minorUnits": 14285714285
+      }
+    ]
+  }
+]

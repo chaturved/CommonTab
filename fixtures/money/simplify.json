@@ -1,0 +1,58 @@
+[
+  {
+    "name": "nobody owes anything",
+    "input": [{ "memberID": "m1", "minorUnits": 0 }, { "memberID": "m2", "minorUnits": 0 }],
+    "expect": []
+  },
+  {
+    "name": "one payment between two people",
+    "input": [{ "memberID": "m1", "minorUnits": 500 }, { "memberID": "m2", "minorUnits": -500 }],
+    "expect": [{ "fromID": "m2", "toID": "m1", "minorUnits": 500 }]
+  },
+  {
+    "name": "four people, three payments (largest debtor pays largest creditor first)",
+    "input": [
+      { "memberID": "you", "minorUnits": 4500 },
+      { "memberID": "sam", "minorUnits": 500 },
+      { "memberID": "riya", "minorUnits": -1000 },
+      { "memberID": "jordan", "minorUnits": -4000 }
+    ],
+    "expect": [
+      { "fromID": "jordan", "toID": "you", "minorUnits": 4000 },
+      { "fromID": "riya", "toID": "you", "minorUnits": 500 },
+      { "fromID": "riya", "toID": "sam", "minorUnits": 500 }
+    ]
+  },
+  {
+    "name": "ties are broken by member order",
+    "input": [
+      { "memberID": "m1", "minorUnits": -100 },
+      { "memberID": "m2", "minorUnits": -100 },
+      { "memberID": "m3", "minorUnits": 100 },
+      { "memberID": "m4", "minorUnits": 100 }
+    ],
+    "expect": [
+      { "fromID": "m1", "toID": "m3", "minorUnits": 100 },
+      { "fromID": "m2", "toID": "m4", "minorUnits": 100 }
+    ]
+  },
+  {
+    "name": "one creditor, three debtors",
+    "input": [
+      { "memberID": "m1", "minorUnits": 600 },
+      { "memberID": "m2", "minorUnits": -100 },
+      { "memberID": "m3", "minorUnits": -200 },
+      { "memberID": "m4", "minorUnits": -300 }
+    ],
+    "expect": [
+      { "fromID": "m4", "toID": "m1", "minorUnits": 300 },
+      { "fromID": "m3", "toID": "m1", "minorUnits": 200 },
+      { "fromID": "m2", "toID": "m1", "minorUnits": 100 }
+    ]
+  },
+  {
+    "name": "balances that do not sum to zero",
+    "input": [{ "memberID": "m1", "minorUnits": 500 }, { "memberID": "m2", "minorUnits": -400 }],
+    "error": true
+  }
+]

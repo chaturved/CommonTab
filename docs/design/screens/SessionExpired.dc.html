@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Session Expired</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="padding: 16px 20px 0 20px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">CommonTab</h1>
+</div>
+<div style="margin: 16px 16px 0 16px; border-radius: 28px; height: 200px; background: linear-gradient(160deg, #0B4350 0%, #06222B 100%)"></div>
+<div style="margin: 16px 16px 0 16px; border-radius: 20px; height: 72px; background: #FFFFFF"></div>
+<div style="margin: 10px 16px 0 16px; border-radius: 20px; height: 72px; background: #FFFFFF"></div>
+
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: rgba(14, 26, 28, 0.45)"></div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; border-radius: 28px 28px 0 0; background: #FFFFFF; padding: 12px 20px 32px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+<div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D5DADC"></div>
+<h2 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em">Sign in again</h2>
+<div style="font-size: 15px; line-height: 1.45; color: #4F5E61">Your session ended, so changes can't sync right now. Everything you added is safe on this phone and will sync after you sign in.</div>
+<div style="border-radius: 16px; background: #F2F4F5; display: flex; flex-direction: column">
+<div style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #E2E6E8">
+<span style="width: 84px; font-size: 14px; color: #5F6B6E">Email</span>
+<span style="font-size: 16px; font-weight: 600">you@example.com</span>
+</div>
+<div style="height: 52px; box-sizing: border-box; padding: 0 16px; display: flex; align-items: center; gap: 12px">
+<label for="pw" style="width: 84px; font-size: 14px; color: #5F6B6E">Password</label>
+<input id="pw" type="password" placeholder="Required" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: #0E1A1C; padding: 0; outline: none">
+</div>
+</div>
+<button type="button" style="height: 52px; border-radius: 26px; border: 0; background: #0B4350; color: #FFFFFF; font-size: 16px; font-weight: 700">Sign in</button>
+<button type="button" style="height: 44px; border: 0; background: transparent; color: #0B6B58; font-size: 15px; font-weight: 600">Not now</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+import type { Allocation } from './splitter';
+
+export interface Clock {
+  now(): number;
+}
+
+export interface Random {
+  uuid(): string;
+  next(): number;
+}
+
+export type WireMethod = 'equal' | 'exact' | 'percentage';
+
+export interface Member {
+  id: string;
+  name: string;
+  userID: string | null;
+  email: string | null;
+  removedAt?: string | null;
+}
+
+export interface ExpenseInput {
+  id: string;
+  merchant: string;
+  occurredAt: string;
+  category: string;
+  notes: string;
+  amountMinor: number;
+  payerID: string;
+  method: WireMethod;
+  participants: string[];
+  values: string[];
+  version: number | null;
+  currencyCode?: string | null;
+  originalMinor?: number | null;
+  rateMicros?: number | null;
+}
+
+export type ExpenseContent = Omit<ExpenseInput, 'version'>;
+
+export interface WireExpense {
+  id: string;
+  groupID: string;
+  merchant: string;
+  occurredAt: string;
+  category: string;
+  notes: string;
+  amountMinor: number;
+  payerID: string;
+  method: WireMethod;
+  allocations: Allocation[];
+  values: string[];
+  version: number;
+  currencyCode?: string | null;
+  originalMinor?: number | null;
+  rateMicros?: number | null;
+  hasReceipt: boolean;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface WireSettlement {
+  id: string;
+  groupID: string;
+  fromID: string;
+  toID: string;
+  amountMinor: number;
+  createdAt: string;
+}
+
+export interface SettlementInput {
+  id: string;
+  fromID: string;
+  toID: string;
+  amountMinor: number;
+}
+
+export interface GroupSnapshot {
+  id: string;
+  name: string;
+  currencyCode: string;
+  ownerID: string;
+  meMemberID: string;
+  version: number;
+  members: Member[];
+  expenses: WireExpense[];
+  deletedExpenses: WireExpense[];
+  settlements: WireSettlement[];
+  balances: { memberID: string; minorUnits: number }[];
+  archived?: boolean;
+}
+
+export interface RateQuote {
+  base: string;
+  quote: string;
+  rateMicros: number;
+  date: string;
+}
+
+export interface GroupStub {
+  id: string;
+  name: string;
+  status: 'removed' | 'deleted';
+  since: string;
+}
+
+export interface GroupCreateInput {
+  id: string;
+  name: string;
+  currencyCode: string;
+  members: { id: string; name: string }[];
+  meMemberID: string;
+}
+
+export type ActivityKind =
+  | 'group.created' | 'group.archived' | 'group.unarchived'
+  | 'expense.added' | 'expense.edited' | 'expense.deleted'
+  | 'payment.recorded'
+  | 'member.joined' | 'member.left' | 'member.added' | 'member.removed';
+
+export interface ActivityEvent {
+  seq: number;
+  groupID: string;
+  actorID: string | null;
+  kind: ActivityKind;
+  subjectID: string | null;
+  data: Record<string, unknown>;
+  at: string;
+}
+
+export interface ActivityPage {
+  events: ActivityEvent[];
+  next: number;
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Camera Access</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0 20px"><button type="button" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; box-shadow: 0 2px 10px rgba(14, 26, 28, 0.08); display: flex; align-items: center; justify-content: center; padding: 0"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button><h1 style="margin: 0; font-size: 18px; font-weight: 700">Scan receipt</h1><div style="width: 44px"></div></div><div style="padding: 110px 32px 0 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center"><div style="width: 84px; height: 84px; border-radius: 28px; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path></svg></div><h2 style="margin: 0; font-size: 24px; font-weight: 800">Camera access is off</h2><div style="font-size: 15px; line-height: 1.5; color: #4F5E61">CommonTab needs the camera to scan receipts. You can turn it on in Settings, or pick a photo you already took.</div></div><div style="position: absolute; left: 16px; right: 16px; bottom: 24px; display: flex; flex-direction: column; gap: 10px"><button type="button" style="height: 52px; border-radius: 26px; border: 0; background: #0B4350; color: #FFFFFF; font-size: 16px; font-weight: 700; ">Open Settings</button><button type="button" style="height: 52px; border-radius: 26px; border: 1.5px solid #0B6B58; background: transparent; color: #0B6B58; font-size: 16px; font-weight: 700; ">Choose from photos</button></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

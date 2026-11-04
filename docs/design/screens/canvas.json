@@ -1,0 +1,600 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Account.dc.html": {
+      "h": 844,
+      "title": "Profile",
+      "w": 390,
+      "x": 1880,
+      "y": 3200
+    },
+    "Activity.dc.html": {
+      "h": 844,
+      "title": "Activity",
+      "w": 390,
+      "x": 470,
+      "y": 964
+    },
+    "AddExpense.dc.html": {
+      "h": 844,
+      "title": "Add expense",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "AddExpenseDark.dc.html": {
+      "h": 844,
+      "title": "Add expense, dark",
+      "w": 390,
+      "x": 940,
+      "y": 11208
+    },
+    "Calculator.dc.html": {
+      "h": 844,
+      "title": "Calculator",
+      "w": 390,
+      "x": 1410,
+      "y": 964
+    },
+    "CameraDenied.dc.html": {
+      "h": 844,
+      "title": "Camera off",
+      "w": 390,
+      "x": 470,
+      "y": 8920
+    },
+    "ChooseGroup.dc.html": {
+      "h": 844,
+      "title": "Choose group",
+      "w": 390,
+      "x": 0,
+      "y": 7776
+    },
+    "Conflict.dc.html": {
+      "h": 844,
+      "title": "Edit conflict",
+      "w": 390,
+      "x": 1410,
+      "y": 4344
+    },
+    "CreateAccount.dc.html": {
+      "h": 844,
+      "title": "Create account",
+      "w": 390,
+      "x": 470,
+      "y": 3200
+    },
+    "CreateGroup.dc.html": {
+      "h": 844,
+      "title": "Create group",
+      "w": 390,
+      "x": 0,
+      "y": 964
+    },
+    "DeleteExpense.dc.html": {
+      "h": 844,
+      "title": "Delete expense",
+      "w": 390,
+      "x": 940,
+      "y": 7776
+    },
+    "EditExpense.dc.html": {
+      "h": 844,
+      "title": "Edit expense",
+      "w": 390,
+      "x": 470,
+      "y": 7776
+    },
+    "Empty.dc.html": {
+      "h": 844,
+      "title": "First run",
+      "w": 390,
+      "x": 2350,
+      "y": 964
+    },
+    "ExpenseDetail.dc.html": {
+      "h": 844,
+      "title": "Expense detail",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "GroupDetail.dc.html": {
+      "h": 844,
+      "title": "Group detail",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "GroupDetailDark.dc.html": {
+      "h": 844,
+      "title": "Group, dark",
+      "w": 390,
+      "x": 470,
+      "y": 11208
+    },
+    "GroupOffline.dc.html": {
+      "h": 844,
+      "title": "Saved offline",
+      "w": 390,
+      "x": 470,
+      "y": 4344
+    },
+    "GroupRemoved.dc.html": {
+      "h": 844,
+      "title": "Removed from group",
+      "w": 390,
+      "x": 1880,
+      "y": 5488
+    },
+    "GroupSettled.dc.html": {
+      "h": 844,
+      "title": "All settled",
+      "w": 390,
+      "x": 1410,
+      "y": 5488
+    },
+    "Groups.dc.html": {
+      "h": 844,
+      "title": "Groups tab",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "HomeOffline.dc.html": {
+      "h": 844,
+      "title": "Home offline",
+      "w": 390,
+      "x": 0,
+      "y": 4344
+    },
+    "Invite.dc.html": {
+      "h": 844,
+      "title": "Invite people",
+      "w": 390,
+      "x": 0,
+      "y": 5488
+    },
+    "Itemized.dc.html": {
+      "h": 844,
+      "title": "Split by item",
+      "w": 390,
+      "x": 0,
+      "y": 6632
+    },
+    "JoinGroup.dc.html": {
+      "h": 844,
+      "title": "Join with code",
+      "w": 390,
+      "x": 940,
+      "y": 1928
+    },
+    "Landing.dc.html": {
+      "h": 2820,
+      "title": "Website, desktop",
+      "w": 1280,
+      "x": 0,
+      "y": 12352
+    },
+    "LandingMobile.dc.html": {
+      "h": 3480,
+      "title": "Website, mobile",
+      "w": 390,
+      "x": 1400,
+      "y": 12352
+    },
+    "LeaveBlocked.dc.html": {
+      "h": 844,
+      "title": "Leave blocked",
+      "w": 390,
+      "x": 940,
+      "y": 5488
+    },
+    "Logo.dc.html": {
+      "h": 1000,
+      "title": "Logo options",
+      "w": 1360,
+      "x": 0,
+      "y": 16200
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "title": "Home",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "MainDark.dc.html": {
+      "h": 844,
+      "title": "Home, dark",
+      "w": 390,
+      "x": 0,
+      "y": 11208
+    },
+    "MainLarge.dc.html": {
+      "h": 844,
+      "title": "Home, large text",
+      "w": 390,
+      "x": 1410,
+      "y": 11208
+    },
+    "Members.dc.html": {
+      "h": 844,
+      "title": "Members",
+      "w": 390,
+      "x": 470,
+      "y": 5488
+    },
+    "MultiCurrency.dc.html": {
+      "h": 844,
+      "title": "Foreign currency",
+      "w": 390,
+      "x": 470,
+      "y": 6632
+    },
+    "NoConnection.dc.html": {
+      "h": 844,
+      "title": "First sign-in offline",
+      "w": 390,
+      "x": 940,
+      "y": 3200
+    },
+    "NotifPrompt.dc.html": {
+      "h": 844,
+      "title": "Ask for notifications",
+      "w": 390,
+      "x": 940,
+      "y": 10064
+    },
+    "NotifSettings.dc.html": {
+      "h": 844,
+      "title": "Notification settings",
+      "w": 390,
+      "x": 1410,
+      "y": 10064
+    },
+    "PushPreview.dc.html": {
+      "h": 844,
+      "title": "Lock screen",
+      "w": 390,
+      "x": 1880,
+      "y": 10064
+    },
+    "RecurringList.dc.html": {
+      "h": 844,
+      "title": "Repeating list",
+      "w": 390,
+      "x": 470,
+      "y": 10064
+    },
+    "RecurringSetup.dc.html": {
+      "h": 844,
+      "title": "Repeat expense",
+      "w": 390,
+      "x": 0,
+      "y": 10064
+    },
+    "ScanCamera.dc.html": {
+      "h": 844,
+      "title": "Scan receipt",
+      "w": 390,
+      "x": 0,
+      "y": 8920
+    },
+    "ScanFailed.dc.html": {
+      "h": 844,
+      "title": "Couldn't read",
+      "w": 390,
+      "x": 1410,
+      "y": 8920
+    },
+    "ScanReview.dc.html": {
+      "h": 844,
+      "title": "Review items",
+      "w": 390,
+      "x": 940,
+      "y": 8920
+    },
+    "ServerDown.dc.html": {
+      "h": 844,
+      "title": "Can't reach CommonTab",
+      "w": 390,
+      "x": 1880,
+      "y": 6632
+    },
+    "SessionExpired.dc.html": {
+      "h": 844,
+      "title": "Session expired",
+      "w": 390,
+      "x": 1410,
+      "y": 3200
+    },
+    "Settings.dc.html": {
+      "h": 844,
+      "title": "Settings",
+      "w": 390,
+      "x": 1880,
+      "y": 964
+    },
+    "SettleUp.dc.html": {
+      "h": 844,
+      "title": "Settle up",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "SharedGroups.dc.html": {
+      "h": 844,
+      "title": "Groups list",
+      "w": 390,
+      "x": 470,
+      "y": 1928
+    },
+    "SignIn.dc.html": {
+      "h": 844,
+      "title": "Sign in",
+      "w": 390,
+      "x": 0,
+      "y": 1928
+    },
+    "Simplify.dc.html": {
+      "h": 844,
+      "title": "Simplified debts",
+      "w": 390,
+      "x": 1410,
+      "y": 6632
+    },
+    "SplitError.dc.html": {
+      "h": 844,
+      "title": "Split doesn't add up",
+      "w": 390,
+      "x": 940,
+      "y": 6632
+    },
+    "SyncFailed.dc.html": {
+      "h": 844,
+      "title": "Change couldn't sync",
+      "w": 390,
+      "x": 1880,
+      "y": 4344
+    },
+    "SyncStatus.dc.html": {
+      "h": 844,
+      "title": "Sync status",
+      "w": 390,
+      "x": 940,
+      "y": 4344
+    },
+    "Tools.dc.html": {
+      "h": 844,
+      "title": "Account tab",
+      "w": 390,
+      "x": 940,
+      "y": 964
+    },
+    "Welcome.dc.html": {
+      "h": 844,
+      "title": "Welcome",
+      "w": 390,
+      "x": 0,
+      "y": 3200
+    },
+    "Wordmark.dc.html": {
+      "x": 0,
+      "y": 17400,
+      "w": 1360,
+      "h": 640,
+      "title": "Wordmark options"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-03T02:10:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "n1": {
+      "fill": "teal",
+      "text": "An account is required. The first sign-in needs internet. After that the app opens offline from the saved session, and an expired session never locks you out of your own data.",
+      "w": 360,
+      "x": 2350,
+      "y": 3200
+    },
+    "n2": {
+      "fill": "blue",
+      "text": "Local first: every change saves on the device, joins a queue, and syncs later. Each record has an ID so a retry never creates a duplicate. Edits carry a version number and deletes leave a marker. If two devices edit the same expense, the newest edit wins and the other person is told.",
+      "w": 360,
+      "x": 2350,
+      "y": 4344
+    },
+    "n3": {
+      "fill": "orange",
+      "text": "A member with an unsettled balance can't leave until it's settled. Members the owner removes keep a read-only copy of the group.",
+      "w": 360,
+      "x": 2350,
+      "y": 5488
+    },
+    "n4": {
+      "fill": "purple",
+      "text": "Money is stored in whole cents. A foreign-currency expense keeps the original amount and the rate used. A split must add up exactly before it can be saved.",
+      "w": 360,
+      "x": 2350,
+      "y": 6632
+    },
+    "n5": {
+      "fill": "teal",
+      "text": "The + button works from any tab. It asks for a group only when you have more than one, and puts the last used group first. Deleting never erases history: the group sees it was deleted.",
+      "w": 360,
+      "x": 1410,
+      "y": 7776
+    },
+    "n6": {
+      "fill": "blue",
+      "text": "Scanning runs on the phone so it works offline. Low-confidence amounts are flagged for a check, and the person always confirms before anything is saved.",
+      "w": 360,
+      "x": 1880,
+      "y": 8920
+    },
+    "n7": {
+      "fill": "orange",
+      "text": "Repeating expenses are created by the server on schedule, so they land even if nobody opens the app. Notifications are asked for after the first group is made, not at launch.",
+      "w": 360,
+      "x": 2350,
+      "y": 10064
+    },
+    "n8": {
+      "fill": "purple",
+      "text": "Dark mode uses the same layout with a dark teal base. Large text lets rows grow in height instead of clipping. Money is always colored and labeled (owed / you owe), never color alone.",
+      "w": 360,
+      "x": 1880,
+      "y": 11208
+    },
+    "n9": {
+      "fill": "teal",
+      "text": "The marketing site is separate from the app. It lives in website/ and is deployed on its own. Dark, product-first: the hero is the app itself. Its buttons open the web app (Expo web) or the store listings.",
+      "w": 360,
+      "x": 1900,
+      "y": 12352
+    },
+    "t1": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Access and account",
+      "x": 0,
+      "y": 2900
+    },
+    "t10": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Brand",
+      "x": 0,
+      "y": 15900
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Offline and sync",
+      "x": 0,
+      "y": 4044
+    },
+    "t3": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Groups and members",
+      "x": 0,
+      "y": 5188
+    },
+    "t4": {
+      "kind": "title1",
+      "maxW": 2270,
+      "text": "Money edge cases",
+      "x": 0,
+      "y": 6332
+    },
+    "t5": {
+      "kind": "title1",
+      "maxW": 1400,
+      "text": "Editing and adding",
+      "x": 0,
+      "y": 7476
+    },
+    "t6": {
+      "kind": "title1",
+      "maxW": 1900,
+      "text": "Scanning receipts",
+      "x": 0,
+      "y": 8620
+    },
+    "t7": {
+      "kind": "title1",
+      "maxW": 2300,
+      "text": "Repeating expenses and notifications",
+      "x": 0,
+      "y": 9764
+    },
+    "t8": {
+      "kind": "title1",
+      "maxW": 1900,
+      "text": "Dark mode and large text",
+      "x": 0,
+      "y": 10908
+    },
+    "t9": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Website",
+      "x": 0,
+      "y": 12052
+    },
+    "title": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "CommonTab redesign",
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Groups.dc.html",
+    "GroupDetail.dc.html",
+    "AddExpense.dc.html",
+    "SettleUp.dc.html",
+    "CreateGroup.dc.html",
+    "Activity.dc.html",
+    "Tools.dc.html",
+    "Calculator.dc.html",
+    "Settings.dc.html",
+    "ExpenseDetail.dc.html",
+    "Empty.dc.html",
+    "SignIn.dc.html",
+    "SharedGroups.dc.html",
+    "JoinGroup.dc.html",
+    "Welcome.dc.html",
+    "CreateAccount.dc.html",
+    "NoConnection.dc.html",
+    "SessionExpired.dc.html",
+    "Account.dc.html",
+    "HomeOffline.dc.html",
+    "GroupOffline.dc.html",
+    "SyncStatus.dc.html",
+    "Conflict.dc.html",
+    "SyncFailed.dc.html",
+    "Invite.dc.html",
+    "Members.dc.html",
+    "LeaveBlocked.dc.html",
+    "GroupSettled.dc.html",
+    "GroupRemoved.dc.html",
+    "Itemized.dc.html",
+    "MultiCurrency.dc.html",
+    "SplitError.dc.html",
+    "Simplify.dc.html",
+    "ServerDown.dc.html",
+    "ChooseGroup.dc.html",
+    "EditExpense.dc.html",
+    "DeleteExpense.dc.html",
+    "ScanCamera.dc.html",
+    "CameraDenied.dc.html",
+    "ScanReview.dc.html",
+    "ScanFailed.dc.html",
+    "RecurringSetup.dc.html",
+    "RecurringList.dc.html",
+    "NotifPrompt.dc.html",
+    "NotifSettings.dc.html",
+    "PushPreview.dc.html",
+    "MainDark.dc.html",
+    "GroupDetailDark.dc.html",
+    "AddExpenseDark.dc.html",
+    "MainLarge.dc.html",
+    "Landing.dc.html",
+    "LandingMobile.dc.html",
+    "Logo.dc.html",
+    "Wordmark.dc.html"
+  ],
+  "pages": [],
+  "title": "CommonTab Home Redesign"
+}

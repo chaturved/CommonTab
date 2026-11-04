@@ -1,0 +1,39 @@
+import { ReactNode } from 'react';
+import { View } from 'react-native';
+import { CircleAlert, Info, TriangleAlert } from 'lucide-react-native';
+import { cx } from '../theme';
+import { ColorName } from '../tokens';
+import { Icon } from './Icon';
+import { Text, TextTone } from './Text';
+
+export type BannerTone = 'warning' | 'error' | 'info';
+
+export interface BannerProps {
+  tone?: BannerTone;
+  title?: string;
+  message: string;
+  icon?: ReactNode;
+  className?: string;
+}
+
+const BOX: Record<BannerTone, string> = { warning: 'bg-warn', error: 'bg-error', info: 'bg-tint' };
+const ICON: Record<BannerTone, ColorName> = { warning: 'warn-icon', error: 'on-error', info: 'on-tint' };
+const TEXT: Record<BannerTone, TextTone> = { warning: 'on-warn', error: 'on-error', info: 'on-tint' };
+
+export function Banner({ tone = 'warning', title, message, icon, className }: BannerProps) {
+  const glyph = { warning: TriangleAlert, error: CircleAlert, info: Info }[tone];
+  return (
+    <View
+      role={tone === 'error' ? 'alert' : 'status'}
+      accessible
+      accessibilityLabel={title ? `${title} ${message}` : message}
+      className={cx('min-h-touch flex-row items-center gap-2.5 rounded-2xl px-3.5 py-2.5', BOX[tone], className)}
+    >
+      {icon ?? <Icon icon={glyph} size={20} strokeWidth={2} tone={ICON[tone]} />}
+      <Text variant="caption" tone={TEXT[tone]} className="flex-1 text-[13px] leading-[18px]">
+        {title ? <Text variant="caption" tone={TEXT[tone]} className="text-[13px] font-bold">{title} </Text> : null}
+        {message}
+      </Text>
+    </View>
+  );
+}

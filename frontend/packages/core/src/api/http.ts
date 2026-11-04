@@ -1,0 +1,98 @@
+import type { ActivityPage, ExpenseInput, GroupCreateInput, GroupSnapshot, GroupStub, Member, RateQuote, SettlementInput, WireExpense, WireSettlement } from '../types';
+import { ApiError } from './errors';
+import type { Api, InviteCode, Profile, Session } from './types';
+
+export interface FetchResponse {
+  status: number;
+  headers: { get(name: string): string | null };
+  text(): Promise<string>;
+}
+export type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body?: string; credentials?: 'include' }) => Promise<FetchResponse>;
+
+export interface HttpApiOptions {
+  baseUrl: string;
+  fetch: FetchLike;
+  /** Read on every call so a new sign-in is picked up at once. Never logged. */
+  getToken: () => Promise<string | null> | string | null;
+  cookies?: { clientHeader: string };
+}
+
+export const API_PREFIX = '/v1';
+
+export class HttpApi implements Api {
+  constructor(private readonly options: HttpApiOptions) {}
+
+  private async call<T>(method: string, path: string, body?: unknown, auth = true, prefix = API_PREFIX): Promise<T> {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const cookies = this.options.cookies;
+    if (cookies && method !== 'GET') headers['X-CommonTab-Client'] = cookies.clientHeader;
+    if (auth) {
+      const token = await this.options.getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    }
+    let response: FetchResponse;
+    try {
+      response = await this.options.fetch(this.options.baseUrl + prefix + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), ...(cookies ? { credentials: 'include' as const } : {}) });
+    } catch (error) {
+      throw new ApiError(0, error instanceof Error ? error.message : 'Network request failed');
+    }
+    const text = await response.text();
+    let json: Record<string, unknown> = {};
+    if (text) {
+      try { json = JSON.parse(text) as Record<string, unknown>; } catch { json = {}; }
+    }
+    if (response.status >= 200 && response.status < 300) return json as T;
+    const retryHeader = Number(response.headers.get('Retry-After'));
+    throw new ApiError(response.status, typeof json['detail'] === 'string' ? json['detail'] : `HTTP ${response.status}`,
+      typeof json['code'] === 'string' ? json['code'] : null, {
+        current: json['current'] as WireExpense | undefined,
+        maxAmountMinor: typeof json['maxAmountMinor'] === 'number' ? json['maxAmountMinor'] : undefined,
+        balanceMinor: typeof json['balanceMinor'] === 'number' ? json['balanceMinor'] : undefined,
+        retryAfterSeconds: typeof json['retryAfterSeconds'] === 'number' ? json['retryAfterSeconds'] : Number.isFinite(retryHeader) && retryHeader > 0 ? retryHeader : undefined,
+      });
+  }
+
+  register = (input: { email: string; name: string; password: string }) => this.call<Session>('POST', '/accounts', input, false);
+  login = (input: { email: string; password: string }) => this.call<Session>('POST', '/auth/sessions', input, false);
+  logout = () => this.call<void>('DELETE', '/auth/sessions');
+  me = () => this.call<Profile>('GET', '/me');
+  rate = (base: string, quote: string) => this.call<RateQuote>('GET', `/rates?base=${base}&quote=${quote}`);
+  activity = (since: number, limit: number) => this.call<ActivityPage>('GET', `/activity?since=${since}&limit=${limit}`);
+  renameMe = (name: string) => this.call<Profile>('PATCH', '/me', { name });
+  changePassword = (input: { currentPassword: string; newPassword: string }) => this.call<void>('POST', '/me/password', input);
+  deleteAccount = (password: string) => this.call<void>('POST', '/me/delete', { password });
+  requestPasswordReset = (email: string) => this.call<void>('POST', '/auth/password-reset', { email }, false);
+  confirmPasswordReset = (input: { email: string; code: string; newPassword: string }) =>
+    this.call<void>('POST', '/auth/password-reset/confirm', input, false);
+
+  async healthy(): Promise<boolean> {
+    try {
+      await this.call('GET', '/healthz', undefined, false, '');
+      return true;
+    } catch (error) {
+      if (error instanceof ApiError && error.isNetwork) throw error;
+      return false;
+    }
+  }
+
+  listGroups = () => this.call<(GroupSnapshot | GroupStub)[]>('GET', '/groups');
+  createGroup = (input: GroupCreateInput) => this.call<GroupSnapshot>('POST', '/groups', input);
+  putMember = (groupId: string, member: { id: string; name: string }) =>
+    this.call<Member>('PUT', `/groups/${groupId}/members/${member.id}`, { name: member.name });
+  putExpense = (groupId: string, expense: ExpenseInput) =>
+    this.call<WireExpense>('PUT', `/groups/${groupId}/expenses/${expense.id}`, expense);
+  deleteExpense = (groupId: string, expenseId: string) =>
+    this.call<void>('DELETE', `/groups/${groupId}/expenses/${expenseId}`);
+  leaveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/leave`);
+  removeMember = (groupId: string, memberId: string) => this.call<void>('DELETE', `/groups/${groupId}/members/${memberId}`);
+  archiveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/archive`);
+  unarchiveGroup = (groupId: string) => this.call<void>('POST', `/groups/${groupId}/unarchive`);
+  deleteGroup = (groupId: string) => this.call<void>('DELETE', `/groups/${groupId}`);
+  createInviteCode = (groupId: string, memberId?: string) =>
+    this.call<InviteCode>('POST', `/groups/${groupId}/invite-code`, { memberID: memberId ?? null });
+  revokeInviteCodes = (groupId: string) => this.call<void>('DELETE', `/groups/${groupId}/invite-code`);
+  joinWithCode = (code: string) => this.call<GroupSnapshot>('POST', '/invitations/join', { code });
+  createSettlement = (groupId: string, settlement: SettlementInput) =>
+    this.call<WireSettlement>('POST', `/groups/${groupId}/settlements`, settlement);
+}

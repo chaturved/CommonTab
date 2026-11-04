@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "CommonTab",
+    "slug": "commontab",
+    "scheme": "commontab",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "ios": {
+      "bundleIdentifier": "app.commontab.mobile"
+    },
+    "android": {
+      "package": "app.commontab.mobile"
+    }
+  }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommonTab Tools</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F2F2F7; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #0E1A1C">
+
+<div style="padding: 16px 20px 0 20px; height: 44px; box-sizing: content-box; display: flex; align-items: center">
+<h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Account</h1>
+</div>
+
+<button type="button" style="margin: 12px 16px 0 16px; width: 358px; box-sizing: border-box; border-radius: 22px; border: 0; background: #FFFFFF; padding: 16px; display: flex; align-items: center; gap: 14px; text-align: left">
+<div style="width: 52px; height: 52px; border-radius: 26px; background: #CFEDE4; color: #0A4A3C; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0">CL</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 18px; font-weight: 700; color: #0E1A1C">Chaturved</span><span style="font-size: 14px; color: #5F6B6E">you@example.com</span></div>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+
+<div style="padding: 22px 20px 0 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #5F6B6E">SYNC AND SETTINGS</div>
+<div style="margin: 8px 16px 0 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column">
+<button type="button" style="box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid #ECEEF0; background: transparent; text-align: left"><div style="width: 40px; height: 40px; border-radius: 12px; background: #E6F1EE; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14-4M4 13a8 8 0 0 0 14 4"></path><path d="M5 3v4h4M19 21v-4h-4"></path></svg></div><div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600; color: #0E1A1C">Sync status</span><span style="font-size: 13px; color: #5F6B6E">Everything is synced · just now</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+<button type="button" style="box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border: 0; background: transparent; text-align: left"><div style="width: 40px; height: 40px; border-radius: 12px; background: #E6F1EE; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></div><div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600; color: #0E1A1C">Settings</span><span style="font-size: 13px; color: #5F6B6E">Appearance, currency and data</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+
+<div style="padding: 22px 20px 0 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: #5F6B6E">TOOLS</div>
+<div style="margin: 8px 16px 0 16px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column">
+<button type="button" style="box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid #ECEEF0; background: transparent; text-align: left"><div style="width: 40px; height: 40px; border-radius: 12px; background: #E6F1EE; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg></div><div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600; color: #0E1A1C">Tip &amp; split calculator</span><span style="font-size: 13px; color: #5F6B6E">Split a restaurant bill by person or item</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+<button type="button" style="box-sizing: border-box; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border: 0; background: transparent; text-align: left"><div style="width: 40px; height: 40px; border-radius: 12px; background: #E6F1EE; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M8 12h8"></path></svg></div><div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600; color: #0E1A1C">Scan a receipt</span><span style="font-size: 13px; color: #5F6B6E">Pull items and totals from a photo</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A969A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+
+<div style="position: absolute; left: 16px; right: 16px; bottom: 20px; height: 64px; box-sizing: border-box; border-radius: 32px; background: rgba(255, 255, 255, 0.96); box-shadow: 0 6px 24px rgba(14, 26, 28, 0.14); padding: 6px; display: flex; gap: 2px">
+<button type="button" aria-label="Home" style="flex: 1; border: 0; border-radius: 26px; background: transparent; color: #4F5E61; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F5E61" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg>
+Home
+</button>
+<button type="button" aria-label="Groups" style="flex: 1; border: 0; border-radius: 26px; background: transparent; color: #4F5E61; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F5E61" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M17 5.5a3 3 0 0 1 0 5M19 14.5c1.6.8 2.7 2.5 2.7 4.5"></path></svg>
+Groups
+</button>
+<button type="button" aria-label="Add expense" style="width: 52px; height: 52px; margin: 0 4px; align-self: center; border: 0; border-radius: 26px; background: #0B4350; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; box-shadow: 0 4px 12px rgba(11, 67, 80, 0.35)"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+<button type="button" aria-label="Activity" style="flex: 1; border: 0; border-radius: 26px; background: transparent; color: #4F5E61; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F5E61" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6"></path></svg>
+Activity
+</button>
+<button type="button" aria-label="Account" style="flex: 1; border: 0; border-radius: 26px; background: #E1F0EC; color: #0B6B58; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 700">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6B58" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg>
+Account
+</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

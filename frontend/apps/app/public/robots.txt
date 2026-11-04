@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://commontab.chaturved-sumanth-lakkaraju.com/sitemap.xml
