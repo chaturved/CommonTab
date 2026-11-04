@@ -247,7 +247,8 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Session loading:** the session provider now always renders its children (`useSession()`); only the signed-in and signed-out route groups wait for the session (`useApp()` is for those). The web `/` shows nothing until the session is known, then the landing page.
 - **React:** `react` and `react-dom` are both 19.3.1 (the lockfile had 19.3.1 and 19.3.0, which the server renderer rejects; kept because the mismatch is a real bug).
 - **Removed:** `website/` (old static site, demo and calculator web app) and `.github/workflows/website.yml` (it published `website/` to GitHub Pages: that site is no longer updated and there is no deployment for the new web build yet). CLAUDE.md, README and docs/architecture.md updated.
-- **Not done:** hosting and a deploy workflow; Privacy and Terms pages; link previews; the dev `gallery` route is also exported.
+- **SEO:** title, description, canonical, `og:`/Twitter tags, `og.png`, `sitemap.xml` and `robots.txt` for `https://commontab.chaturved-sumanth-lakkaraju.com`, all in `frontend/apps/app/public`. Every link shows the same card (invite links too) and the landing text is still drawn by JavaScript.
+- **Not done:** hosting and a deploy workflow; Privacy and Terms pages; per-page previews; the dev `gallery` route is also exported.
 
 ## Step 5c: backend structure
 ## Step 5c: backend structure (SOLID clean-up) — done

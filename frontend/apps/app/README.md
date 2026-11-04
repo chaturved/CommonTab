@@ -36,4 +36,6 @@ The API must list the site's address in `ALLOWED_ORIGINS` (CORS, in `backend/.en
 
 Not decided yet: where this is hosted. The old GitHub Pages workflow for the static `website/` folder was removed with that folder.
 
-Link previews (the card a chat app shows for a pasted link) are not set up: the single-page build has no page text or preview tags in its HTML. A static export would add them; see PROGRESS.md.
+### SEO and link previews
+
+`public/index.html` carries the title, description, canonical link and the `og:`/Twitter preview tags, with `public/og.png` (1200x630, a screenshot of the landing page) as the image. Every address serves this same file, so every link shows the same card. The site address is written in those tags and in `public/sitemap.xml` and `public/robots.txt` (`https://commontab.chaturved-sumanth-lakkaraju.com`): change all three if the domain changes. The landing page's text is drawn by JavaScript, so it is not in the HTML; a static export would add that (commit `0d23296` has a working one).
