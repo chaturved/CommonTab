@@ -137,7 +137,7 @@ CI (`.github/workflows/ci.yml`) runs the backend tests against Postgres, the fro
 
 ## Deploying
 
-The web app is a single-page build that any static host can serve; `.github/workflows/web.yml` publishes it to GitHub Pages from `main`. Setup steps and notes on hosting are in [frontend/apps/app/README.md](frontend/apps/app/README.md). The API has no hosting yet: it needs a server that stays up, HTTPS, backups, and its allowed web origin set in `ALLOWED_ORIGINS`.
+The web app is a single-page build that any static host can serve; `.github/workflows/web.yml` publishes it to GitHub Pages from `main`. Setup steps and notes on hosting are in [frontend/apps/app/README.md](frontend/apps/app/README.md). The API deploys to Render from `render.yaml` (steps in [backend/README.md](backend/README.md#deploy-on-render)); it needs `DATABASE_URL`, Resend keys and `ALLOWED_ORIGINS`, and it is not deployed yet.
 
 ## Legacy iOS app
 
