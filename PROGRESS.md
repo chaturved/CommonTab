@@ -251,6 +251,10 @@ Decisions recorded: the Conflict screen follows SPEC and SYNC_ARCHITECTURE ("Kee
 - **Deploy workflow:** `.github/workflows/web.yml` (GitHub Pages) added: type check, tests, build with `EXPO_PUBLIC_API_URL` from the repository variable `API_URL`, `404.html` copy for the single-page fallback, deploy. Runs on `main` only (or by hand). Not yet run: it needs the Pages setting, the `API_URL` variable, the DNS record and a deployed API (steps in `frontend/apps/app/README.md`).
 - **Not done:** hosting the API; Privacy and Terms pages; per-page previews; the dev `gallery` route is also exported.
 
+## Docs and a CI fix
+- **CI fix:** the backend integration job failed on the foreign-currency commit because the expense repository's SQL needed `currency_code`, `original_minor` and `rate_micros` for every insert and update, and the repository tests (and the receipt and group repository tests) do not pass them. They are optional parameters now (empty for ordinary expenses). Full backend run: 579 passed. Under four parallel workers against the shared Supabase pooler the migration tests can fail with connection errors; run them serially (`pytest tests/integration/test_migrations.py`) if that happens. CI runs serially.
+- **Docs:** `docs/architecture.md` starts with the high-level design (Mermaid flowcharts: components, saving an expense offline-first, opening the app and routes); the legacy iOS notes moved below it. The root `README.md` is rewritten for the rebuild (what it does, layout, run, tests, deploy); the long legacy iOS feature and endpoint notes are gone from it (the endpoint list is in `docs/shared-api.md`).
+
 ## Step 5c: backend structure
 ## Step 5c: backend structure (SOLID clean-up) — done
 - **Layered layout:** `app/api` (routes + `deps.py`), `schemas`, `services`, `repositories`, `domain`, `core`. Moves were their own commit.

@@ -1,27 +1,105 @@
 # Architecture
 
-CommonTab has two expense stores with different lifecycles. The iOS local archive keeps personal expenses, local groups, itemized details, and receipt photos on one device. The API keeps authenticated group members, shared expenses, balances, settlements, and receipt images in a server database. Importing a local expense into a shared group is an explicit user action; it creates a new server record after the user reviews its payer and split.
+CommonTab splits shared expenses. One TypeScript app (Expo) runs on iOS, Android and the web. It is offline-first: every change is saved on the device first and sent to the API in the background. The API (FastAPI and Postgres) owns the shared state: accounts, groups, expenses, payments and the activity feed.
+
+The original SwiftUI app is kept under `legacy/ios` as a reference; its notes are at the end of this file.
+
+## High-level design
+
+### Components
+
+```mermaid
+flowchart TB
+  subgraph Client["Expo app (iOS, Android, web)"]
+    Screens["Screens<br/>Expo Router + NativeWind<br/>packages/ui"]
+    Core["packages/core<br/>money, splitter, ledger,<br/>outbox, sync engine, API client"]
+    Store[("Local store<br/>SQLite on phones<br/>IndexedDB on web")]
+    Screens --> Core
+    Core --> Store
+  end
+
+  Pages["Static web host<br/>(GitHub Pages)<br/>landing page + web app"]
+  Pages -. serves the web build .-> Screens
+
+  subgraph Backend["Backend (FastAPI)"]
+    Routes["routes<br/>/v1 endpoints, auth, rate limit"]
+    Services["services<br/>rules, permissions, splits"]
+    Repos["repositories<br/>SQL"]
+    Routes --> Services --> Repos
+  end
+
+  Core -- "HTTPS, JSON<br/>bearer token or session cookie" --> Routes
+  Repos --> DB[("Postgres<br/>Supabase")]
+  Services -- "password-reset email" --> Resend["Resend"]
+  Services -- "exchange rates (cached 1 h)" --> Frankfurter["Frankfurter"]
+```
+
+The shared API contract is in [shared-api.md](shared-api.md). Money is always integer minor units (cents); `packages/core` and the backend share the fixtures in `fixtures/money` so the same inputs give the same cents.
+
+### Saving an expense (offline-first)
+
+```mermaid
+flowchart TD
+  A["Person saves an expense"] --> B["Save on the device<br/>(local store)"]
+  B --> C["Screen updates at once:<br/>balances count the change"]
+  B --> D["Queue it in the outbox"]
+  D --> E{"Online and signed in?"}
+  E -- "no" --> F["Wait: 'N changes waiting to sync'<br/>retry with backoff"]
+  F --> E
+  E -- "yes" --> G["PUT /v1/groups/:id/expenses/:expenseId"]
+  G --> H{"Server checks<br/>member, split adds up,<br/>currency conversion"}
+  H -- "refused (4xx)" --> I["Mark failed:<br/>person can review or discard"]
+  H -- "version conflict (409)" --> J["Conflict screen:<br/>keep mine or theirs"]
+  H -- "ok" --> K["One database transaction:<br/>write expense, bump group version,<br/>record activity event"]
+  K --> L["Mark synced, store the server copy"]
+  L --> M["Pull on the next sync:<br/>GET /v1/groups and GET /v1/activity?since=N"]
+  M --> N["Other devices and members<br/>see the change and the Activity feed"]
+```
+
+Retrying a request is safe: the expense id is chosen on the device, and repeating the same write changes nothing.
+
+### Opening the app
+
+```mermaid
+flowchart TD
+  Start["Open /"] --> P{"Platform"}
+  P -- "web" --> W["Landing page<br/>(Open app if signed in)"]
+  P -- "iOS or Android" --> S{"Signed in?"}
+  S -- "yes" --> H["/home"]
+  S -- "no" --> WE["/welcome"]
+  W -- "Get started" --> CA["/create-account"]
+  W -- "Sign in" --> SI["/sign-in"]
+  WE --> CA
+  WE --> SI
+  WE --> JC["/join-code"]
+  CA --> H
+  SI --> H
+  H --> Tabs["Home, Groups, Activity, Account"]
+  Link["Invite link /join/CODE"] --> S2{"Signed in?"}
+  S2 -- "yes" --> J["Join with the code filled in"]
+  S2 -- "no" --> CA
+```
+
+Signed-in and signed-out screens live in separate route groups; the session decides which group is reachable, so a signed-out visit to `/home` lands on the front door.
 
 ## Project layout
 
 ```text
-legacy/
-  ios/
-    CommonTab/            SwiftUI app, domain, data, and resources
-    CommonTabTests/       Swift domain, persistence, and client tests
-    CommonTabUITests/     End-to-end iOS flows
-    CommonTab.xcodeproj/  Native app project
-    Package.swift         Testable core package
+frontend/                 TypeScript npm workspace
+  packages/core/          Pure TypeScript: money, splitter, ledger, outbox, sync, API client, view models
+  packages/ui/            Design tokens and components (NativeWind)
+  apps/app/               Expo app for iOS, Android and web (landing page at the web root)
 backend/
   app/                    API routes, services, repositories, schemas
-  tests/                  HTTP contract and behavior tests
-  pyproject.toml          Python service package
-frontend/                 TypeScript workspace (packages/core, packages/ui, apps/app)
-docs/                     Architecture, API contract, screenshots
+  migrations/             Alembic migrations
+  tests/                  unit and integration (real Postgres) tests
+fixtures/money/           Shared JSON cases used by core and backend tests
+docs/                     Architecture, API contract, design docs
+legacy/ios/               SwiftUI app and Swift tests (reference only)
 scripts/                  Repository utilities
 ```
 
-## Dependency boundaries
+## Legacy iOS app: dependency boundaries
 
 - `legacy/ios/CommonTab/Domain` is independent of SwiftUI and persistence. Swift money math, itemized calculations, validation, and local models live here.
 - `legacy/ios/CommonTab/Application` coordinates local archive and receipt repository interfaces. `Data/Local` implements storage and keeps credentials in the Keychain.
@@ -30,7 +108,7 @@ scripts/                  Repository utilities
 - `backend/app` is layered. `main.py` builds the app; `api/routes/` has one router module per resource and each class declares what it needs with `Depends` in `__init__` (services take repositories, repositories take the request's connection from `get_db`, which is one database transaction), and `api/deps.py` has bearer-token auth and the rate limit. `services/` holds the rules, `repositories/` the SQL, `schemas/` the request and response models. `domain/rules.py` contains money allocation and balance rules. `core/errors.py` defines the shared API error response.
 - The web app is the Expo app exported as a single-page app (`npm run export:web` in `frontend/apps/app`). `/` is the landing page and `/home` is Home. A host must send every path to `index.html`; see `frontend/apps/app/README.md`.
 
-## Cross-platform contract
+## Cross-platform contract (legacy notes)
 
 The server owns shared group money rules. Clients send integer minor units, a split method, participants in an explicit order, and optional exact-minor-unit or percentage inputs. The server allocates any remainder deterministically and returns each member's share and balance. Group currencies are restricted to USD, EUR, GBP, CAD, AUD, JPY, and INR so future clients can agree on fraction digits. See [shared API](shared-api.md) and the generated `/openapi.json` schema.
 

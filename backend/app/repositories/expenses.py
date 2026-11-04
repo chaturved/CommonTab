@@ -32,7 +32,8 @@ class ExpenseRepository:
                               allocations, input_values, version, updated_at, currency_code, original_minor, rate_micros)
         VALUES (:id, :group_id, :merchant, :occurred_at, :category, :notes, :amount_minor, :payer_id, :method,
                 :allocations, :input_values, :version, :updated_at, :currency_code, :original_minor, :rate_micros)
-    ''').bindparams(sa.bindparam('allocations', type_=JSONB), sa.bindparam('input_values', type_=JSONB))
+    ''').bindparams(sa.bindparam('allocations', type_=JSONB), sa.bindparam('input_values', type_=JSONB),
+                                      sa.bindparam('currency_code', value=None), sa.bindparam('original_minor', value=None), sa.bindparam('rate_micros', value=None))
 
     def insert_expense(self, values: dict) -> None:
         self.connection.execute(self._expense_columns, values)
@@ -43,7 +44,8 @@ class ExpenseRepository:
                input_values=:input_values, version=:version, updated_at=:updated_at, deleted_at=:deleted_at,
                currency_code=:currency_code, original_minor=:original_minor, rate_micros=:rate_micros
         WHERE id=:id
-    ''').bindparams(sa.bindparam('allocations', type_=JSONB), sa.bindparam('input_values', type_=JSONB))
+    ''').bindparams(sa.bindparam('allocations', type_=JSONB), sa.bindparam('input_values', type_=JSONB),
+                                    sa.bindparam('currency_code', value=None), sa.bindparam('original_minor', value=None), sa.bindparam('rate_micros', value=None))
 
     def update_expense(self, values: dict) -> None:
         self.connection.execute(self._expense_update, values)
