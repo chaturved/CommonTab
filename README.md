@@ -15,6 +15,73 @@ The cross-platform rebuild is tracked in [PROGRESS.md](PROGRESS.md). The origina
 - Account screens: sign in, create account, password reset by email, change name or password, delete account, export CSV.
 - A landing page at the web root, a desktop layout with a sidebar, and phone layouts.
 
+## How it works
+
+### Components
+
+```mermaid
+flowchart TB
+  subgraph Client["Expo app (iOS, Android, web)"]
+    Screens["Screens<br/>Expo Router + NativeWind<br/>packages/ui"]
+    Core["packages/core<br/>money, splitter, ledger,<br/>outbox, sync engine, API client"]
+    Store[("Local store<br/>SQLite on phones<br/>IndexedDB on web")]
+    Screens --> Core
+    Core --> Store
+  end
+
+  Pages["Static web host<br/>(GitHub Pages)<br/>landing page + web app"]
+  Pages -. serves the web build .-> Screens
+
+  subgraph Backend["Backend (FastAPI)"]
+    Routes["routes<br/>/v1 endpoints, auth, rate limit"]
+    Services["services<br/>rules, permissions, splits"]
+    Repos["repositories<br/>SQL"]
+    Routes --> Services --> Repos
+  end
+
+  Core -- "HTTPS, JSON<br/>bearer token or session cookie" --> Routes
+  Repos --> DB[("Postgres<br/>Supabase")]
+  Services -- "password-reset email" --> Resend["Resend"]
+  Services -- "exchange rates (cached 1 h)" --> Frankfurter["Frankfurter"]
+```
+
+### Saving an expense (offline-first)
+
+```mermaid
+flowchart TD
+  A["Person saves an expense"] --> B["Save on the device<br/>(local store)"]
+  B --> C["Screen updates at once:<br/>balances count the change"]
+  B --> D["Queue it in the outbox"]
+  D --> E{"Online and signed in?"}
+  E -- "no" --> F["Wait: 'N changes waiting to sync'<br/>retry with backoff"]
+  F --> E
+  E -- "yes" --> G["PUT /v1/groups/:id/expenses/:expenseId"]
+  G --> H{"Server checks<br/>member, split adds up,<br/>currency conversion"}
+  H -- "refused (4xx)" --> I["Mark failed:<br/>person can review or discard"]
+  H -- "version conflict (409)" --> J["Conflict screen:<br/>keep mine or theirs"]
+  H -- "ok" --> K["One database transaction:<br/>write expense, bump group version,<br/>record activity event"]
+  K --> L["Mark synced, store the server copy"]
+  L --> M["Pull on the next sync:<br/>GET /v1/groups and GET /v1/activity?since=N"]
+  M --> N["Other devices and members<br/>see the change and the Activity feed"]
+```
+
+More diagrams (opening the app and routes) and the layering rules are in [docs/architecture.md](docs/architecture.md).
+
+### Design decisions and trade-offs
+
+- **Offline-first.** The UI never waits on the network. A change is saved on the device, then goes through an outbox that retries with backoff. The cost is that the client has to model "waiting", "failed" and "conflict" states, and the screens show them.
+- **Safe retries.** The client picks every id (expense, payment, group, person), and the writes are `PUT` or idempotent. Repeating a request that already succeeded returns the same record and writes nothing, including no second activity event. Reusing an id for a different payment, or an id that belongs to another group, is a `409`.
+- **Conflicts are explicit.** Each expense has a `version`. A write with a stale version gets `409 version_conflict` and the person chooses which version to keep; the other is filed in the expense's history. Last-write-wins would lose edits silently.
+- **Money is integer cents.** No floats anywhere. Remainders are shared out deterministically (request order for equal splits, largest remainder for percentages), so a bill always adds up exactly. The TypeScript and Python code run the same JSON fixtures in `fixtures/money`, so both give the same cents.
+- **The server is the authority for shared state.** It checks membership, that a split adds up, that a payment does not exceed what is owed (under a lock on the group), and that a foreign-currency amount matches its rate. Clients can compute balances immediately, and the server's numbers win on the next sync.
+- **Foreign currency.** The expense stores the original amount, its currency and the rate (an integer, millionths) next to the amount in the group's currency, so balances never change when rates move. Rates come through the backend (cached for an hour, with a fallback to the last rate the device saw when offline) and not from the apps.
+- **Activity feed.** Events are written in the same transaction as the change. Clients pull with a sequence cursor (`since=N`), so a device only fetches what is new and the feed is cheap to poll.
+- **Sessions.** An httpOnly cookie for browsers and a bearer token for everything else. A write that authenticates by cookie must also carry a custom header, which a page on another site cannot add (CSRF protection). A `401` always means the session ended, so wrong-password cases return `403`.
+- **Layered backend.** Routes, then services, then repositories, with one database transaction per request. Rules live in services and SQL in repositories, so unit tests mock the repositories and integration tests hit a real Postgres.
+- **Deletes keep history.** Expenses are tombstoned (so other devices learn about the deletion), and a group is soft-deleted; people who leave or are removed stay in old expenses.
+
+What it does not do yet, and what I would do next: host the API (it needs a long-running server, HTTPS and backups); the rate limiter is in memory, so it only works for one instance (a shared store such as Redis would be needed to scale out); the web build is a single-page app, so the landing page's text is not in the HTML; receipt scanning, recurring expenses and push notifications are out of scope for the first version.
+
 ## Repository layout
 
 ```text
