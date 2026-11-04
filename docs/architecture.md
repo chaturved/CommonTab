@@ -12,11 +12,6 @@ legacy/
     CommonTabUITests/     End-to-end iOS flows
     CommonTab.xcodeproj/  Native app project
     Package.swift         Testable core package
-website/
-  index.html              Product landing page
-  site.css                Product page styling
-  app/                    Browser app, styles, and calculator tests
-  assets/                 Images used by the deployed site
 backend/
   app/                    API routes, services, repositories, schemas
   tests/                  HTTP contract and behavior tests
@@ -33,7 +28,7 @@ scripts/                  Repository utilities
 - `legacy/ios/CommonTab/Data/Remote` owns HTTP transport and API DTOs. Group expenses, temporary bill sessions, exchange rates, and analytics have separate clients. Views create requests and display server results; they do not compute authoritative shared balances.
 - `legacy/ios/CommonTab/Features` owns SwiftUI navigation and form state. The four root tabs are Overview, Groups, Expenses, and Tools. Screens are grouped by workflow; `Shared` owns reusable presentation components, while editors and details have their own files.
 - `backend/app` is layered. `main.py` builds the app; `api/routes/` has one router module per resource and each class declares what it needs with `Depends` in `__init__` (services take repositories, repositories take the request's connection from `get_db`, which is one database transaction), and `api/deps.py` has bearer-token auth and the rate limit. `services/` holds the rules, `repositories/` the SQL, `schemas/` the request and response models. `domain/rules.py` contains money allocation and balance rules. `core/errors.py` defines the shared API error response.
-- `website` is a static deployment. Its product pages and browser app are separate directories and share only public assets. The browser app currently saves personal expenses on the device and does not call the shared API.
+- The web app is the Expo app exported statically (`npm run export:web` in `frontend/apps/app`). `/` is the landing page and `/home` is Home. A host must serve each route's HTML file and rewrite the dynamic routes; see `frontend/apps/app/README.md`.
 
 ## Cross-platform contract
 

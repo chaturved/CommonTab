@@ -1,7 +1,8 @@
 import { Redirect } from 'expo-router';
-import { useApp } from '../src/app-context';
+import { useSession } from '../src/app-context';
 
 export default function Root() {
-  const { user } = useApp();
+  const { ready, user } = useSession();
+  if (!ready) return null;
   return <Redirect href={user ? '/home' : '/welcome'} />;
 }

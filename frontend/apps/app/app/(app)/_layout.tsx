@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { useApp } from '../../src/app-context';
+import { useApp, useSession } from '../../src/app-context';
 import { SessionExpiredSheet } from '../../src/auth/SessionExpiredSheet';
 import { DesktopShell } from '../../src/components/DesktopShell';
 import { useIsDesktop } from '../../src/layout';
 
-export default function AppLayout() {
+function AppShell() {
   const desktop = useIsDesktop();
   const { clearJustSignedIn } = useApp();
   useEffect(() => clearJustSignedIn(), [clearJustSignedIn]);
@@ -27,4 +27,9 @@ export default function AppLayout() {
       <SessionExpiredSheet />
     </>
   );
+}
+
+export default function AppLayout() {
+  const { ready } = useSession();
+  return ready ? <AppShell /> : null;
 }

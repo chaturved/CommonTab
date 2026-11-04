@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml/badge.svg)](https://github.com/chaturved/CommonTab/actions/workflows/ci.yml)
 
-CommonTab includes a native iOS app, a product website, a browser app, and an optional FastAPI service. The SwiftUI app saves personal expenses and scanned receipts locally. The service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
+CommonTab includes a native iOS app (legacy), a cross-platform TypeScript app (iOS, Android and web, with the landing page at the web root), and a FastAPI service. The SwiftUI app saves personal expenses and scanned receipts locally. The service provides accounts, shared groups, expense and receipt sync, settlements, temporary itemized-bill sessions, and aggregate analytics.
 
 ## Repository layout
 
@@ -11,24 +11,19 @@ frontend/          TypeScript npm workspace (in progress): packages/core, packag
 backend/           FastAPI service (package app) and HTTP tests
 legacy/
   ios/             SwiftUI app, Xcode project, and Swift tests (reference only)
-website/           Product pages and browser app, deployed together
-  app/             Browser app and its calculator tests
-  assets/          Website images and icon
 docs/              Architecture, API contract, design docs (docs/design), screenshots
 scripts/           Repository utilities
 ```
 
 The cross-platform rebuild is tracked in [PROGRESS.md](PROGRESS.md).
 
-Each app owns its UI and build configuration. The iOS and future React Native clients share the API contract in [docs/shared-api.md](docs/shared-api.md), not source files. The product site and browser app share one static deployment under `website`.
+Each app owns its UI and build configuration. The iOS and future React Native clients share the API contract in [docs/shared-api.md](docs/shared-api.md), not source files.
 
 ## App preview
 
 <img src="docs/screenshots/overview.png" alt="CommonTab overview showing expense totals, a group, and navigation" width="320">
 
-A [product website and web app](website/README.md) introduce CommonTab and let visitors use the tip calculator and personal expenses online. The web app starts with example expenses, stores changes on the device, and does not connect to the shared API.
-
-To view the product site and browser app locally, run `python3 -m http.server 3000 --directory website`, then open `http://localhost:3000/` or `http://localhost:3000/app/`.
+The web app and its landing page live in `frontend/apps/app`. Run `npm run web` there to develop, or `npm run export:web` to build the static site into `dist/` (see [frontend/apps/app/README.md](frontend/apps/app/README.md) for hosting).
 
 ## Try it locally
 

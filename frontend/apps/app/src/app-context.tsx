@@ -19,7 +19,19 @@ interface AppValue {
   deleteAccount(password: string): Promise<void>;
 }
 
+interface SessionValue {
+  ready: boolean;
+  user: SignedInUser | null;
+  justSignedIn: boolean;
+  setPendingJoinCode(code: string | null): void;
+}
+
 const AppContext = createContext<AppValue | null>(null);
+const SessionContext = createContext<SessionValue>({ ready: false, user: null, justSignedIn: false, setPendingJoinCode: () => undefined });
+
+export function useSession(): SessionValue {
+  return useContext(SessionContext);
+}
 
 export function useApp(): AppValue {
   const value = useContext(AppContext);
@@ -27,7 +39,7 @@ export function useApp(): AppValue {
   return value;
 }
 
-export function AppProvider({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
+export function AppProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<Services | null>(null);
   const [user, setUser] = useState<SignedInUser | null>(null);
   const pendingCode = useRef<string | null>(null);
@@ -113,5 +125,16 @@ export function AppProvider({ children, fallback }: { children: ReactNode; fallb
     },
   }, [services, user, justSignedIn, accept, leave]);
 
-  return value ? <AppContext.Provider value={value}>{children}</AppContext.Provider> : <>{fallback}</>;
+  const session = useMemo<SessionValue>(() => ({
+    ready: services !== null,
+    user,
+    justSignedIn,
+    setPendingJoinCode: (code) => { pendingCode.current = code; },
+  }), [services, user, justSignedIn]);
+
+  return (
+    <SessionContext.Provider value={session}>
+      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+    </SessionContext.Provider>
+  );
 }

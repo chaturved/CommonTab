@@ -1,15 +1,17 @@
 import '../global.css';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { AppProvider, useApp } from '../src/app-context';
+import { AppProvider, useSession } from '../src/app-context';
+import { markHydrated } from '../src/layout';
 
 function Routes() {
-  const { user } = useApp();
+  const { ready, user } = useSession();
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={user !== null}>
+      <Stack.Protected guard={!ready || user !== null}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
-      <Stack.Protected guard={user === null}>
+      <Stack.Protected guard={!ready || user === null}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       <Stack.Screen name="gallery" />
@@ -18,8 +20,9 @@ function Routes() {
 }
 
 export default function RootLayout() {
+  useEffect(markHydrated, []);
   return (
-    <AppProvider fallback={null}>
+    <AppProvider>
       <Routes />
     </AppProvider>
   );

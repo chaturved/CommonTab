@@ -1,7 +1,26 @@
-import { useWindowDimensions } from 'react-native';
+import { useSyncExternalStore } from 'react';
+import { Platform, useWindowDimensions } from 'react-native';
 
 export const DESKTOP_MIN_WIDTH = 1024;
 
+let hydrated = Platform.OS !== 'web';
+const listeners = new Set<() => void>();
+
+export function markHydrated(): void {
+  if (hydrated) return;
+  hydrated = true;
+  listeners.forEach((listener) => listener());
+}
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+
 export function useIsDesktop(): boolean {
-  return useWindowDimensions().width >= DESKTOP_MIN_WIDTH;
+  const width = useWindowDimensions().width;
+  const ready = useSyncExternalStore(subscribe, () => hydrated, () => false);
+  return ready && width >= DESKTOP_MIN_WIDTH;
 }
