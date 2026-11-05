@@ -75,16 +75,24 @@ export default function Home() {
                 ))}
               </View>
             </View>
-            {recent.length > 0 ? (
-              <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
-                <SectionHeader title="Recent expenses" />
+            <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
+              <SectionHeader title="Recent expenses" />
+              {recent.length > 0 ? (
                 <Card className="overflow-hidden">
                   {recent.map(({ row, currencyCode }, i) => (
                     <ExpenseRow key={row.id} row={row} currencyCode={currencyCode} subtitle="home" divider={i < recent.length - 1} />
                   ))}
                 </Card>
-              </View>
-            ) : null}
+              ) : (
+                <Card className="items-start gap-3 p-5">
+                  <View className="gap-1">
+                    <Text variant="body" className="font-semibold">No expenses yet</Text>
+                    <Text variant="body-small" tone="muted">Add one and it shows up here.</Text>
+                  </View>
+                  <Button label="Add expense" variant="secondary" size="small" onPress={() => router.push('/add-expense')} />
+                </Card>
+              )}
+            </View>
           </View>
         </>
       ) : null}
