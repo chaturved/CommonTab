@@ -8,14 +8,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "plugins": [
-      [
-        "expo-router",
-        {
-          "asyncRoutes": {
-            "web": false
-          }
-        }
-      ],
+      "expo-router",
       "expo-sqlite",
       "expo-secure-store"
     ],
