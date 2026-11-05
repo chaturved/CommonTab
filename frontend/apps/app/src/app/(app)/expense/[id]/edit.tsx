@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useRouteParam } from '@/hooks/useRouteParam';
 import { View } from 'react-native';
 import { Text } from '@commontab/ui';
 import { ExpenseFormView } from '@/components/expense/ExpenseFormView';
@@ -8,7 +8,7 @@ import { useIsDesktop } from '@/hooks/useViewport';
 
 export default function EditExpense() {
   const desktop = useIsDesktop();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useRouteParam('id');
   const { ready, groups } = useGroups();
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);

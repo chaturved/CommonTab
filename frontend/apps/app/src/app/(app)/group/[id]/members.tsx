@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouteParam } from '@/hooks/useRouteParam';
+import { Redirect, useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { UserPlus } from 'lucide-react-native';
 import { BackButton, Icon, Text } from '@commontab/ui';
@@ -13,7 +14,7 @@ import { useIsDesktop } from '@/hooks/useViewport';
 
 export default function Members() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useRouteParam('id');
   const { data } = useGroup(id);
   const desktop = useIsDesktop();
   const [sheet, setSheet] = useState<'leave' | 'delete' | null>(null);

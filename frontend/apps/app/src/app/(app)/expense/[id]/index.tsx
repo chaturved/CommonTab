@@ -1,4 +1,5 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
+import { useRouteParam } from '@/hooks/useRouteParam';
 import { View } from 'react-native';
 import { BackButton, Text } from '@commontab/ui';
 import { ExpenseDetailContent } from '@/components/expense/ExpenseDetail';
@@ -8,7 +9,7 @@ import { useIsDesktop } from '@/hooks/useViewport';
 
 export default function ExpenseScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useRouteParam('id');
   const { ready, groups } = useGroups();
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);
