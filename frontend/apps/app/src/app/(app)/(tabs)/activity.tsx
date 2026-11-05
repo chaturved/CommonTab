@@ -10,6 +10,7 @@ import { Screen } from '@/components/layout/Screen';
 import { SyncStatusChip } from '@/components/sync/SyncStatusChip';
 import { useActivityEvents } from '@/hooks/useActivityEvents';
 import { useGroups } from '@/hooks/useGroups';
+import { useNow } from '@/hooks/useNow';
 import type { GroupData } from '@/types/group';
 import { useIsDesktop } from '@/hooks/useViewport';
 
@@ -35,8 +36,9 @@ export default function Activity() {
   const desktop = useIsDesktop();
   const { groups } = useGroups();
   const { ready, events } = useActivityEvents();
+  const now = useNow();
   const [filter, setFilter] = useState<ActivityFilter>('all');
-  const rows = activityFeed(events, groups.map((g) => g.group), Date.now(), filter);
+  const rows = activityFeed(events, groups.map((g) => g.group), now, filter);
   const days = byDay(rows);
 
   const open = (row: ActivityRow) => {

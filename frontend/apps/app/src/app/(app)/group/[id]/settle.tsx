@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
@@ -9,6 +9,9 @@ import { FormPage } from '@/components/layout/FormPage';
 import { SwitchRow } from '@/components/ui/SwitchRow';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useGroup } from '@/hooks/useGroups';
+import type { GroupData } from '@/types/group';
+
+const NO_BALANCES: GroupData['summary']['balances'] = [];
 
 const decimalOnly = (text: string) => {
   const cleaned = text.replace(/[^\d.]/g, '');
@@ -33,10 +36,10 @@ export default function Settle() {
   const [problem, setProblem] = useState<string | null>(null);
 
   const group = data?.group;
-  const balances = data?.summary.balances ?? [];
+  const balances = data?.summary.balances ?? NO_BALANCES;
   const others = group?.members.filter((m) => m.id !== group.meMemberID) ?? [];
   const chosenId = otherId ?? data?.summary.counterparts[0]?.memberID ?? others[0]?.id ?? null;
-  const direction = useMemo(() => (group && chosenId ? directionWith(balances, group.meMemberID, chosenId) : null), [group, chosenId, balances]);
+  const direction = group && chosenId ? directionWith(balances, group.meMemberID, chosenId) : null;
   const amount = amountText ?? (direction ? formatMinorUnits(direction.limit, group!.currencyCode) : '');
   const check = group ? checkSettlement({ amountText: amount, direction, group }) : { ok: false as const, message: '' };
   const nameOf = (memberId: string) => {
