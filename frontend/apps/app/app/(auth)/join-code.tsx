@@ -18,7 +18,6 @@ export default function JoinWithCode() {
 
   return (
     <AuthScreen
-      inlineFooter
       footer={
         <View className="gap-2.5">
           <Button label="Create account" disabled={!ready} onPress={() => go('/create-account')} />

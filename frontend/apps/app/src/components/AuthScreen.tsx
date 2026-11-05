@@ -7,12 +7,10 @@ import { useIsDesktop } from '../layout';
 import { Wordmark } from './Logo';
 import { Screen } from './Screen';
 
-export function AuthScreen({ children, footer, inlineFooter }: { children: ReactNode; footer?: ReactNode; inlineFooter?: boolean }) {
+export function AuthScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   const desktop = useIsDesktop();
   const router = useRouter();
-  if (!desktop) {
-    return inlineFooter ? <Screen>{children}{footer}</Screen> : <Screen footer={footer}>{children}</Screen>;
-  }
+  if (!desktop) return <Screen footer={footer}>{children}</Screen>;
   return (
     <View className="flex-1 flex-row bg-background">
       <LinearGradient colors={[colors.light['hero-from'], '#061A20']} start={{ x: 0.2, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ width: '50%', padding: 56, justifyContent: 'space-between' }}>
