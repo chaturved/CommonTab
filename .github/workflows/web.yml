@@ -38,7 +38,7 @@ jobs:
         run: npx expo export --platform web
         working-directory: frontend/apps/app
       - name: Serve the app for addresses that have no file (GitHub Pages sends them to 404.html)
-        run: cp dist/index.html dist/404.html
+        run: cp dist/home.html dist/404.html
         working-directory: frontend/apps/app
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

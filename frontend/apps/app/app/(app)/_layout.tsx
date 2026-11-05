@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useApp, useSession } from '../../src/app-context';
 import { SessionExpiredSheet } from '../../src/auth/SessionExpiredSheet';
+import { Splash } from '../../src/components/Splash';
 import { DesktopShell } from '../../src/components/DesktopShell';
 import { useIsDesktop } from '../../src/layout';
 
@@ -31,5 +32,5 @@ function AppShell() {
 
 export default function AppLayout() {
   const { ready } = useSession();
-  return ready ? <AppShell /> : null;
+  return ready ? <AppShell /> : <Splash />;
 }
