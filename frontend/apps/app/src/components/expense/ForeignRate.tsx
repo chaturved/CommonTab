@@ -1,13 +1,8 @@
 import { useState } from 'react';
+import { decimalOnly } from '@/lib/amountInput';
 import { TextInput, View } from 'react-native';
 import { parseRate, rateSentence, shortDate, type RateResult } from '@commontab/core';
 import { Banner, Button, Text, useThemeColors } from '@commontab/ui';
-
-const decimalOnly = (text: string) => {
-  const cleaned = text.replace(/[^\d.]/g, '');
-  const [whole = '', ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
-};
 
 export function ForeignRate({ entry, currency, rateText, onRateText, quote, loading, kept, countsAs, error }: {
   entry: string;
