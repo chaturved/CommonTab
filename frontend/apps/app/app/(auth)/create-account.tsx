@@ -2,16 +2,15 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { looksLikeEmail, MIN_PASSWORD_LENGTH, passwordProgress } from '@commontab/core';
-import { BackButton, Button, FieldGroup, FieldRow, PasswordMeter, Text } from '@commontab/ui';
+import { Button, FieldGroup, FieldRow, PasswordMeter, Text } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
 import { FailureBanner } from '../../src/auth/FailureBanner';
 import { useSubmit } from '../../src/auth/useSubmit';
+import { AuthHeader } from '../../src/components/AuthHeader';
 import { AuthScreen } from '../../src/components/AuthScreen';
-import { useIsDesktop } from '../../src/layout';
 
 export default function CreateAccount() {
   const router = useRouter();
-  const desktop = useIsDesktop();
   const { register } = useApp();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -25,25 +24,17 @@ export default function CreateAccount() {
   return (
     <AuthScreen
       footer={
-        desktop ? (
-          <View className="gap-3.5">
-            {button}
-            <View className="items-center"><Button label="Already have an account? Sign in" variant="ghost" size="small" onPress={() => router.replace('/sign-in')} /></View>
-          </View>
-        ) : button
+        <View className="gap-3.5">
+          {button}
+          <View className="items-center"><Button label="Already have an account? Sign in" variant="ghost" size="small" onPress={() => router.replace('/sign-in')} /></View>
+        </View>
       }
     >
-      {desktop ? null : (
-        <View className="flex-row items-center justify-between pt-1">
-          <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))} />
-        </View>
-      )}
-      <View className={desktop ? 'gap-1.5' : 'gap-1.5 px-2 pt-2'}>
-        <Text variant="large-title" accessibilityRole="header">Create your account</Text>
-        <Text variant="body-small" tone="muted" className={desktop ? 'text-[15px]' : 'leading-[21px]'}>
-          {desktop ? 'Free. Works offline.' : 'Your groups and expenses are saved to your account, so they follow you to a new phone.'}
-        </Text>
-      </View>
+      <AuthHeader
+        title="Create your account"
+        subtitle="Your groups and expenses are saved to your account, so they follow you to a new phone."
+        desktopSubtitle="Free. Works offline."
+      />
       <FailureBanner failure={failure} />
       <FieldGroup>
         <FieldRow label="Name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" autoCapitalize="words" />
