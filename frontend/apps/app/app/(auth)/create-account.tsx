@@ -33,7 +33,6 @@ export default function CreateAccount() {
       <AuthHeader
         title="Create your account"
         subtitle="Your groups and expenses are saved to your account, so they follow you to a new phone."
-        desktopSubtitle="Free. Works offline."
       />
       <FailureBanner failure={failure} />
       <FieldGroup>

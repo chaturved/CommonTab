@@ -34,8 +34,6 @@ export default function SignIn() {
       <AuthHeader
         title="Pick up where you left off."
         subtitle="Your groups and expenses will load and stay in sync across your devices."
-        desktopTitle="Welcome back"
-        desktopSubtitle="Sign in to CommonTab"
       />
       {reset ? <Banner tone="info" message="Your password was changed. Sign in with the new one." /> : null}
       <FailureBanner failure={failure} />
