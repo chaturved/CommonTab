@@ -1,5 +1,4 @@
-import { View } from 'react-native';
-import { Pressable } from 'react-native';
+import { View , Pressable } from 'react-native';
 import { timeAgo } from '@commontab/core';
 import { AmountText, AvatarStack, Button, Card, Text } from '@commontab/ui';
 import type { GroupData } from '@/types/group';

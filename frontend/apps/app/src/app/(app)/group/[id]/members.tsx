@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { UserPlus } from 'lucide-react-native';
-import { Pressable } from 'react-native';
 import { BackButton, Icon, Text } from '@commontab/ui';
 import { GroupActionRows } from '@/components/group/GroupDangerRows';
 import { DeleteGroupSheet, LeaveGroupSheet, RemoveMemberSheet } from '@/components/group/GroupSheets';
@@ -17,10 +16,10 @@ export default function Members() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data } = useGroup(id);
   const desktop = useIsDesktop();
-  if (desktop) return <Redirect href={{ pathname: '/group/[id]', params: { id, tab: 'Members' } }} />;
   const [sheet, setSheet] = useState<'leave' | 'delete' | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const members = (data?.group.members ?? []).filter((m) => !m.removedAt);
+  if (desktop) return <Redirect href={{ pathname: '/group/[id]', params: { id, tab: 'Members' } }} />;
 
   return (
     <Screen wide>
