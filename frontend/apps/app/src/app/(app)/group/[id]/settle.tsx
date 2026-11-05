@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { decimalOnly } from '@/lib/amountInput';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
@@ -12,12 +13,6 @@ import { useGroup } from '@/hooks/useGroups';
 import type { GroupData } from '@/types/group';
 
 const NO_BALANCES: GroupData['summary']['balances'] = [];
-
-const decimalOnly = (text: string) => {
-  const cleaned = text.replace(/[^\d.]/g, '');
-  const [whole = '', ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
-};
 
 export default function Settle() {
   const router = useRouter();

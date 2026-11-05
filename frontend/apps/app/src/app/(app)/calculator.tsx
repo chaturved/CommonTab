@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { decimalOnly } from '@/lib/amountInput';
 import { useRouter } from 'expo-router';
 import { Minus, Plus } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
@@ -12,12 +13,6 @@ import { useIsDesktop } from '@/hooks/useViewport';
 const CURRENCY = 'USD';
 const TIPS = ['15', '18', '20', '25'];
 const DESKTOP_TIPS = ['15', '18', '20'];
-
-const decimalOnly = (text: string) => {
-  const cleaned = text.replace(/[^\d.]/g, '');
-  const [whole = '', ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
-};
 
 export default function Calculator() {
   const router = useRouter();
