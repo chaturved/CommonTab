@@ -32,7 +32,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <AuthScreen footer={<Button label="Set new password" loading={confirm.busy} disabled={!ready} onPress={save} />}>
+    <AuthScreen inlineFooter footer={<Button label="Set new password" loading={confirm.busy} disabled={!ready} onPress={save} />}>
       <AuthHeader
         title="Enter your code"
         subtitle={`If ${email} has an account, we emailed it a code like ABCD-2345. It works for an hour.`}
