@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { FieldLayoutProvider, Text, colors } from '@commontab/ui';
 import { useIsDesktop } from '../layout';
 import { Wordmark } from './Logo';
@@ -8,11 +9,18 @@ import { Screen } from './Screen';
 
 export function AuthScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   const desktop = useIsDesktop();
+  const router = useRouter();
   if (!desktop) return <Screen footer={footer}>{children}</Screen>;
   return (
     <View className="flex-1 flex-row bg-background">
       <LinearGradient colors={[colors.light['hero-from'], '#061A20']} start={{ x: 0.2, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ width: '50%', padding: 56, justifyContent: 'space-between' }}>
-        <Wordmark size={24} light />
+        {Platform.OS === 'web' ? (
+          <Pressable accessibilityRole="link" accessibilityLabel="CommonTab home" onPress={() => router.push('/')} className="self-start active:opacity-80">
+            <Wordmark size={24} light />
+          </Pressable>
+        ) : (
+          <Wordmark size={24} light />
+        )}
         <View>
           <Text variant="large-title" tone="white" accessibilityRole="header" style={{ fontSize: 52, lineHeight: 54, fontWeight: '600', letterSpacing: -2.3 }}>
             Nobody should do bill math twice.
