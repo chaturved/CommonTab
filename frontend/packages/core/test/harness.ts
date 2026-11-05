@@ -1,8 +1,9 @@
 import { Actions, MemoryStorage, SyncEngine, type Session } from '../src';
 import { FakeServer } from './fakeServer';
 
-export { TestClock, TestRandom } from './support';
 import { TestClock, TestRandom } from './support';
+
+export { TestClock, TestRandom };
 
 export interface Device {
   name: string;

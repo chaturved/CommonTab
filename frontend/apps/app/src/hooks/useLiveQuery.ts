@@ -18,7 +18,7 @@ export function useLiveQuery<T>(load: (services: Services) => Promise<T>, initia
       live = false;
       unsubscribe();
     };
-  }, [services]);
+  }, [services, load]);
 
   return state;
 }

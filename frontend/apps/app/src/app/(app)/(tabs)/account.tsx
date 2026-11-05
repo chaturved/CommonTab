@@ -10,6 +10,7 @@ import { SettingsPanel } from '@/components/account/SettingsPanel';
 import { ChangeNameSheet, ChangePasswordSheet, DeleteAccountSheet } from '@/components/account/AccountSheets';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { syncLabel } from '@/lib/syncLabel';
+import { useNow } from '@/hooks/useNow';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 function SettingRow({ title, detail, label, onPress, divider, desktop, danger }: { title: string; detail: string; label?: string; onPress?: () => void; divider?: boolean; desktop?: boolean; danger?: boolean }) {
@@ -37,6 +38,7 @@ export default function Account() {
   const desktop = useIsDesktop();
   const { user, signOut } = useApp();
   const status = useSyncStatus();
+  const now = useNow();
   const [confirming, setConfirming] = useState(false);
   const [dialog, setDialog] = useState<'name' | 'password' | 'delete' | null>(null);
   const unsynced = (status?.waiting ?? 0) + (status?.failed ?? 0) + (status?.conflicts ?? 0);
@@ -74,7 +76,7 @@ export default function Account() {
     <>
       <Eyebrow>SESSION AND DATA</Eyebrow>
       <Card className="overflow-hidden">
-        <SettingRow desktop={desktop} title="Sync status" detail={syncLabel(status, Date.now())} divider />
+        <SettingRow desktop={desktop} title="Sync status" detail={syncLabel(status, now)} divider />
         <SettingRow desktop={desktop} title="Sign out" detail="Warns first if changes are unsynced" label="Sign out" onPress={requestSignOut} divider />
         <SettingRow desktop={desktop} title="Delete account" detail="Removes your data from our servers" label="Delete" onPress={() => setDialog('delete')} danger />
       </Card>

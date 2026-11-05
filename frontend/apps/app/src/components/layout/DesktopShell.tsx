@@ -7,6 +7,7 @@ import { Avatar, Icon, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
 import { useGroups } from '@/hooks/useGroups';
 import { syncLabel } from '@/lib/syncLabel';
+import { useNow } from '@/hooks/useNow';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { Wordmark } from '@/components/ui/Logo';
 
@@ -24,6 +25,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const { user } = useApp();
   const { groups } = useGroups();
   const status = useSyncStatus();
+  const now = useNow();
   const ordered = sortForList(groups.map((g) => g.summary).filter((s) => s.active));
   const activeGroup = path.startsWith('/group/') ? path.split('/')[2] : null;
   const dot = (balance: number, settled: boolean) => (settled || balance === 0 ? colors.muted : balance > 0 ? colors.accent : colors.owe);
@@ -57,11 +59,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             );
           })}
         </View>
-        <View className="mt-auto flex-row items-center gap-2.5 rounded-[14px] bg-tint px-3 py-2.5" accessible accessibilityLabel={`${user?.name}. ${syncLabel(status, Date.now())}`}>
+        <View className="mt-auto flex-row items-center gap-2.5 rounded-[14px] bg-tint px-3 py-2.5" accessible accessibilityLabel={`${user?.name}. ${syncLabel(status, now)}`}>
           <Avatar name={user?.name ?? '?'} id={user?.id} size="md" className="h-[34px] w-[34px]" />
           <View className="min-w-0 flex-1">
             <Text variant="body-small" numberOfLines={1} className="text-sm font-bold">{user?.name}</Text>
-            <Text variant="caption" tone="on-tint" className="text-xs font-semibold">{syncLabel(status, Date.now())}</Text>
+            <Text variant="caption" tone="on-tint" className="text-xs font-semibold">{syncLabel(status, now)}</Text>
           </View>
         </View>
       </View>

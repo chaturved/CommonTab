@@ -20,12 +20,12 @@ export function ItemizedEditor({ people, currencyCode, onResult }: { people: Per
   const [items, setItems] = useState<ItemRow[]>([{ name: '', priceText: '', assignedTo: [] }]);
   const [taxText, setTaxText] = useState('');
   const [tipPercent, setTipPercent] = useState('');
-  const peopleIds = people.map((p) => p.id);
-  const outcome = useMemo(() => evaluateItemized({ people: peopleIds, items, taxText, tipPercent }, currencyCode), [peopleIds.join(','), items, taxText, tipPercent, currencyCode]);
+  const peopleKey = people.map((p) => p.id).join(',');
+  const outcome = useMemo(() => evaluateItemized({ people: peopleKey ? peopleKey.split(',') : [], items, taxText, tipPercent }, currencyCode), [peopleKey, items, taxText, tipPercent, currencyCode]);
 
   useEffect(() => {
     onResult(outcome.ok ? outcome.result : null);
-  }, [outcome]);
+  }, [outcome, onResult]);
 
   const update = (index: number, change: Partial<ItemRow>) => setItems((all) => all.map((row, i) => (i === index ? { ...row, ...change } : row)));
   const toggle = (index: number, personId: string) =>
