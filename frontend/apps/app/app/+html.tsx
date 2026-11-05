@@ -16,6 +16,9 @@ export default function Root({ children }: PropsWithChildren) {
         <title>{TITLE}</title>
         <meta name="description" content={DESCRIPTION} />
         <meta name="theme-color" content="#061A20" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="canonical" href={`${SITE}/`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="CommonTab" />
