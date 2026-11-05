@@ -386,6 +386,14 @@
       "w": 1360,
       "h": 640,
       "title": "Wordmark options"
+    },
+    "HomeDesktop.dc.html": {
+      "h": 800,
+      "title": "Home, first run (desktop)",
+      "w": 1280,
+      "x": 0,
+      "y": 15292,
+      "expand": "fill"
     }
   },
   "createdOnFiles": {
@@ -593,7 +601,8 @@
     "Landing.dc.html",
     "LandingMobile.dc.html",
     "Logo.dc.html",
-    "Wordmark.dc.html"
+    "Wordmark.dc.html",
+    "HomeDesktop.dc.html"
   ],
   "pages": [],
   "title": "CommonTab Home Redesign"

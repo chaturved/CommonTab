@@ -8,6 +8,6 @@ export default function JoinLink() {
   const { ready, user, setPendingJoinCode } = useSession();
   if (!ready) return <Splash />;
   if (user) return <Redirect href={{ pathname: '/join', params: { code } }} />;
-  setPendingJoinCode(code ?? null);
+  setPendingJoinCode(code);
   return <Redirect href="/create-account" />;
 }
