@@ -83,4 +83,3 @@ export interface Storage extends Store {
   transaction<T>(work: (tx: Store) => Promise<T>): Promise<T>;
 }
 
-export type { GroupSnapshot };
