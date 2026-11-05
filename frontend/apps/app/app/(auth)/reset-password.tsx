@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { MIN_PASSWORD_LENGTH, passwordProgress } from '@commontab/core';
-import { BackButton, Banner, Button, FieldGroup, FieldRow, PasswordMeter, Text } from '@commontab/ui';
+import { Banner, Button, FieldGroup, FieldRow, PasswordMeter } from '@commontab/ui';
 import { useApp } from '../../src/app-context';
 import { FailureBanner } from '../../src/auth/FailureBanner';
 import { useSubmit } from '../../src/auth/useSubmit';
+import { AuthHeader } from '../../src/components/AuthHeader';
 import { AuthScreen } from '../../src/components/AuthScreen';
 
 export default function ResetPassword() {
@@ -32,15 +33,12 @@ export default function ResetPassword() {
 
   return (
     <AuthScreen footer={<Button label="Set new password" loading={confirm.busy} disabled={!ready} onPress={save} />}>
-      <View className="flex-row items-center justify-between pt-1">
-        <BackButton />
-      </View>
-      <View className="gap-1.5 px-2 pt-2">
-        <Text variant="large-title" accessibilityRole="header">Enter your code</Text>
-        <Text variant="body-small" tone="muted" className="leading-[21px]">
-          If {email} has an account, we emailed it a code like ABCD-2345. It works for an hour.
-        </Text>
-      </View>
+      <AuthHeader
+        title="Enter your code"
+        subtitle={`If ${email} has an account, we emailed it a code like ABCD-2345. It works for an hour.`}
+        backTo="/sign-in"
+        backOnDesktop
+      />
       <FailureBanner failure={failure} />
       {resent && !failure ? <Banner tone="info" message="We sent a new code. The old one no longer works." /> : null}
       <FieldGroup>
