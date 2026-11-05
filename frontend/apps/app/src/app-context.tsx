@@ -49,13 +49,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       const created = await createServices();
-      const restored = await created.auth.restore(await created.cachedUser());
-      await created.rememberUser(restored);
-      if (cancelled) return;
+      const cached = await created.cachedUser();
       const saved = await created.getPref('appearance');
+      if (cancelled) return;
       if (saved === 'light' || saved === 'dark' || saved === 'system') setAppearance(saved as AppearanceMode);
       setServices(created);
-      setUser(restored);
+      setUser(cached);
+      const restored = await created.auth.restore(cached);
+      if (cancelled) return;
+      await created.rememberUser(restored);
+      setUser((current) => (current?.id === cached?.id ? restored : current));
     })();
     return () => { cancelled = true; };
   }, []);
