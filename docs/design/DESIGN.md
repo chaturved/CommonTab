@@ -28,7 +28,7 @@ Account holds profile, sync status, Settings, and Tools (calculator, scan receip
 ## Screen to existing code map (current SwiftUI app under `apps/ios/CommonTab/Features`, to be ported to the React Native app)
 | Screens | Existing area |
 |---|---|
-| Main, HomeOffline, Empty | Home |
+| Main, HomeOffline, Empty, HomeDesktop | Home |
 | Groups, GroupDetail, CreateGroup, Members, Invite, JoinGroup, GroupSettled, GroupRemoved, LeaveBlocked | Groups, GroupExpenses, Shared |
 | AddExpense, ChooseGroup, EditExpense, DeleteExpense, ExpenseDetail, SettleUp, Simplify, SplitError, MultiCurrency | Expenses |
 | Itemized, ScanCamera, ScanReview, ScanFailed, CameraDenied | ItemizedBill, Receipts |
@@ -40,6 +40,14 @@ Account holds profile, sync status, Settings, and Tools (calculator, scan receip
 | *Dark, MainLarge | appearance variants |
 
 Note: `Tools.dc.html` is the Account tab; `Account.dc.html` is the pushed Profile screen.
+
+## Desktop layouts (width 1024 and up)
+Phone screens are the base; `HomeDesktop.dc.html` (1280 wide) is the first desktop design. Rules for desktop screens:
+1. Content sits in a column of at most 960px, left aligned next to the sidebar.
+2. Buttons size to their label, never full width.
+3. A card never spans the whole window.
+4. An empty sidebar section says what is missing and offers one action ("No groups yet." and "+ Create a group").
+5. Each card has one main action; the second is an outline or text button.
 
 ## Frontend UI stack (decided)
 - Expo (React Native) with Expo Router; one app for iOS, Android and web.
