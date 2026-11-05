@@ -1,5 +1,5 @@
 import { useRouter, type Href } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { BackButton, Text } from '@commontab/ui';
 import { useIsDesktop } from '../layout';
 import { Wordmark } from './Logo';
@@ -13,7 +13,7 @@ interface AuthHeaderProps {
   backOnDesktop?: boolean;
 }
 
-export function AuthHeader({ title, subtitle, desktopTitle, desktopSubtitle, backTo = '/welcome', backOnDesktop }: AuthHeaderProps) {
+export function AuthHeader({ title, subtitle, desktopTitle, desktopSubtitle, backTo = Platform.OS === 'web' ? '/' : '/welcome', backOnDesktop }: AuthHeaderProps) {
   const router = useRouter();
   const desktop = useIsDesktop();
   const back = () => (router.canGoBack() ? router.back() : router.replace(backTo));
