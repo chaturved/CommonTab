@@ -11,6 +11,22 @@ npm start        # Expo dev server (scan the QR code for a phone)
 
 The API address comes from `EXPO_PUBLIC_API_URL` (default `http://localhost:8000`).
 
+## Structure
+
+```
+src/
+  app/          routes only (Expo Router); screens stay thin
+  components/   ui, layout, sync, auth, group, expense, account, landing
+  hooks/        useViewport, useLiveQuery, useGroups, useGroupActions, useSubmit, ...
+  context/      AppContext (session and services provider)
+  services/     createServices and the per-platform storage and token drivers
+  lib/          pure helpers (labels, errors, export)
+  constants/    config, layout breakpoints, currencies
+  types/        shared types
+```
+
+Import with the `@/` alias (it maps to `src/`). Anything inside `src/app` becomes a route, so nothing else goes there.
+
 ## Routes
 
 - `/` is the landing page on web. On iOS and Android it redirects to `/home` when signed in and `/welcome` when signed out.
@@ -47,4 +63,4 @@ Not decided yet: where the API is hosted. Set `API_URL` only once it is, because
 
 ### SEO and link previews
 
-`app/+html.tsx` carries the title, description, canonical link and the `og:`/Twitter preview tags, with `public/og.png` (1200x630, a screenshot of the landing page) as the image. Every route gets the same tags, so every link shows the same card, and the 404 fallback has the same tags but a 404 status, which some chat apps may ignore. The site address is written in `+html.tsx`, `public/sitemap.xml` and `public/robots.txt` (`https://commontab.chaturved-sumanth-lakkaraju.com`): change all three if the domain changes. The landing page's text is in the HTML, and its phone and desktop layouts are chosen by CSS (`lg:` classes, 1024px), so there is no layout change when the app starts. Text sizes use `!text-[Npx]` because the `Text` variant class would otherwise win at the phone width. Only the mock-up phones beside the headline are sized in JavaScript; they are drawn at full size first and shrink after the app starts on windows narrower than 1280px.
+`src/app/+html.tsx` carries the title, description, canonical link and the `og:`/Twitter preview tags, with `public/og.png` (1200x630, a screenshot of the landing page) as the image. Every route gets the same tags, so every link shows the same card, and the 404 fallback has the same tags but a 404 status, which some chat apps may ignore. The site address is written in `+html.tsx`, `public/sitemap.xml` and `public/robots.txt` (`https://commontab.chaturved-sumanth-lakkaraju.com`): change all three if the domain changes. The landing page's text is in the HTML, and its phone and desktop layouts are chosen by CSS (`lg:` classes, 1024px), so there is no layout change when the app starts. Text sizes use `!text-[Npx]` because the `Text` variant class would otherwise win at the phone width. Only the mock-up phones beside the headline are sized in JavaScript; they are drawn at full size first and shrink after the app starts on windows narrower than 1280px.
