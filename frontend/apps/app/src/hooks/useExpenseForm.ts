@@ -5,6 +5,7 @@ import {
   type ExpenseForm, type LocalExpense, type RateResult,
 } from '@commontab/core';
 import { useApp } from '@/context/AppContext';
+import { useGoBack } from '@/hooks/useGoBack';
 import { useRateQuote } from '@/hooks/useRateQuote';
 import type { GroupData } from '@/types/group';
 
@@ -17,6 +18,7 @@ interface Options {
 
 export function useExpenseForm({ mode, data, expense, initial }: Options) {
   const router = useRouter();
+  const goBack = useGoBack();
   const { services } = useApp();
   const { group } = data;
   const currency = group.currencyCode;
@@ -52,7 +54,7 @@ export function useExpenseForm({ mode, data, expense, initial }: Options) {
     try {
       const saved = await services.actions.saveExpense(group.id, { ...evaluated.draft, id: expense?.id });
       void services.engine.sync();
-      if (mode === 'edit') router.back();
+      if (mode === 'edit') goBack();
       else router.replace({ pathname: '/groups/[id]', params: { id: saved.groupID } });
     } catch (error) {
       setProblem(error instanceof Error ? error.message : 'Could not save this expense.');
