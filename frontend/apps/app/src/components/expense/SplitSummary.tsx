@@ -16,6 +16,8 @@ export function SplitSummaryRow({ draft, byItem, onEdit }: Omit<Props, 'desktop'
   return <PickerRow label="Split" value={splitSummary(draft.form, draft.evaluated, byItem, draft.group.currencyCode)} onPress={onEdit} />;
 }
 
+const columnsFor = (count: number) => (count <= 3 ? Math.max(1, count) : count === 4 ? 2 : count <= 6 ? 3 : 4);
+
 export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop'>) {
   const { form, evaluated, group } = draft;
   const currency = group.currencyCode;
@@ -27,12 +29,12 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
         <Text variant="body-small" tone="muted">{splitMethodLabel(form, byItem)}</Text>
       </View>
       {rows.length > 0 ? (
-        <View className="flex-row flex-wrap gap-3">
+        <View style={{ display: 'grid', gridTemplateColumns: `repeat(${columnsFor(rows.length)}, minmax(0, 1fr))`, gap: 12 } as never}>
           {rows.map((share) => {
             const member = group.members.find((m) => m.id === share.memberID);
             if (!member) return null;
             return (
-              <View key={share.memberID} className="min-h-row min-w-[240px] flex-1 flex-row items-center gap-3 rounded-2xl bg-background px-4">
+              <View key={share.memberID} className="min-h-row flex-row items-center gap-3 rounded-2xl bg-background px-4">
                 <Avatar name={member.name} id={member.id} />
                 <Text variant="body" className="flex-1 font-semibold">{displayName(member, group.meMemberID)}</Text>
                 <Text variant="button">{formatCurrency(share.minorUnits, currency)}</Text>
