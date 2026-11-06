@@ -78,15 +78,18 @@ export function ExpenseBody({ expense, data }: { expense: LocalExpense; data: Gr
 export function ExpenseStatus({ expense, data }: { expense: LocalExpense; data: GroupData }) {
   const router = useRouter();
   const { services } = useApp();
-  const [failedOpId, setFailedOpId] = useState<string | null>(null);
+  const [failedOp, setFailedOp] = useState<{ expenseId: string; opId: string | null } | null>(null);
 
   useEffect(() => {
-    if (expense.syncState !== 'failed') {
-      setFailedOpId(null);
-      return;
-    }
-    void services.storage.listOutbox().then((entries) => setFailedOpId(entries.find((e) => e.entityId === expense.id && e.status === 'failed')?.opId ?? null));
+    if (expense.syncState !== 'failed') return;
+    let live = true;
+    void services.storage.listOutbox().then((entries) => {
+      if (live) setFailedOp({ expenseId: expense.id, opId: entries.find((e) => e.entityId === expense.id && e.status === 'failed')?.opId ?? null });
+    });
+    return () => { live = false; };
   }, [services, expense.id, expense.syncState]);
+
+  const failedOpId = expense.syncState === 'failed' && failedOp?.expenseId === expense.id ? failedOp.opId : null;
 
   if (expense.syncState === 'pending') return <Banner tone="info" message="Saved here. Waiting to sync." />;
 

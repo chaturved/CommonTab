@@ -1,4 +1,4 @@
-import type { ActivityEvent, ExpenseContent, GroupSnapshot, Member, WireExpense, WireSettlement } from '../types';
+import type { ActivityEvent, ExpenseContent, Member, WireExpense, WireSettlement } from '../types';
 import type { OutboxEntry } from '../outbox/types';
 
 export type SyncState = 'synced' | 'pending' | 'failed' | 'conflict';
@@ -83,4 +83,3 @@ export interface Storage extends Store {
   transaction<T>(work: (tx: Store) => Promise<T>): Promise<T>;
 }
 
-export type { GroupSnapshot };

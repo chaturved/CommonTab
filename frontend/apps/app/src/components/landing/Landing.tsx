@@ -1,8 +1,9 @@
-import { useRef, type ComponentRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Button, Text } from '@commontab/ui';
 import { BrandMark } from '@/components/ui/BrandMark';
+import { useScrollAnchors } from '@/hooks/useScrollAnchors';
 import { useViewportWidth } from '@/hooks/useViewport';
 import { GroupScreen, OfflineScreen, OverviewScreen, PhoneFrame } from '@/components/landing/mocks';
 
@@ -109,10 +110,7 @@ function Step({ n, title, body }: { n: string; title: string; body: string }) {
 export function Landing({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
   const width = useViewportWidth();
-  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
-  const spots = useRef<Partial<Record<Anchor, number>>>({});
-  const mark = (anchor: Anchor) => ({ onLayout: (e: { nativeEvent: { layout: { y: number } } }) => { spots.current[anchor] = e.nativeEvent.layout.y; } });
-  const jump = (anchor: Anchor) => scroll.current?.scrollTo({ y: Math.max(0, (spots.current[anchor] ?? 0) - 12), animated: true });
+  const { scroll, mark, jump } = useScrollAnchors<Anchor>();
   const go = (path: Path) => router.push(path);
   const start = (): Path => (signedIn ? '/home' : '/create-account');
   const stageScale = Math.min(1, (width - 128) / 1152);

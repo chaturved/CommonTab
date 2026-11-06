@@ -1,14 +1,14 @@
-import { View } from 'react-native';
-import { Pressable } from 'react-native';
+import { View , Pressable } from 'react-native';
 import { timeAgo } from '@commontab/core';
 import { AmountText, AvatarStack, Button, Card, Text } from '@commontab/ui';
+import { useNow } from '@/hooks/useNow';
 import type { GroupData } from '@/types/group';
 
 const lastActivity = (g: GroupData) => g.expenses.reduce((latest, e) => Math.max(latest, Date.parse(e.updatedAt)), 0);
 
 export function ChooseGroup({ groups, onPick, onCreate, hideHeading }: { groups: GroupData[]; onPick: (id: string) => void; onCreate: () => void; hideHeading?: boolean }) {
   const ordered = [...groups].sort((a, b) => lastActivity(b) - lastActivity(a) || a.group.name.localeCompare(b.group.name));
-  const now = Date.now();
+  const now = useNow();
   return (
     <View className="gap-4">
       <View className="gap-1 px-2 pt-2">

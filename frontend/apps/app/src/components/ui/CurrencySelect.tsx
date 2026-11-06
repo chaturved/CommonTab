@@ -1,8 +1,9 @@
-import { ComponentRef, ReactNode, useRef, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Check, Search } from 'lucide-react-native';
 import { Modal, Pressable, ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
 import { Icon, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { CURRENCIES, matchCurrencies } from '@/constants/currencies';
+import { useWindowAnchor } from '@/hooks/useWindowAnchor';
 import { useIsDesktop } from '@/hooks/useViewport';
 
 const WIDTH = 300;
@@ -11,8 +12,7 @@ export function CurrencySelect({ value, onChange, children }: { value: string; o
   const desktop = useIsDesktop();
   const colors = useThemeColors();
   const window = useWindowDimensions();
-  const anchorRef = useRef<ComponentRef<typeof View>>(null);
-  const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const { ref: anchorRef, box: anchor, measure } = useWindowAnchor();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const options = matchCurrencies(query);
@@ -20,10 +20,7 @@ export function CurrencySelect({ value, onChange, children }: { value: string; o
   const show = () => {
     setQuery('');
     if (!desktop) return setOpen(true);
-    anchorRef.current?.measureInWindow((x: number, y: number, w: number, h: number) => {
-      setAnchor({ x, y, w, h });
-      setOpen(true);
-    });
+    measure(() => setOpen(true));
   };
   const close = () => setOpen(false);
   const pick = (code: string) => {

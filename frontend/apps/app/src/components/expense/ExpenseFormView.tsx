@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import {
   addDifferenceTo, applyItemized, balanceChangeNote, balanceChanges, CATEGORIES, displayName, evaluateForm, evenPercents, formatCurrency,
-  formatRate, formFromExpense, longDate, newExpenseForm, quoteRate, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant, type ExpenseForm,
+  formatRate, formFromExpense, longDate, newExpenseForm, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant, type ExpenseForm,
   type FormMethod, type ItemizedResult, type LocalExpense, type RateResult,
 } from '@commontab/core';
 import { Avatar, Banner, Button, CheckRow, FieldGroup, FieldRow, ListRow, SegmentedControl, Sheet, Text, useThemeColors } from '@commontab/ui';
@@ -14,6 +14,7 @@ import { ForeignRate } from '@/components/expense/ForeignRate';
 import { ItemizedEditor } from '@/components/expense/ItemizedEditor';
 import { PickerRow } from '@/components/ui/PickerRow';
 import type { GroupData } from '@/types/group';
+import { useRateQuote } from '@/hooks/useRateQuote';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
@@ -47,6 +48,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const { group } = data;
   const currency = group.currencyCode;
   const [form, setForm] = useState<ExpenseForm>(() => (expense ? formFromExpense(expense, currency) : { ...newExpenseForm(group, Date.now()), ...initial }));
+  const patch = (changes: Partial<ExpenseForm>) => setForm((f) => ({ ...f, ...changes }));
   const [sheet, setSheet] = useState<'payer' | 'date' | 'group' | 'item' | 'category' | null>(null);
   const [itemResult, setItemResult] = useState<ItemizedResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -54,24 +56,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const entry = form.currencyCode ?? currency;
   const foreign = entry !== currency;
   const keptRate = mode === 'edit' && expense?.currencyCode === entry;
-  const [quote, setQuote] = useState<RateResult | null>(null);
-  const [quoting, setQuoting] = useState(false);
   const evaluated = useMemo(() => evaluateForm(form, currency), [form, currency]);
-  useEffect(() => {
-    setQuote(null);
-    if (!foreign || keptRate) return;
-    let live = true;
-    setQuoting(true);
-    void quoteRate(services.api, services.storage, entry, currency).then((result) => {
-      if (!live) return;
-      setQuote(result);
-      setQuoting(false);
-      if (result) setForm((f) => (f.currencyCode === entry && f.rateText === '' ? { ...f, rateText: formatRate(result.rateMicros) } : f));
-    });
-    return () => {
-      live = false;
-    };
-  }, [entry, currency, foreign, keptRate, services]);
+  const fillRate = useCallback((result: RateResult | null) => {
+    if (result) setForm((f) => (f.currencyCode === entry && f.rateText === '' ? { ...f, rateText: formatRate(result.rateMicros) } : f));
+  }, [entry]);
+  const { quote, quoting } = useRateQuote(entry, currency, foreign && !keptRate, fillRate);
   const pickCurrency = (code: string) => patch({ currencyCode: code === currency ? null : code, rateText: '' });
   const rateBlock = foreign ? (
     <ForeignRate
@@ -102,7 +91,6 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     return member ? displayName(member, group.meMemberID) : 'Someone';
   };
   const offline = status !== null && status.connectivity === 'offline';
-  const patch = (changes: Partial<ExpenseForm>) => setForm((f) => ({ ...f, ...changes }));
   const shareOf = (id: string) => evaluated.shares.find((s) => s.memberID === id)?.minorUnits;
   const lastParticipant = form.participants[form.participants.length - 1];
 

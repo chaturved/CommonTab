@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { Button, FieldGroup, FieldRow, Sheet, Text } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
@@ -7,26 +7,34 @@ import { FailureBanner } from '@/components/auth/FailureBanner';
 import { useSubmit } from '@/hooks/useSubmit';
 
 export function SessionExpiredSheet() {
-  const { user, signIn, services } = useApp();
+  const { user } = useApp();
   const expired = useSyncStatus()?.connectivity === 'sessionExpired';
   const [dismissed, setDismissed] = useState(false);
-  const [password, setPassword] = useState('');
-  const { busy, failure, run, clear } = useSubmit('signIn');
+  const [wasExpired, setWasExpired] = useState(expired);
 
-  useEffect(() => {
-    if (!expired) {
-      setDismissed(false);
-      setPassword('');
-      clear();
-    }
-  }, [expired]);
+  if (wasExpired !== expired) {
+    setWasExpired(expired);
+    if (!expired) setDismissed(false);
+  }
+
+  return (
+    <Sheet visible={expired && !dismissed && user !== null} onClose={() => setDismissed(true)} title="Sign in again">
+      <SignInAgainForm onDismiss={() => setDismissed(true)} />
+    </Sheet>
+  );
+}
+
+function SignInAgainForm({ onDismiss }: { onDismiss: () => void }) {
+  const { user, signIn, services } = useApp();
+  const [password, setPassword] = useState('');
+  const { busy, failure, run } = useSubmit('signIn');
 
   const submit = async () => {
     if (await run(() => signIn(user!.email, password))) void services.engine.sync();
   };
 
   return (
-    <Sheet visible={expired && !dismissed && user !== null} onClose={() => setDismissed(true)} title="Sign in again">
+    <>
       <Text variant="body-small" tone="fg-soft" className="leading-[22px]">
         Your session ended, so changes can't sync right now. Everything you added is safe on this phone and will sync after you sign in.
       </Text>
@@ -41,7 +49,7 @@ export function SessionExpiredSheet() {
         </FieldGroup>
       </View>
       <Button label={failure?.kind === 'offline' ? 'Try again' : 'Sign in'} loading={busy} disabled={password.length === 0} onPress={submit} />
-      <Button label="Not now" variant="ghost" onPress={() => setDismissed(true)} />
-    </Sheet>
+      <Button label="Not now" variant="ghost" onPress={onDismiss} />
+    </>
   );
 }
