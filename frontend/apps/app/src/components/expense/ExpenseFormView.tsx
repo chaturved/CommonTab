@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Plus } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { BackButton, Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, Button, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { OptionList } from '@/components/ui/OptionList';
@@ -50,8 +50,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     return member ? displayName(member, group.meMemberID) : 'Someone';
   };
 
-  const rateBlock = foreign ? (
+  const rate = (compact: boolean) => foreign ? (
     <ForeignRate
+      compact={compact}
       entry={entry}
       currency={currency}
       rateText={form.rateText}
@@ -63,6 +64,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       error={evaluated.errors.rate && form.rateText !== '' ? evaluated.errors.rate : undefined}
     />
   ) : null;
+  const rateBlock = rate(false);
   const currencyChip = (
     <CurrencySelect value={entry} onChange={pickCurrency}>
       {(open, isOpen) => (
@@ -161,7 +163,8 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           style={{ outlineStyle: 'none' } as never}
         />
       </View>
-      {foreign ? (
+      {foreign && desktop ? rate(true) : null}
+      {foreign && !desktop ? (
         <View className="mt-1 flex-row items-center justify-between border-t border-divider pt-3">
           <Text variant="body-small" tone="fg-soft">Group currency</Text>
           <Text variant="body-small" className="font-bold">{currency} {currencySymbol(currency)}</Text>
@@ -175,6 +178,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const payerPicker = picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />);
   const datePicker = picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>);
   const categoryPicker = picker('Category', CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other', () => setSheet('category'), (close) => <OptionList options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => choose(close, { category })} />);
+  const [showNotes, setShowNotes] = useState(false);
   const notes = <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />;
 
   const chips = (
@@ -201,7 +205,6 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           {header}
           {banners}
           {amountCard}
-          {rateBlock}
           <FieldLayoutProvider layout="stacked">
             <View className="gap-3">
               {description}
@@ -210,7 +213,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
                 <View className="min-w-0 flex-1">{datePicker}</View>
                 <View className="min-w-0 flex-1">{categoryPicker}</View>
               </View>
-              {notes}
+              {showNotes || form.notes !== '' ? notes : <Button label="Add a note" variant="ghost" size="small" className="self-start" icon={<Icon icon={Plus} size={16} strokeWidth={2.4} tone="accent" />} onPress={() => setShowNotes(true)} />}
             </View>
           </FieldLayoutProvider>
           {splitCard}

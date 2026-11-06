@@ -17,7 +17,7 @@ export function Screen({ children, footer, wide, tabs, className }: ScreenProps)
   if (desktop && wide) {
     return (
       <View className="flex-1 bg-background">
-        <ScrollView className="flex-1" contentContainerClassName={cx('w-full max-w-[1120px] gap-[22px] self-center px-10 py-7', className)} keyboardShouldPersistTaps="handled">
+        <ScrollView className="flex-1" contentContainerClassName={cx('w-full max-w-[1120px] gap-[22px] self-center px-10 py-7', className)} contentContainerStyle={footer ? { paddingBottom: 48 } : undefined} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
         {footer ? <View className="w-full max-w-[1120px] self-center px-10 pb-6 pt-2">{footer}</View> : null}
