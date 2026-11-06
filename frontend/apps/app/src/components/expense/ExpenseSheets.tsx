@@ -1,18 +1,15 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
-import { ScrollView, View } from 'react-native';
-import { applyItemized, CATEGORIES, displayName, type ExpenseForm, type FormEvaluation, type ItemizedResult, type LocalGroup, type Member } from '@commontab/core';
-import { Button, ListRow, Sheet } from '@commontab/ui';
+import { View } from 'react-native';
+import { CATEGORIES, displayName, type ExpenseForm, type FormEvaluation, type LocalGroup, type Member } from '@commontab/core';
+import { ListRow, Sheet } from '@commontab/ui';
 import { DateChooser } from '@/components/expense/DateChooser';
-import { ItemizedEditor } from '@/components/expense/ItemizedEditor';
 import type { GroupData } from '@/types/group';
 
-export type ExpenseSheet = 'payer' | 'date' | 'group' | 'item' | 'category';
+export type ExpenseSheet = 'payer' | 'date' | 'group' | 'category';
 
 interface Props {
   sheet: ExpenseSheet | null;
   onClose: () => void;
   form: ExpenseForm;
-  setForm: Dispatch<SetStateAction<ExpenseForm>>;
   patch: (changes: Partial<ExpenseForm>) => void;
   evaluated: FormEvaluation;
   people: Member[];
@@ -21,9 +18,7 @@ interface Props {
   onPickGroup?: (id: string) => void;
 }
 
-export function ExpenseSheets({ sheet, onClose, form, setForm, patch, evaluated, people, group, groups, onPickGroup }: Props) {
-  const [itemResult, setItemResult] = useState<ItemizedResult | null>(null);
-  const currency = group.currencyCode;
+export function ExpenseSheets({ sheet, onClose, form, patch, evaluated, people, group, groups, onPickGroup }: Props) {
   const choose = (changes: Partial<ExpenseForm>) => {
     patch(changes);
     onClose();
@@ -40,12 +35,6 @@ export function ExpenseSheets({ sheet, onClose, form, setForm, patch, evaluated,
       </Sheet>
       <Sheet visible={sheet === 'date'} onClose={onClose} title="Date">
         <DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={onClose} />
-      </Sheet>
-      <Sheet visible={sheet === 'item'} onClose={onClose} title="Split by item">
-        <ScrollView className="max-h-[460px]" keyboardShouldPersistTaps="handled">
-          <ItemizedEditor people={people.map((m) => ({ id: m.id, name: displayName(m, group.meMemberID) }))} currencyCode={currency} onResult={setItemResult} />
-        </ScrollView>
-        <Button label="Use this split" disabled={!itemResult} onPress={() => { if (itemResult) setForm((f) => applyItemized(f, itemResult, currency)); onClose(); }} />
       </Sheet>
       <Sheet visible={sheet === 'category'} onClose={onClose} title="Category">
         <View className="overflow-hidden rounded-2xl bg-background">

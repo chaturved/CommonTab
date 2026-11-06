@@ -1,17 +1,20 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { BackButton, Banner, Button, FieldGroup, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, FieldGroup, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { OptionList } from '@/components/ui/OptionList';
 import { DateChooser } from '@/components/expense/DateChooser';
 import { ForeignRate } from '@/components/expense/ForeignRate';
 import { ExpenseSheets, type ExpenseSheet } from '@/components/expense/ExpenseSheets';
-import { SplitEditor } from '@/components/expense/SplitEditor';
+import { ExpenseActionBar } from '@/components/expense/ExpenseActionBar';
+import { Screen } from '@/components/layout/Screen';
+import { SplitSummaryCard, SplitSummaryRow } from '@/components/expense/SplitSummary';
 import { PickerRow } from '@/components/ui/PickerRow';
+import { clearExpenseDraft, publishExpenseDraft, useExpenseDraft, type ExpenseDraft } from '@/state/expenseDraft';
 import { useExpenseForm } from '@/hooks/useExpenseForm';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
@@ -34,9 +37,14 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const currency = group.currencyCode;
   const { form, setForm, patch, evaluated, entry, keptRate, foreign, quote, quoting, pickCurrency, note, busy, problem, save } = useExpenseForm({ mode, data, expense, initial });
   const [sheet, setSheet] = useState<ExpenseSheet | null>(null);
+  const { byItem } = useExpenseDraft();
+  const editSplit = () => router.push('/split');
   const offline = status !== null && status.connectivity === 'offline';
-  const memberIds = group.members.map((m) => m.id);
-  const people = group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID);
+  const memberIds = useMemo(() => group.members.map((m) => m.id), [group.members]);
+  const people = useMemo(() => group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID), [group.members, form.participants, form.payerID]);
+  const draft = useMemo<ExpenseDraft>(() => ({ mode, form, setForm, patch, evaluated, group, people, memberIds, note }), [mode, form, setForm, patch, evaluated, group, people, memberIds, note]);
+  useEffect(() => publishExpenseDraft(draft), [draft]);
+  useEffect(() => clearExpenseDraft, []);
   const nameOf = (id: string) => {
     const member = group.members.find((m) => m.id === id);
     return member ? displayName(member, group.meMemberID) : 'Someone';
@@ -74,8 +82,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       {problem ? <Banner tone="error" message={problem} /> : null}
     </>
   );
-  const split = <SplitEditor form={form} setForm={setForm} patch={patch} evaluated={evaluated} people={people} memberIds={memberIds} group={group} desktop={desktop} note={note} onPickItems={() => setSheet('item')} />;
-  const sheets = <ExpenseSheets sheet={sheet} onClose={() => setSheet(null)} form={form} setForm={setForm} patch={patch} evaluated={evaluated} people={people} group={group} groups={groups} onPickGroup={onPickGroup} />;
+  const splitRow = <SplitSummaryRow draft={draft} byItem={byItem} onEdit={editSplit} />;
+  const splitCard = <SplitSummaryCard draft={draft} byItem={byItem} onEdit={editSplit} />;
+  const sheets = <ExpenseSheets sheet={sheet} onClose={() => setSheet(null)} form={form} patch={patch} evaluated={evaluated} people={people} group={group} groups={groups} onPickGroup={onPickGroup} />;
   const picker = (label: string, value: string, onSheet: (() => void) | undefined, content?: (close: () => void) => ReactNode) => {
     if (!desktop || !content) return <PickerRow label={label} value={value} onPress={onSheet} />;
     return (
@@ -90,6 +99,14 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   };
 
   const title = mode === 'add' ? 'Add expense' : 'Edit expense';
+  const saveLabel = mode === 'add' ? 'Save expense' : 'Save changes';
+  const ready = Boolean(evaluated.draft);
+  const sharing = form.participants.length;
+  const firstError = evaluated.errors.amount ?? evaluated.errors.participants ?? evaluated.errors.date ?? evaluated.errors.rate;
+  const summary = evaluated.draft && evaluated.amountMinor !== null
+    ? `${formatCurrency(evaluated.amountMinor, currency)} paid by ${nameOf(form.payerID)}, split ${sharing === 1 ? 'with 1 person' : `between ${sharing} people`}`
+    : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? 'Check the split to continue.');
+
   const header = desktop ? (
     <View className="min-h-touch flex-row items-center gap-3">
       <BackButton onPress={() => router.back()} />
@@ -103,8 +120,12 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     </View>
   );
 
+  const description = (
+    <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" last />
+  );
+
   const amountCard = (
-    <View className="gap-1 rounded-card bg-card px-4 py-3">
+    <View className={`gap-1 rounded-card bg-card px-4 pt-3 ${desktop ? 'overflow-hidden pb-0' : 'pb-3'}`}>
       <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
       <View className="flex-row items-center gap-2">
         {currencyChip}
@@ -116,6 +137,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           placeholder="0.00"
           placeholderTextColor={colors.muted}
           autoFocus={mode === 'add'}
+          editable={!byItem}
           className="min-h-[48px] min-w-0 flex-1 text-[34px] font-extrabold text-fg"
           style={{ outlineStyle: 'none' } as never}
         />
@@ -127,72 +149,75 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         </View>
       ) : null}
       {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
+      {desktop ? <View className="-mx-4 mt-2 border-t border-divider">{description}</View> : null}
     </View>
   );
 
-  const details = (
-    <FieldGroup>
-      <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
-      {picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined)}
-      {picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />)}
-      {picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>)}
-      <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />
-    </FieldGroup>
-  );
+  const groupPicker = picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined);
+  const payerPicker = picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />);
+  const datePicker = picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>);
+  const categoryPicker = picker('Category', CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other', () => setSheet('category'), (close) => <OptionList options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => choose(close, { category })} />);
+  const notes = <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />;
 
-  const categoryChips = CATEGORIES.map((c) => {
-    const selected = form.category === c.id;
-    return (
-      <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`Category ${c.label}`} accessibilityState={{ selected }} onPress={() => patch({ category: c.id })} className={`min-h-touch justify-center rounded-pill px-4 ${selected ? 'bg-primary' : 'bg-card'}`}>
-        <Text variant="body-small" tone={selected ? 'on-primary' : 'fg-soft'} className="font-semibold">{c.label}</Text>
-      </Pressable>
-    );
-  });
-  const categories = desktop ? (
-    <View accessibilityLabel="Category" className="flex-row flex-wrap gap-2">{categoryChips}</View>
-  ) : (
+  const chips = (
     <View className="w-full overflow-hidden">
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-0.5 py-1" accessibilityLabel="Category">
-        {categoryChips}
+        {CATEGORIES.map((c) => {
+          const selected = form.category === c.id;
+          return (
+            <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`Category ${c.label}`} accessibilityState={{ selected }} onPress={() => patch({ category: c.id })} className={`min-h-touch justify-center rounded-pill px-4 ${selected ? 'bg-primary' : 'bg-card'}`}>
+              <Text variant="body-small" tone={selected ? 'on-primary' : 'fg-soft'} className="font-semibold">{c.label}</Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );
 
-  const saveButton = <Button label={mode === 'add' ? 'Save expense' : 'Save changes'} loading={busy} disabled={!evaluated.draft} onPress={save} />;
+  const actions = <ExpenseActionBar desktop={desktop} label={saveLabel} summary={summary} ready={ready} busy={busy} onCancel={() => router.back()} onSave={save} />;
 
   if (desktop) {
     return (
-      <View className="w-full max-w-[960px] gap-4 self-start">
-        {header}
-        {banners}
-        <View className="flex-row items-start gap-6">
-          <View className="min-w-0 flex-1 gap-4">
-            {amountCard}
-            {rateBlock}
-            {details}
-            {categories}
+      <Screen wide footer={actions}>
+        <View className="w-full max-w-[960px] gap-4 self-start">
+          {header}
+          {banners}
+          <View className="flex-row items-start gap-6">
+            <View className="min-w-0 flex-[1.15] gap-4">
+              {amountCard}
+              {rateBlock}
+              <FieldGroup>
+                {groupPicker}
+                {payerPicker}
+                {datePicker}
+                {categoryPicker}
+                {notes}
+              </FieldGroup>
+            </View>
+            <View className="min-w-0 flex-1">{splitCard}</View>
           </View>
-          <View className="min-w-0 flex-1 gap-4">
-            {split}
-            {saveButton}
-          </View>
+          {sheets}
         </View>
-        {sheets}
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <View className="w-full gap-4">
+    <Screen wide footer={actions}>
       {header}
       {banners}
       {amountCard}
       {rateBlock}
-      {details}
-      {categories}
-      {split}
-      {saveButton}
+      <FieldGroup>
+        {description}
+        {groupPicker}
+        {payerPicker}
+        {datePicker}
+        {splitRow}
+        {notes}
+      </FieldGroup>
+      {chips}
       {sheets}
-    </View>
+    </Screen>
   );
 }

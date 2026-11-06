@@ -41,6 +41,5 @@ export default function AddExpense() {
     );
   }
 
-  const form = <ExpenseFormView key={data!.group.id} mode="add" data={data!} groups={groups} onPickGroup={setPicked} initial={amount ? { amountText: amount } : undefined} />;
-  return <Screen wide>{form}</Screen>;
+  return <ExpenseFormView key={data!.group.id} mode="add" data={data!} groups={groups} onPickGroup={setPicked} initial={amount ? { amountText: amount } : undefined} />;
 }
