@@ -144,7 +144,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   );
 
   const amountCard = (
-    <View className={`gap-1 rounded-card bg-card px-4 pt-3 ${desktop ? 'overflow-hidden pb-0' : 'pb-3'}`}>
+    <View className="gap-1 rounded-card bg-card px-4 py-3">
       <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
       <View className="flex-row items-center gap-2">
         {currencyChip}
@@ -168,7 +168,6 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         </View>
       ) : null}
       {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
-      {desktop ? <View className="-mx-4 mt-2 border-t border-divider">{description}</View> : null}
     </View>
   );
 
@@ -205,6 +204,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           {rateBlock}
           <FieldLayoutProvider layout="stacked">
             <View className="gap-3">
+              {description}
               <View className="flex-row gap-3">
                 <View className="min-w-0 flex-1">{payerPicker}</View>
                 <View className="min-w-0 flex-1">{datePicker}</View>
