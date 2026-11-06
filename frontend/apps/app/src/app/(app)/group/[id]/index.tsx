@@ -1,4 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useRouteParam } from '@/hooks/useRouteParam';
 import { Check, Ellipsis } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { byNewest, expenseRow, formatCurrency } from '@commontab/core';
@@ -18,7 +19,7 @@ import { useIsDesktop } from '@/hooks/useViewport';
 
 export default function GroupDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useRouteParam('id');
   const { ready, data } = useGroup(id);
   const desktop = useIsDesktop();
   const lifecycle = useGroupActions(id ?? '');

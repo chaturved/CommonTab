@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouteParam } from '@/hooks/useRouteParam';
+import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { Platform, Share, View } from 'react-native';
 import { describeAuthFailure, type InviteCode } from '@commontab/core';
@@ -17,7 +18,7 @@ export default function Invite() {
   const router = useRouter();
   const desktop = useIsDesktop();
   const { services } = useApp();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const id = useRouteParam('id');
   const { data } = useGroup(id);
   const [code, setCode] = useState<InviteCode | null>(id ? (cache.get(id) ?? null) : null);
   const [problem, setProblem] = useState<string | null>(null);
