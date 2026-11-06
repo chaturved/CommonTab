@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { formatCurrency } from '@commontab/core';
-import { Hero, Text } from '@commontab/ui';
+import { colors, Hero, Text, type TextTone } from '@commontab/ui';
 import { useIsDesktop } from '@/hooks/useViewport';
 
 export function heroLabel(net: number, scope: 'overall' | 'group'): string {
@@ -28,8 +28,8 @@ export function BalanceHero({ net, currencyCode, scope, caption, owe, owed }: {
   );
   const stats = owe !== undefined && owed !== undefined ? (
     <View className={desktop ? 'w-[440px] flex-row gap-3' : 'flex-row gap-2.5'} importantForAccessibility="no-hide-descendants">
-      <Stat label="You owe" value={formatCurrency(owe, currencyCode)} large={desktop} />
-      <Stat label="Owed to you" value={formatCurrency(owed, currencyCode)} large={desktop} />
+      <Stat label="You owe" amount={owe} value={formatCurrency(owe, currencyCode)} large={desktop} color={colors.dark.owe} />
+      <Stat label="Owed to you" amount={owed} value={formatCurrency(owed, currencyCode)} large={desktop} tone="mint" />
     </View>
   ) : null;
   return (
@@ -49,11 +49,12 @@ export function BalanceHero({ net, currencyCode, scope, caption, owe, owed }: {
   );
 }
 
-function Stat({ label, value, large }: { label: string; value: string; large?: boolean }) {
+function Stat({ label, amount, value, large, tone = 'white', color }: { label: string; amount: number; value: string; large?: boolean; tone?: TextTone; color?: string }) {
+  const tinted = amount > 0;
   return (
     <View className="flex-1 gap-0.5 rounded-2xl px-3.5 py-2.5" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
       <Text variant="caption" tone="hero-muted">{label}</Text>
-      <Text variant="button" tone="white" style={large ? { fontSize: 24, lineHeight: 30 } : undefined}>{value}</Text>
+      <Text variant="button" tone={tinted && !color ? tone : 'white'} style={[large ? { fontSize: 24, lineHeight: 30 } : null, tinted && color ? { color } : null]}>{value}</Text>
     </View>
   );
 }
