@@ -64,7 +64,7 @@ export function localDate(nowMs: number): string {
 export function newExpenseForm(group: LocalGroup, nowMs: number): ExpenseForm {
   return {
     merchant: '', amountText: '', payerID: group.meMemberID, date: localDate(nowMs), category: 'dining', notes: '',
-    currencyCode: null, rateText: '', method: 'equal', participants: group.members.filter((m) => !m.removedAt).map((m) => m.id), amounts: {}, percents: {},
+    currencyCode: null, rateText: '', method: 'equal', participants: defaultParticipants(group), amounts: {}, percents: {},
   };
 }
 
@@ -137,10 +137,21 @@ export function evaluateForm(form: ExpenseForm, currencyCode: string): FormEvalu
   let split: SplitIssue | null = null;
   let values: string[] = [];
 
-  if (form.participants.length > 0 && amountMinor !== null) {
+  if (form.participants.length > 0 && form.method === 'percent') {
+    const entered = form.participants.map((id) => (form.percents[id] ?? '').trim());
+    const result = entered.every((v) => v !== '') ? percentTotal(entered) : null;
+    if (!result) {
+      split = { kind: 'invalid', diffMinor: 0 };
+    } else if (result.total !== 100n * 10n ** BigInt(result.scale)) {
+      split = { kind: 'percent', diffMinor: 0, percentTotal: showPercent(result.total, result.scale) };
+    } else if (amountMinor !== null) {
+      shares = allocate({ method: 'percent', amount: amountMinor, participants: form.participants, values: entered });
+      values = entered;
+    }
+  } else if (form.participants.length > 0 && amountMinor !== null) {
     if (form.method === 'equal') {
       shares = allocate({ method: 'equal', amount: amountMinor, participants: form.participants });
-    } else if (form.method === 'exact') {
+    } else {
       const minors = form.participants.map((id) => ((form.amounts[id] ?? '').trim() === '' ? 0 : tryParse(form.amounts[id] as string, currencyCode)));
       if (minors.some((m) => m === null)) {
         split = { kind: 'invalid', diffMinor: 0 };
@@ -150,17 +161,6 @@ export function evaluateForm(form: ExpenseForm, currencyCode: string): FormEvalu
         const sum = units.reduce((a, b) => a + b, 0);
         if (sum !== amountMinor) split = { kind: sum < amountMinor ? 'short' : 'over', diffMinor: Math.abs(amountMinor - sum) };
         values = units.map(String);
-      }
-    } else {
-      const entered = form.participants.map((id) => (form.percents[id] ?? '').trim());
-      const result = entered.every((v) => v !== '') ? percentTotal(entered) : null;
-      if (!result) {
-        split = { kind: 'invalid', diffMinor: 0 };
-      } else if (result.total !== 100n * 10n ** BigInt(result.scale)) {
-        split = { kind: 'percent', diffMinor: 0, percentTotal: showPercent(result.total, result.scale) };
-      } else {
-        shares = allocate({ method: 'percent', amount: amountMinor, participants: form.participants, values: entered });
-        values = entered;
       }
     }
   }
@@ -219,6 +219,24 @@ export function evenPercents(form: ExpenseForm): ExpenseForm {
     percents[id] = hundredths(parts[i] as number);
   });
   return { ...form, percents };
+}
+
+export function defaultParticipants(group: LocalGroup): string[] {
+  return group.members.filter((m) => !m.removedAt).map((m) => m.id);
+}
+
+export function resetSplit(form: ExpenseForm, group: LocalGroup): ExpenseForm {
+  const even: ExpenseForm = { ...form, method: 'equal', participants: defaultParticipants(group), amounts: {}, percents: {} };
+  return form.method === 'equal' ? even : switchMethod(even, form.method, group.currencyCode);
+}
+
+export function isDefaultSplit(form: ExpenseForm, group: LocalGroup): boolean {
+  const reset = resetSplit(form, group);
+  const same = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+  return form.participants.length === reset.participants.length
+    && reset.participants.every((id) => form.participants.includes(id))
+    && same(form.amounts, reset.amounts)
+    && same(form.percents, reset.percents);
 }
 
 export function switchMethod(form: ExpenseForm, method: FormMethod, currencyCode: string): ExpenseForm {

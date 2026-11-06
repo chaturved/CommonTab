@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { View } from 'react-native';
-import { applyItemized, displayName, formatCurrency, type ItemizedResult } from '@commontab/core';
-import { BackButton, Text } from '@commontab/ui';
+import { applyItemized, displayName, formatCurrency, isDefaultSplit, resetSplit, type ItemizedResult } from '@commontab/core';
+import { BackButton, Button, Text } from '@commontab/ui';
 import { ExpenseActionBar } from '@/components/expense/ExpenseActionBar';
 import { ItemizedEditor } from '@/components/expense/ItemizedEditor';
 import { SplitEditor } from '@/components/expense/SplitEditor';
@@ -10,7 +10,7 @@ import { Screen } from '@/components/layout/Screen';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { splitMethodLabel } from '@/lib/splitSummary';
 import { setSplitByItem, useExpenseDraft } from '@/state/expenseDraft';
-import { useItemizedSplitDraft } from '@/state/itemizedSplit';
+import { resetItemizedSplit, useItemizedSplitDraft } from '@/state/itemizedSplit';
 
 const TITLES = { equal: 'Split equally', exact: 'Split exactly', percent: 'Split by percent' } as const;
 
@@ -36,6 +36,10 @@ export function SplitScreen({ fallback }: { fallback: Href }) {
     ? 'Enter an amount on the expense first.'
     : evaluated.errors.participants ?? (issue ? 'Fix the split to continue.' : byItem && itemResult === null ? 'Add an item, a price and who had it.' : null);
   const ready = blocker === null;
+  const hasItems = items.items.some((item) => item.name !== '' || item.priceText !== '');
+  const resettable = byItem ? hasItems : !isDefaultSplit(form, group);
+  const resetLabel = byItem ? 'Clear items' : form.method === 'equal' ? 'Include everyone' : 'Reset to equal split';
+  const reset = () => (byItem ? resetItemizedSplit() : draft.setForm((f) => resetSplit(f, group)));
   const summary = blocker ?? `${splitMethodLabel(form, byItem)} · ${total}`;
 
   const actions = <ExpenseActionBar desktop={desktop} label="Done" summary={summary} ready={ready} busy={false} pinned={!desktop} onSave={() => router.back()} />;
@@ -70,6 +74,7 @@ export function SplitScreen({ fallback }: { fallback: Href }) {
           desktop={desktop}
           note={draft.note}
           byItem={byItem}
+          belowSelector={resettable ? <Button label={resetLabel} variant="ghost" size="small" onPress={reset} /> : null}
           onByItem={setSplitByItem}
           itemized={<ItemizedEditor people={draft.people.map((m) => ({ id: m.id, name: displayName(m, group.meMemberID) }))} currencyCode={currency} draft={items} onDraft={setItems} onResult={applyResult} hideTotal />}
         />

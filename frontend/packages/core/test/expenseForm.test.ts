@@ -1,6 +1,6 @@
 import {
   addDifferenceTo, balanceChangeNote, expenseChanges, balanceChanges, evaluateForm, formFromExpense, newExpenseForm, splitIssueMessage, splitRestEqually,
-  switchMethod, toggleParticipant, type ExpenseForm, type LocalExpense, type LocalGroup,
+  isDefaultSplit, resetSplit, switchMethod, toggleParticipant, type ExpenseForm, type LocalExpense, type LocalGroup,
 } from '../src';
 
 const group: LocalGroup = {
@@ -23,6 +23,52 @@ describe('a new expense does not include people who left', () => {
   test('they are not pre-selected', () => {
     const left = { ...group, members: group.members.map((m) => (m.id === 'riya' ? { ...m, removedAt: '2026-11-02T10:00:00Z' } : m)) };
     expect(newExpenseForm(left, NOW).participants).toEqual(['me', 'sam']);
+  });
+});
+
+describe('percent split without an amount', () => {
+  test('the percentages are still checked', () => {
+    const form = { ...switchMethod(filled(), 'percent', 'USD'), amountText: '', percents: { me: '100', sam: '100', riya: '75' } };
+    const evaluation = evaluateForm(form, 'USD');
+    expect(evaluation.amountMinor).toBeNull();
+    expect(evaluation.split).toMatchObject({ kind: 'percent', percentTotal: '275' });
+    expect(evaluation.draft).toBeNull();
+  });
+  test('percentages that add up to 100 raise no split problem', () => {
+    const form = { ...switchMethod(filled(), 'percent', 'USD'), amountText: '' };
+    expect(evaluateForm(form, 'USD').split).toBeNull();
+  });
+});
+
+describe('resetSplit', () => {
+  test('equal: everyone is back in and nothing else changes', () => {
+    const changed = toggleParticipant(filled(), 'riya', order);
+    expect(isDefaultSplit(changed, group)).toBe(false);
+    const reset = resetSplit(changed, group);
+    expect(reset).toMatchObject({ method: 'equal', participants: order, amountText: '163.50', merchant: 'Dinner at Uchi' });
+    expect(isDefaultSplit(reset, group)).toBe(true);
+  });
+  test('exact: stays exact and gives everyone an equal amount', () => {
+    const changed = { ...switchMethod(filled(), 'exact', 'USD'), amounts: { me: '100.00', sam: '63.50' }, participants: ['me', 'sam'] };
+    const reset = resetSplit(changed, group);
+    expect(reset.method).toBe('exact');
+    expect(reset.participants).toEqual(order);
+    expect(reset.amounts).toEqual({ me: '54.50', sam: '54.50', riya: '54.50' });
+  });
+  test('percent: stays percent and gives everyone an even share that adds to 100', () => {
+    const changed = { ...switchMethod(filled(), 'percent', 'USD'), percents: { me: '200', sam: '5', riya: '5' } };
+    const reset = resetSplit(changed, group);
+    expect(reset.method).toBe('percent');
+    const total = order.reduce((sum, id) => sum + Math.round(Number(reset.percents[id]) * 100), 0);
+    expect(total).toBe(10000);
+  });
+  test('a split that was only just switched is already at its defaults', () => {
+    expect(isDefaultSplit(switchMethod(filled(), 'exact', 'USD'), group)).toBe(true);
+    expect(isDefaultSplit(switchMethod(filled(), 'percent', 'USD'), group)).toBe(true);
+  });
+  test('leaves out people who left', () => {
+    const left = { ...group, members: group.members.map((m) => (m.id === 'riya' ? { ...m, removedAt: '2026-11-02T10:00:00Z' } : m)) };
+    expect(resetSplit(filled({ method: 'equal' }), left).participants).toEqual(['me', 'sam']);
   });
 });
 

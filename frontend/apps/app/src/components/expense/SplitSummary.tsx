@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 import { displayName, formatCurrency } from '@commontab/core';
-import { Avatar, Button, Text } from '@commontab/ui';
+import { Avatar, Banner, Button, Text } from '@commontab/ui';
 import { PickerRow } from '@/components/ui/PickerRow';
-import { splitMethodLabel, splitSummary } from '@/lib/splitSummary';
+import { splitMethodLabel, splitProblem, splitSummary } from '@/lib/splitSummary';
 import type { ExpenseDraft } from '@/state/expenseDraft';
 
 interface Props {
@@ -13,7 +13,13 @@ interface Props {
 }
 
 export function SplitSummaryRow({ draft, byItem, onEdit }: Omit<Props, 'desktop'>) {
-  return <PickerRow label="Split" value={splitSummary(draft.form, draft.evaluated, byItem, draft.group.currencyCode)} onPress={onEdit} />;
+  const problem = splitProblem(draft.form, draft.evaluated, byItem, draft.group.currencyCode);
+  return (
+    <>
+      <PickerRow label="Split" value={splitSummary(draft.form, draft.evaluated, byItem, draft.group.currencyCode)} onPress={onEdit} />
+      {problem ? <Text variant="caption" tone="owe" accessibilityRole="alert" className="px-4 pb-3 text-[13px]">{problem}</Text> : null}
+    </>
+  );
 }
 
 const columnsFor = (count: number) => (count <= 3 ? Math.max(1, count) : count === 4 ? 2 : count <= 6 ? 3 : 4);
@@ -22,13 +28,16 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
   const { form, evaluated, group } = draft;
   const currency = group.currencyCode;
   const rows = evaluated.shares.filter((s) => form.participants.includes(s.memberID));
+  const problem = splitProblem(form, evaluated, byItem, currency);
   return (
     <View className="gap-3 rounded-card bg-card p-4">
       <View className="flex-row items-center justify-between">
         <Text variant="section" accessibilityRole="header">Split</Text>
         <Text variant="body-small" tone="muted">{splitMethodLabel(form, byItem)}</Text>
       </View>
-      {rows.length > 0 ? (
+      {problem ? (
+        <Banner tone="error" message={problem} />
+      ) : rows.length > 0 ? (
         <View style={{ display: 'grid', gridTemplateColumns: `repeat(${columnsFor(rows.length)}, minmax(0, 1fr))`, gap: 12 } as never}>
           {rows.map((share) => {
             const member = group.members.find((m) => m.id === share.memberID);
@@ -43,7 +52,7 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
           })}
         </View>
       ) : (
-        <Text variant="body-small" tone="muted">Enter an amount to see who pays what.</Text>
+        <Text variant="body-small" tone="muted">{evaluated.amountMinor === null ? 'Enter an amount to see who pays what.' : 'Pick who shares this expense.'}</Text>
       )}
       <Button label="Edit split" variant="secondary" size="small" className="self-start" onPress={onEdit} />
     </View>

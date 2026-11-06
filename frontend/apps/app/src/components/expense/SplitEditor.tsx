@@ -5,7 +5,7 @@ import {
   type ExpenseForm, type FormEvaluation, type FormMethod, type LocalGroup, type Member,
 } from '@commontab/core';
 import { Avatar, Banner, Button, CheckRow, FieldGroup, SegmentedControl, Text, useThemeColors } from '@commontab/ui';
-import { currencySymbol, decimalOnly } from '@/lib/amountInput';
+import { capAmountText, currencySymbol, percentOnly } from '@/lib/amountInput';
 
 const METHODS = [{ key: 'equal', label: 'Equally' }, { key: 'exact', label: 'Exact' }, { key: 'percent', label: 'Percent' }, { key: 'item', label: 'By item' }];
 
@@ -22,9 +22,10 @@ interface Props {
   byItem: boolean;
   onByItem: (on: boolean) => void;
   itemized: ReactNode;
+  belowSelector?: ReactNode;
 }
 
-export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, byItem, onByItem, itemized }: Props) {
+export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, byItem, onByItem, itemized, belowSelector }: Props) {
   const colors = useThemeColors();
   const currency = group.currencyCode;
   const issue = evaluated.split && form.method !== 'equal' ? evaluated.split : null;
@@ -46,6 +47,7 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
           if (key !== 'item') setForm((f) => switchMethod(f, key as FormMethod, currency));
         }}
       />
+      {belowSelector ? <View className="-mt-2 items-end">{belowSelector}</View> : null}
       {byItem ? itemized : (
       <>
       <FieldGroup>
@@ -72,7 +74,7 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
                     <TextInput
                       accessibilityLabel={`${label} ${form.method === 'exact' ? 'amount' : 'percent'}`}
                       value={form.method === 'exact' ? (form.amounts[member.id] ?? '') : (form.percents[member.id] ?? '')}
-                      onChangeText={(text) => (form.method === 'exact' ? patch({ amounts: { ...form.amounts, [member.id]: decimalOnly(text) } }) : patch({ percents: { ...form.percents, [member.id]: decimalOnly(text) } }))}
+                      onChangeText={(text) => (form.method === 'exact' ? patch({ amounts: { ...form.amounts, [member.id]: capAmountText(text, evaluated.amountMinor, currency) } }) : patch({ percents: { ...form.percents, [member.id]: percentOnly(text) } }))}
                       keyboardType="decimal-pad"
                       placeholder="0"
                       placeholderTextColor={colors.muted}
@@ -89,9 +91,9 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
       </FieldGroup>
       {evaluated.errors.participants ? <Text variant="caption" tone="owe">{evaluated.errors.participants}</Text> : null}
 
-      {issue && evaluated.amountMinor !== null ? (
+      {issue && (evaluated.amountMinor !== null || form.method === 'percent') ? (
         <View className="gap-2">
-          <Banner tone="error" message={splitIssueMessage(issue, currency, evaluated.amountMinor, evaluated.shares)} />
+          <Banner tone="error" message={splitIssueMessage(issue, currency, evaluated.amountMinor ?? 0, evaluated.shares)} />
           {issue.kind === 'short' && lastParticipant ? (
             <>
               <Button label={`Add ${formatCurrency(issue.diffMinor, currency)} to ${nameOf(lastParticipant)}`} variant="secondary" onPress={() => setForm((f) => addDifferenceTo(f, lastParticipant, currency, issue))} />
