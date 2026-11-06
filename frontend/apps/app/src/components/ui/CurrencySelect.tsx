@@ -1,17 +1,17 @@
 import { ReactNode, useState } from 'react';
 import { Check, Search } from 'lucide-react-native';
-import { Modal, Pressable, ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Icon, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { CURRENCIES, matchCurrencies } from '@/constants/currencies';
+import { Popover } from '@/components/ui/Popover';
 import { useWindowAnchor } from '@/hooks/useWindowAnchor';
 import { useIsDesktop } from '@/hooks/useViewport';
 
 const WIDTH = 300;
 
-export function CurrencySelect({ value, onChange, children }: { value: string; onChange: (code: string) => void; children: (open: () => void) => ReactNode }) {
+export function CurrencySelect({ value, onChange, children }: { value: string; onChange: (code: string) => void; children: (open: () => void, isOpen: boolean) => ReactNode }) {
   const desktop = useIsDesktop();
   const colors = useThemeColors();
-  const window = useWindowDimensions();
   const { ref: anchorRef, box: anchor, measure } = useWindowAnchor();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -49,16 +49,11 @@ export function CurrencySelect({ value, onChange, children }: { value: string; o
 
   return (
     <>
-      <View ref={anchorRef} collapsable={false}>{children(show)}</View>
+      <View ref={anchorRef} collapsable={false}>{children(show, open)}</View>
       {desktop ? (
-        <Modal transparent visible={open} onRequestClose={close} animationType="fade">
-          <Pressable accessible={false} onPress={close} className="absolute inset-0" />
-          {anchor ? (
-            <View role="dialog" accessibilityLabel="Currency" className="absolute overflow-hidden rounded-2xl border border-divider bg-card" style={{ left: Math.max(12, Math.min(anchor.x + anchor.w - WIDTH, window.width - WIDTH - 12)), top: Math.min(anchor.y + anchor.h + 6, Math.max(12, window.height - 372)), width: WIDTH, maxHeight: 360, boxShadow: '0 16px 48px rgba(0,0,0,0.22)' } as never}>
-              {list}
-            </View>
-          ) : null}
-        </Modal>
+        <Popover visible={open} onClose={close} anchor={anchor} label="Currency" width={WIDTH} align="end">
+          {list}
+        </Popover>
       ) : (
         <Sheet visible={open} onClose={close} title="Currency">
           <View className="overflow-hidden rounded-2xl bg-background">{list}</View>

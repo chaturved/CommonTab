@@ -19,10 +19,12 @@ interface Props {
   group: LocalGroup;
   desktop: boolean;
   note: string | null;
+  byItem: boolean;
   onPickItems: () => void;
+  onLeaveItems: () => void;
 }
 
-export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, onPickItems }: Props) {
+export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, byItem, onPickItems, onLeaveItems }: Props) {
   const colors = useThemeColors();
   const currency = group.currencyCode;
   const issue = evaluated.split && form.method !== 'equal' ? evaluated.split : null;
@@ -33,17 +35,19 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
     return member ? displayName(member, group.meMemberID) : 'Someone';
   };
   const shareOf = (id: string) => evaluated.shares.find((s) => s.memberID === id)?.minorUnits;
-  const Rows = desktop ? DesktopRows : FieldGroup;
 
   return (
     <>
-      {desktop ? null : <Text variant="section" accessibilityRole="header" className="px-1 pt-1">Split</Text>}
       <SegmentedControl
         options={METHODS}
-        value={form.method}
-        onChange={(key) => (key === 'item' ? onPickItems() : setForm((f) => switchMethod(f, key as FormMethod, currency)))}
+        value={byItem ? 'item' : form.method}
+        onChange={(key) => {
+          if (key === 'item') return onPickItems();
+          onLeaveItems();
+          setForm((f) => switchMethod(f, key as FormMethod, currency));
+        }}
       />
-      <Rows>
+      <FieldGroup>
         {people.map((member, i) => {
           const checked = form.participants.includes(member.id);
           const share = shareOf(member.id);
@@ -60,6 +64,8 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
               detail={form.method === 'percent' ? shareText : undefined}
               trailing={
                 form.method === 'equal' ? (
+                  shareText ? <Text variant="button">{shareText}</Text> : null
+                ) : checked && byItem ? (
                   shareText ? <Text variant="button">{shareText}</Text> : null
                 ) : checked ? (
                   <View className="flex-row items-center gap-1">
@@ -81,7 +87,7 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
             />
           );
         })}
-      </Rows>
+      </FieldGroup>
       {evaluated.errors.participants ? <Text variant="caption" tone="owe">{evaluated.errors.participants}</Text> : null}
 
       {issue && evaluated.amountMinor !== null ? (
@@ -103,10 +109,7 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
         <Text variant="caption" tone="accent" className="px-1 font-semibold">{`Adds up to ${formatCurrency(evaluated.amountMinor, currency)}`}</Text>
       ) : null}
       {note ? <Text variant="body-small" tone="muted" className="px-1 text-[13px]">{note}</Text> : null}
+      {byItem ? <Button label="Edit items" variant="secondary" size="small" className="self-start" onPress={onPickItems} /> : null}
     </>
   );
-}
-
-function DesktopRows({ children }: { children: React.ReactNode }) {
-  return <View className="overflow-hidden rounded-card bg-card">{children}</View>;
 }

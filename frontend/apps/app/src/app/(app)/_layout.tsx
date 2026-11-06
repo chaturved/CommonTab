@@ -15,11 +15,13 @@ function AppShell() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="create-group" options={desktop ? dialog : { presentation: 'modal' }} />
-      <Stack.Screen name="add-expense" options={dialog} />
+      <Stack.Screen name="add-expense" />
+      <Stack.Screen name="split" />
+      <Stack.Screen name="split-by-item" />
       <Stack.Screen name="join" options={dialog} />
       <Stack.Screen name="group/[id]/settle" options={dialog} />
       <Stack.Screen name="group/[id]/invite" options={dialog} />
-      <Stack.Screen name="expense/[id]/edit" options={dialog} />
+      <Stack.Screen name="expense/[id]/edit" />
     </Stack>
   );
   return (
