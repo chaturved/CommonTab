@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { usePathname, useRouter } from 'expo-router';
 import { Activity, CircleUser, House, Plus, Users } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
@@ -10,6 +10,8 @@ import { syncLabel } from '@/lib/syncLabel';
 import { useNow } from '@/hooks/useNow';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { Wordmark } from '@/components/ui/Logo';
+import { DiscardSheet } from '@/components/expense/DiscardSheet';
+import { useExpenseDraft } from '@/state/expenseDraft';
 
 const NAV = [
   { label: 'Home', icon: House, href: '/home', match: (p: string) => p === '/home' },
@@ -27,21 +29,26 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const status = useSyncStatus();
   const now = useNow();
   const ordered = sortForList(groups.map((g) => g.summary).filter((s) => s.active));
-  const activeGroup = path.startsWith('/groups/') ? path.split('/')[2] : null;
+  const { draft } = useExpenseDraft();
+  const [pending, setPending] = useState<(() => void) | null>(null);
+  const go = (action: () => void) => (draft?.dirty ? setPending(() => action) : action());
+  const onNewExpense = path.startsWith('/expenses/new');
+  const inExpenseForm = onNewExpense || /^\/expenses\/[^/]+\/edit/.test(path);
+  const activeGroup = inExpenseForm ? (draft?.group.id ?? null) : path.startsWith('/groups/') ? path.split('/')[2] : null;
   const dot = (balance: number, settled: boolean) => (settled || balance === 0 ? colors.muted : balance > 0 ? colors.accent : colors.owe);
 
   return (
     <View className="flex-1 flex-row bg-background">
       <View accessibilityRole="navigation" accessibilityLabel="Main" className="w-[248px] shrink-0 gap-1.5 border-r border-divider bg-card px-4 py-[22px]">
         <View className="px-2 pb-[18px]"><Wordmark /></View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={() => router.push('/expenses/new')} className="mb-3.5 h-11 flex-row items-center justify-center gap-1.5 rounded-pill bg-primary active:opacity-80">
+        <Pressable accessibilityRole="button" accessibilityLabel="Add expense" accessibilityState={{ selected: onNewExpense }} onPress={() => { if (!onNewExpense) go(() => router.push('/expenses/new')); }} className={`mb-3.5 h-11 flex-row items-center justify-center gap-1.5 rounded-pill border-2 bg-primary active:opacity-80 ${onNewExpense ? 'border-accent' : 'border-transparent'}`}>
           <Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />
           <Text variant="button" tone="on-primary" className="text-[15px]">Add expense</Text>
         </Pressable>
         {NAV.map((item) => {
           const selected = item.match(path);
           return (
-            <Pressable key={item.label} accessibilityRole="link" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => router.navigate(item.href)} className={`h-10 flex-row items-center gap-3 rounded-xl px-3 ${selected ? 'bg-tint-selected' : 'active:opacity-80'}`}>
+            <Pressable key={item.label} accessibilityRole="link" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => go(() => router.navigate(item.href))} className={`h-10 flex-row items-center gap-3 rounded-xl px-3 ${selected ? 'bg-tint-selected' : 'active:opacity-80'}`}>
               <Icon icon={item.icon} size={20} strokeWidth={1.9} tone={selected ? 'accent' : 'tab'} />
               <Text variant="body-small" tone={selected ? 'accent' : 'tab'} className={selected ? 'font-bold' : 'font-semibold'}>{item.label}</Text>
             </Pressable>
@@ -51,7 +58,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
         {ordered.length === 0 ? (
           <View className="gap-1 px-3">
             <Text variant="body-small" tone="muted" className="text-sm leading-5">No groups yet.</Text>
-            <Pressable accessibilityRole="link" accessibilityLabel="Create a group" onPress={() => router.push('/groups/new')} className="min-h-touch justify-center active:opacity-80">
+            <Pressable accessibilityRole="link" accessibilityLabel="Create a group" onPress={() => go(() => router.push('/groups/new'))} className="min-h-touch justify-center active:opacity-80">
               <Text variant="body-small" tone="accent" className="text-sm font-bold">+ Create a group</Text>
             </Pressable>
           </View>
@@ -60,7 +67,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           {ordered.map((s) => {
             const selected = s.id === activeGroup;
             return (
-              <Pressable key={s.id} accessibilityRole="link" accessibilityLabel={s.name} accessibilityState={{ selected }} onPress={() => router.navigate({ pathname: '/groups/[id]', params: { id: s.id } })} className={`h-9 flex-row items-center gap-2.5 rounded-[10px] px-3 ${selected ? 'bg-background' : 'active:opacity-80'}`}>
+              <Pressable key={s.id} accessibilityRole="link" accessibilityLabel={s.name} accessibilityState={{ selected }} onPress={() => go(() => router.navigate({ pathname: '/groups/[id]', params: { id: s.id } }))} className={`h-9 flex-row items-center gap-2.5 rounded-[10px] px-3 ${selected ? 'bg-background' : 'active:opacity-80'}`}>
                 <View className="h-2 w-2 rounded-pill" style={{ backgroundColor: dot(s.myBalance, s.status === 'settled') }} />
                 <Text variant="body-small" tone={selected ? 'fg' : 'tab'} numberOfLines={1} className={`flex-1 text-sm ${selected ? 'font-bold' : 'font-medium'}`}>{s.name}</Text>
               </Pressable>
@@ -76,6 +83,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
         </View>
       </View>
       <View className="min-w-0 flex-1">{children}</View>
+      <DiscardSheet visible={pending !== null} onKeep={() => setPending(null)} onDiscard={() => { const next = pending; setPending(null); next?.(); }} />
     </View>
   );
 }

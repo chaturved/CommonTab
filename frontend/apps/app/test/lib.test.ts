@@ -1,5 +1,6 @@
 import { ApiError, type SyncStatus } from '@commontab/core';
 import { capAmountText, currencySymbol, decimalOnly, percentOnly } from '@/lib/amountInput';
+import { isoDate, monthCells, parseIsoDate, shiftMonth } from '@/lib/calendar';
 import { dayOffset } from '@/lib/dates';
 import { explainGroupError } from '@/lib/groupErrors';
 import { syncLabel } from '@/lib/syncLabel';
@@ -47,6 +48,25 @@ describe('dayOffset', () => {
     expect(today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     const diff = (Date.parse(`${today}T12:00:00Z`) - Date.parse(`${dayOffset(-1)}T12:00:00Z`)) / 86_400_000;
     expect(diff).toBe(1);
+  });
+});
+
+describe('calendar helpers', () => {
+  it('pads dates and reads them back', () => {
+    expect(isoDate(2026, 10, 5)).toBe('2026-11-05');
+    expect(parseIsoDate('2026-11-05')).toEqual({ year: 2026, month: 10, day: 5 });
+    expect(parseIsoDate('Nov 5')).toBeNull();
+  });
+  it('lays a month out in whole weeks starting on Sunday', () => {
+    const cells = monthCells(2026, 10);
+    expect(cells.length % 7).toBe(0);
+    expect(cells[0]).toBe(1);
+    expect(cells.filter((c) => c !== null)).toHaveLength(30);
+    expect(monthCells(2026, 1).filter((c) => c !== null)).toHaveLength(28);
+  });
+  it('moves across year ends', () => {
+    expect(shiftMonth(2026, 11, 1)).toEqual({ year: 2027, month: 0 });
+    expect(shiftMonth(2026, 0, -1)).toEqual({ year: 2025, month: 11 });
   });
 });
 
