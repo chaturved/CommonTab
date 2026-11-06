@@ -21,18 +21,18 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
   const currency = group.currencyCode;
   const rows = evaluated.shares.filter((s) => form.participants.includes(s.memberID));
   return (
-    <View className="gap-3 rounded-card bg-card p-4" style={{ position: 'sticky', top: 24 } as never}>
+    <View className="gap-3 rounded-card bg-card p-4">
       <View className="flex-row items-center justify-between">
         <Text variant="section" accessibilityRole="header">Split</Text>
         <Text variant="body-small" tone="muted">{splitMethodLabel(form, byItem)}</Text>
       </View>
       {rows.length > 0 ? (
-        <View className="overflow-hidden rounded-2xl bg-background">
-          {rows.map((share, i) => {
+        <View className="flex-row flex-wrap gap-3">
+          {rows.map((share) => {
             const member = group.members.find((m) => m.id === share.memberID);
             if (!member) return null;
             return (
-              <View key={share.memberID} className={`min-h-row flex-row items-center gap-3 px-4 ${i < rows.length - 1 ? 'border-b border-divider' : ''}`}>
+              <View key={share.memberID} className="min-h-row min-w-[240px] flex-1 flex-row items-center gap-3 rounded-2xl bg-background px-4">
                 <Avatar name={member.name} id={member.id} />
                 <Text variant="body" className="flex-1 font-semibold">{displayName(member, group.meMemberID)}</Text>
                 <Text variant="button">{formatCurrency(share.minorUnits, currency)}</Text>

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { BackButton, Banner, FieldGroup, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { OptionList } from '@/components/ui/OptionList';
@@ -182,20 +182,20 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         <View className="w-full max-w-[960px] gap-4 self-start">
           {header}
           {banners}
-          <View className="flex-row items-start gap-6">
-            <View className="min-w-0 flex-[1.15] gap-4">
-              {amountCard}
-              {rateBlock}
-              <FieldGroup>
-                {groupPicker}
-                {payerPicker}
-                {datePicker}
-                {categoryPicker}
-                {notes}
-              </FieldGroup>
+          {amountCard}
+          {rateBlock}
+          <FieldLayoutProvider layout="stacked">
+            <View className="gap-3">
+              <View className="flex-row gap-3">
+                <View className="min-w-0 flex-1">{groupPicker}</View>
+                <View className="min-w-0 flex-1">{payerPicker}</View>
+                <View className="min-w-0 flex-1">{datePicker}</View>
+                <View className="min-w-0 flex-1">{categoryPicker}</View>
+              </View>
+              {notes}
             </View>
-            <View className="min-w-0 flex-1">{splitCard}</View>
-          </View>
+          </FieldLayoutProvider>
+          {splitCard}
           {sheets}
         </View>
       </Screen>
