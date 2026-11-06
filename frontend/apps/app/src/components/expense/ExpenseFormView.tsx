@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Users } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
 import { BackButton, Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
@@ -108,17 +108,24 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? (form.merchant.trim() === '' ? 'Add a description to continue.' : 'Check the split to continue.'));
 
   const multiGroup = Boolean(groups && groups.length > 1);
+  const chipBox = 'min-h-touch flex-row items-center gap-2 rounded-pill border-[1.5px] border-divider bg-card px-4';
+  const groupLabel = (
+    <>
+      <Icon icon={Users} size={18} strokeWidth={2} tone="accent" />
+      <Text variant="body-small" className="font-bold">{group.name}</Text>
+    </>
+  );
   const groupChip = multiGroup ? (
     <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={(groups ?? []).map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
       {(open, isOpen) => (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} className="min-h-touch flex-row items-center gap-1.5 rounded-pill bg-background px-3.5 active:opacity-80">
-          <Text variant="body-small" className="font-semibold">{group.name}</Text>
-          <Icon icon={isOpen ? ChevronUp : ChevronDown} size={14} strokeWidth={2.4} tone="muted" />
+        <Pressable accessibilityRole="button" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} className={`${chipBox} active:opacity-80`}>
+          {groupLabel}
+          <Icon icon={isOpen ? ChevronUp : ChevronDown} size={16} strokeWidth={2.4} tone="muted" />
         </Pressable>
       )}
     </Dropdown>
   ) : (
-    <Text variant="body-small" tone="muted" accessibilityLabel={`Group, ${group.name}`}>{group.name}</Text>
+    <View accessible accessibilityLabel={`Group, ${group.name}`} className={chipBox}>{groupLabel}</View>
   );
 
   const header = desktop ? (
