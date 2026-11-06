@@ -5,7 +5,7 @@ import { evaluateItemized, formatCurrency, type ItemizedResult, type ItemRow } f
 import { avatarColorIndex, avatarColors, Banner, Button, Icon, Text, useThemeColors } from '@commontab/ui';
 import { Eyebrow } from '@/components/ui/Section';
 import { newItemRow, useItemizedDraft, type ItemizedDraft } from '@/hooks/useItemizedDraft';
-import { decimalOnly } from '@/lib/amountInput';
+import { currencySymbol, decimalOnly } from '@/lib/amountInput';
 
 export interface Person {
   id: string;
@@ -19,9 +19,10 @@ interface Props {
   draft?: ItemizedDraft;
   onDraft?: Dispatch<SetStateAction<ItemizedDraft>>;
   inset?: boolean;
+  hideTotal?: boolean;
 }
 
-export function ItemizedEditor({ people, currencyCode, onResult, draft: controlled, onDraft, inset }: Props) {
+export function ItemizedEditor({ people, currencyCode, onResult, draft: controlled, onDraft, inset, hideTotal }: Props) {
   const colors = useThemeColors();
   const own = useItemizedDraft();
   const [draft, setDraft] = controlled && onDraft ? [controlled, onDraft] : own;
@@ -34,6 +35,8 @@ export function ItemizedEditor({ people, currencyCode, onResult, draft: controll
   }, [outcome, onResult]);
 
   const surface = inset ? 'bg-background' : 'bg-card';
+  const inputSurface = inset ? 'bg-card' : 'bg-background';
+  const inputStyle = { borderColor: colors['field-border'], outlineStyle: 'none' } as never;
   const setItems = (change: (all: ItemRow[]) => ItemRow[]) => setDraft((d) => ({ ...d, items: change(d.items) }));
   const update = (index: number, patch: Partial<ItemRow>) => setItems((all) => all.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   const toggle = (index: number, personId: string) =>
@@ -44,6 +47,7 @@ export function ItemizedEditor({ people, currencyCode, onResult, draft: controll
 
   return (
     <View className="gap-3">
+      {hideTotal ? null : (
       <View className={`flex-row items-center justify-between gap-3 rounded-card p-4 ${surface}`}>
         <View>
           <Text variant="body-small" tone="muted">Receipt total</Text>
@@ -54,20 +58,26 @@ export function ItemizedEditor({ people, currencyCode, onResult, draft: controll
           <Text variant="caption" tone="muted" className="text-[13px]">Tax and tip {show((result?.tax ?? 0) + (result?.tip ?? 0))}</Text>
         </View>
       </View>
+      )}
 
       <Eyebrow>WHO HAD WHAT</Eyebrow>
+      <Text variant="body-small" tone="muted" className="-mt-1 px-2">Name each item, enter its price, then tap who had it.</Text>
       <View className={`overflow-hidden rounded-card ${surface}`}>
         {items.map((item, index) => (
           <View key={index} className="gap-2 border-b border-divider px-4 py-3">
             <View className="flex-row items-center gap-2">
-              <TextInput accessibilityLabel={`Item ${index + 1} name`} value={item.name} onChangeText={(name) => update(index, { name })} placeholder="Item" placeholderTextColor={colors.muted} className="min-h-touch min-w-0 flex-1 text-body font-semibold text-fg" style={{ outlineStyle: 'none' } as never} />
-              <TextInput accessibilityLabel={`Item ${index + 1} price`} value={item.priceText} onChangeText={(text) => update(index, { priceText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} className="min-h-touch w-24 text-right text-body font-bold text-fg" style={{ outlineStyle: 'none' } as never} />
+              <TextInput accessibilityLabel={`Item ${index + 1} name`} value={item.name} onChangeText={(name) => update(index, { name })} placeholder="Item name" placeholderTextColor={colors.muted} className={`min-h-touch min-w-0 flex-1 rounded-input border px-3 text-body font-semibold text-fg ${inputSurface}`} style={inputStyle} />
+              <View className={`min-h-touch w-32 flex-row items-center gap-1 rounded-input border px-3 ${inputSurface}`} style={{ borderColor: colors['field-border'] }}>
+                <Text variant="body" tone="muted">{currencySymbol(currencyCode)}</Text>
+                <TextInput accessibilityLabel={`Item ${index + 1} price`} value={item.priceText} onChangeText={(text) => update(index, { priceText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} className="min-h-touch min-w-0 flex-1 text-right text-body font-bold text-fg" style={{ outlineStyle: 'none' } as never} />
+              </View>
               {items.length > 1 ? (
                 <Pressable accessibilityRole="button" accessibilityLabel={`Remove item ${index + 1}`} hitSlop={8} onPress={() => setItems((all) => all.filter((_, i) => i !== index))} className="h-11 w-8 items-center justify-center">
                   <Icon icon={X} size={18} strokeWidth={2.2} tone="muted" />
                 </Pressable>
               ) : null}
             </View>
+            <Text variant="caption" tone="muted" className="text-[13px] font-bold">Who had it</Text>
             <View className="flex-row flex-wrap gap-1.5">
               {people.map((person) => {
                 const on = item.assignedTo.includes(person.id);

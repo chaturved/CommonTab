@@ -33,6 +33,8 @@ Receipt scan (camera, review, assign), repeating expenses, push notifications an
 ### Later
 Friends list outside groups, search, charts, more currencies and auto rates, tablet layout.
 
+Backlog, needs approval before work starts (data model, API contract and sync format change): keep the itemization of a split-by-item expense (items, prices, who had what, tax and tip) on the expense, so it reopens as By item and stays editable. Today By item is applied as exact per-person amounts and the items are not stored.
+
 ## Acceptance criteria (examples; each feature needs its own tests)
 - A $100.00 bill split 3 ways gives 33.34 / 33.33 / 33.33 and always sums to 10000 cents.
 - Airplane mode: add, edit and delete an expense; kill and reopen the app; changes persist and show "waiting to sync". Reconnect: they sync once, with no duplicates.

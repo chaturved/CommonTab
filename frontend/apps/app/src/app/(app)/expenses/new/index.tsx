@@ -25,7 +25,7 @@ export default function AddExpense() {
         <View className="items-center gap-3 px-6 py-10">
           <Text variant="section" className="text-center">Create a group first</Text>
           <Text tone="muted" className="text-center">Expenses live in a group, so make one to start splitting.</Text>
-          <Button label="Create a group" onPress={() => router.replace('/create-group')} />
+          <Button label="Create a group" onPress={() => router.replace('/groups/new')} />
         </View>
       </Screen>
     );
@@ -35,7 +35,7 @@ export default function AddExpense() {
     return (
       <Screen wide>
         <View className="w-full max-w-[560px] self-center">
-          <ChooseGroup groups={groups} onPick={setPicked} onCreate={() => router.replace('/create-group')} />
+          <ChooseGroup groups={groups} onPick={setPicked} onCreate={() => router.replace('/groups/new')} />
         </View>
       </Screen>
     );

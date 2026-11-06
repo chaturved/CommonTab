@@ -7,7 +7,7 @@ export default function JoinLink() {
   const code = useRouteParam('code');
   const { ready, user, setPendingJoinCode } = useSession();
   if (!ready) return <Splash />;
-  if (user) return <Redirect href={{ pathname: '/join', params: { code } }} />;
+  if (user) return <Redirect href={{ pathname: '/groups/join', params: { code } }} />;
   setPendingJoinCode(code);
   return <Redirect href="/create-account" />;
 }

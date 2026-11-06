@@ -55,9 +55,9 @@ export function GroupDesktop({ data }: { data: GroupData }) {
         actions={
           <>
             {summary.status === 'settled' && !summary.archived ? <Button label="Archive group" variant="secondary" size="small" loading={lifecycle.busy} onPress={() => void lifecycle.archive()} /> : null}
-            <Button label="Invite" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/invite', params: { id: group.id } })} />
-            {summary.status === 'needsSettling' ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/group/[id]/settle', params: { id: group.id } })} /> : null}
-            <Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
+            <Button label="Invite" variant="secondary" size="small" onPress={() => router.push({ pathname: '/groups/[id]/invite', params: { id: group.id } })} />
+            {summary.status === 'needsSettling' ? <Button label="Settle up" variant="secondary" size="small" onPress={() => router.push({ pathname: '/groups/[id]/settle', params: { id: group.id } })} /> : null}
+            <Button label="Add expense" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push({ pathname: '/expenses/new', params: { group: group.id } })} />
           </>
         }
       />

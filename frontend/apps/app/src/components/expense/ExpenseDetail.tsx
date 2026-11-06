@@ -97,7 +97,7 @@ export function ExpenseStatus({ expense, data }: { expense: LocalExpense; data: 
     return (
       <View className="gap-2">
         <Banner tone="error" title="This change couldn't sync." message={expense.error?.message ?? 'The server turned it down.'} />
-        <Button label="Edit the expense" variant="secondary" onPress={() => router.push({ pathname: '/expense/[id]/edit', params: { id: expense.id } })} />
+        <Button label="Edit the expense" variant="secondary" onPress={() => router.push({ pathname: '/expenses/[id]/edit', params: { id: expense.id } })} />
         <Button label="Discard this change" variant="ghost" disabled={!failedOpId} onPress={() => failedOpId && void services.actions.discardFailed(failedOpId)} />
       </View>
     );
@@ -145,7 +145,7 @@ export function ExpenseActions({ expense, data, afterDelete }: { expense: LocalE
   return (
     <>
       <View className="flex-row gap-2.5 pt-4">
-        {canEdit ? <Button label="Edit" className="flex-1" onPress={() => router.push({ pathname: '/expense/[id]/edit', params: { id: expense.id } })} /> : null}
+        {canEdit ? <Button label="Edit" className="flex-1" onPress={() => router.push({ pathname: '/expenses/[id]/edit', params: { id: expense.id } })} /> : null}
         <Button label="Delete" variant="secondary" className="flex-1" onPress={() => setConfirming(true)} />
       </View>
       <Text variant="caption" tone="muted" className="pt-2 text-center text-[13px]">Deleting updates balances for everyone in the group.</Text>
