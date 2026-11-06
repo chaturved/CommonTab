@@ -4,6 +4,9 @@ import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
 import { Banner, Button, FieldGroup, FieldRow, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { FieldDropdown, OptionList, SelectField } from '@/components/ui/SelectField';
+import { DateChooser } from '@/components/expense/DateChooser';
 import { DesktopDialog } from '@/components/ui/DesktopDialog';
 import { ForeignRate } from '@/components/expense/ForeignRate';
 import { ExpenseSheets, type ExpenseSheet } from '@/components/expense/ExpenseSheets';
@@ -61,6 +64,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       )}
     </CurrencySelect>
   );
+  const dateLabel = evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`);
   const banners = (
     <>
       {mode === 'edit' && offline ? (
@@ -78,7 +82,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       <DesktopDialog
         title={mode === 'add' ? 'Add expense' : 'Edit expense'}
         onClose={() => router.back()}
-        headerRight={groups && groups.length > 1 ? <Button label={`${group.name} ▾`} variant="ghost" size="small" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={() => setSheet('group')} /> : <Text variant="body-small" tone="muted">{group.name}</Text>}
+        headerRight={groups && groups.length > 1 ? (
+          <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
+            {(open) => <Button label={`${group.name} ▾`} variant="ghost" size="small" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} />}
+          </Dropdown>
+        ) : <Text variant="body-small" tone="muted">{group.name}</Text>}
         primary={{ label: mode === 'add' ? 'Save expense' : 'Save changes', onPress: save, disabled: !evaluated.draft, loading: busy }}
       >
         {banners}
@@ -97,9 +105,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         </View>
         {rateBlock}
         <View className="flex-row gap-3">
-          <View className="flex-1"><PickerRow label="Paid by" value={nameOf(form.payerID)} onPress={() => setSheet('payer')} /></View>
-          <View className="flex-1"><PickerRow label="Date" value={evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`)} onPress={() => setSheet('date')} /></View>
-          <View className="flex-1"><PickerRow label="Category" value={CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other'} onPress={() => setSheet('category')} /></View>
+          <View className="flex-1"><SelectField label="Paid by" value={nameOf(form.payerID)} options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => patch({ payerID })} /></View>
+          <View className="flex-1">
+            <FieldDropdown label="Date" value={dateLabel} width={280} content={(close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>} />
+          </View>
+          <View className="flex-1"><SelectField label="Category" value={CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other'} options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => patch({ category })} /></View>
         </View>
         <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} />
         {split}
@@ -144,7 +154,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
         <PickerRow label="Group" value={group.name} onPress={groups && groups.length > 1 ? () => setSheet('group') : undefined} />
         <PickerRow label="Paid by" value={nameOf(form.payerID)} onPress={() => setSheet('payer')} />
-        <PickerRow label="Date" value={evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`)} onPress={() => setSheet('date')} />
+        <PickerRow label="Date" value={dateLabel} onPress={() => setSheet('date')} />
         <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />
       </FieldGroup>
 

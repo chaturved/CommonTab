@@ -1,9 +1,9 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { ScrollView, View } from 'react-native';
 import { applyItemized, CATEGORIES, displayName, type ExpenseForm, type FormEvaluation, type ItemizedResult, type LocalGroup, type Member } from '@commontab/core';
-import { Button, FieldGroup, FieldRow, ListRow, Sheet, Text } from '@commontab/ui';
+import { Button, ListRow, Sheet } from '@commontab/ui';
+import { DateChooser } from '@/components/expense/DateChooser';
 import { ItemizedEditor } from '@/components/expense/ItemizedEditor';
-import { dayOffset } from '@/lib/dates';
 import type { GroupData } from '@/types/group';
 
 export type ExpenseSheet = 'payer' | 'date' | 'group' | 'item' | 'category';
@@ -39,15 +39,7 @@ export function ExpenseSheets({ sheet, onClose, form, setForm, patch, evaluated,
         </View>
       </Sheet>
       <Sheet visible={sheet === 'date'} onClose={onClose} title="Date">
-        <View className="flex-row gap-2">
-          <Button label="Today" variant="secondary" size="small" className="flex-1" onPress={() => choose({ date: dayOffset(0) })} />
-          <Button label="Yesterday" variant="secondary" size="small" className="flex-1" onPress={() => choose({ date: dayOffset(-1) })} />
-        </View>
-        <FieldGroup>
-          <FieldRow label="Date" value={form.date} onChangeText={(date) => patch({ date })} placeholder="2026-10-30" autoCapitalize="none" last />
-        </FieldGroup>
-        {evaluated.errors.date ? <Text variant="caption" tone="owe">{evaluated.errors.date}</Text> : null}
-        <Button label="Done" disabled={Boolean(evaluated.errors.date)} onPress={onClose} />
+        <DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={onClose} />
       </Sheet>
       <Sheet visible={sheet === 'item'} onClose={onClose} title="Split by item">
         <ScrollView className="max-h-[460px]" keyboardShouldPersistTaps="handled">
