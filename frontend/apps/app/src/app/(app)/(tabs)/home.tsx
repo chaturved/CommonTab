@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
 import { View } from 'react-native';
 import { byNewest, expenseRow, overallTotals, sortForList } from '@commontab/core';
-import { Button, Card, Hero, Icon, Text } from '@commontab/ui';
+import { Button, Card, Icon, Text } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
 import { BalanceHero } from '@/components/group/BalanceHero';
 import { ConnectionBanner } from '@/components/sync/ConnectionBanner';
+import { FirstRun } from '@/components/home/FirstRun';
 import { ExpenseRow } from '@/components/expense/ExpenseRow';
 import { GroupCard } from '@/components/group/GroupCard';
 import { SectionHeader } from '@/components/ui/Section';
@@ -15,12 +16,6 @@ import { useGroups } from '@/hooks/useGroups';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
-
-const STEPS = [
-  ['Create a group', 'A trip, an apartment, a dinner crew'],
-  ['Add expenses', 'Split equally, by amount, or by percent'],
-  ['Settle up', 'Record payments to clear balances'],
-] as const;
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -54,33 +49,7 @@ export default function Home() {
         </View>
       )}
       <ConnectionBanner />
-      {ready && groups.length === 0 ? (
-        <>
-          <Hero>
-            <Text variant="label" tone="mint">Welcome, {user?.name.split(' ')[0]}</Text>
-            <Text variant="large-title" tone="white" className="text-[26px] leading-[30px]">Split costs without the awkward math.</Text>
-            <Text variant="body-small" tone="hero-muted" className="text-sm leading-5">
-              Make a group, add what you spend, and CommonTab keeps track of who owes who.
-            </Text>
-            <Button label="Create a group" variant="hero" icon={<Icon icon={Plus} size={20} strokeWidth={2.4} tone="hero-to" />} onPress={() => router.push('/create-group')} />
-            <Button label="Join with a code" variant="hero-outline" onPress={() => router.push('/join')} />
-          </Hero>
-          <SectionHeader title="How it works" />
-          <Card className="overflow-hidden">
-            {STEPS.map(([title, body], index) => (
-              <View key={title} accessible accessibilityLabel={`Step ${index + 1}: ${title}. ${body}`} className={`min-h-row flex-row items-center gap-3.5 px-4 py-3 ${index < STEPS.length - 1 ? 'border-b border-divider' : ''}`}>
-                <View className="h-8 w-8 items-center justify-center rounded-pill bg-tint">
-                  <Text variant="caption" tone="on-tint" className="font-bold">{index + 1}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text variant="body" className="font-semibold">{title}</Text>
-                  <Text variant="caption" tone="muted" className="text-[13px]">{body}</Text>
-                </View>
-              </View>
-            ))}
-          </Card>
-        </>
-      ) : null}
+      {ready && groups.length === 0 ? <FirstRun name={user?.name.split(' ')[0] ?? ''} /> : null}
       {groups.length > 0 ? (
         <>
           {totals.map((t) => (
@@ -106,16 +75,24 @@ export default function Home() {
                 ))}
               </View>
             </View>
-            {recent.length > 0 ? (
-              <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
-                <SectionHeader title="Recent expenses" />
+            <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
+              <SectionHeader title="Recent expenses" />
+              {recent.length > 0 ? (
                 <Card className="overflow-hidden">
                   {recent.map(({ row, currencyCode }, i) => (
                     <ExpenseRow key={row.id} row={row} currencyCode={currencyCode} subtitle="home" divider={i < recent.length - 1} />
                   ))}
                 </Card>
-              </View>
-            ) : null}
+              ) : (
+                <Card className="items-start gap-3 p-5">
+                  <View className="gap-1">
+                    <Text variant="body" className="font-semibold">No expenses yet</Text>
+                    <Text variant="body-small" tone="muted">Add one and it shows up here.</Text>
+                  </View>
+                  <Button label="Add expense" variant="secondary" size="small" onPress={() => router.push('/add-expense')} />
+                </Card>
+              )}
+            </View>
           </View>
         </>
       ) : null}

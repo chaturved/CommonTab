@@ -48,6 +48,14 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           );
         })}
         <Text variant="caption" tone="muted" className="px-3 pb-1.5 pt-5 text-xs font-bold tracking-wider">Groups</Text>
+        {ordered.length === 0 ? (
+          <View className="gap-1 px-3">
+            <Text variant="body-small" tone="muted" className="text-sm leading-5">No groups yet.</Text>
+            <Pressable accessibilityRole="link" accessibilityLabel="Create a group" onPress={() => router.push('/create-group')} className="min-h-touch justify-center active:opacity-80">
+              <Text variant="body-small" tone="accent" className="text-sm font-bold">+ Create a group</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View className="gap-0.5">
           {ordered.map((s) => {
             const selected = s.id === activeGroup;
