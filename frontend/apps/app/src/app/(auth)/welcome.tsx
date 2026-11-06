@@ -1,49 +1,40 @@
 import { Redirect, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Text, colors } from '@commontab/ui';
+import { Button, Text, ThemeScope, colors } from '@commontab/ui';
 import { BrandMark } from '@/components/ui/BrandMark';
+import { AuthLegal } from '@/components/auth/AuthExtras';
 import { useIsDesktop } from '@/hooks/useViewport';
 
-function Logo() {
-  return (
-    <View className="h-[88px] w-[88px] items-center justify-center rounded-[26px] border bg-hero-from" style={{ borderColor: 'rgba(143,229,199,0.25)' }}>
-      <BrandMark size={60} />
-    </View>
-  );
-}
+const DARK = colors.dark;
+const BACKGROUND = { backgroundImage: `linear-gradient(160deg, ${DARK['hero-from']}, ${DARK['hero-to']})` };
 
 export default function Welcome() {
   const router = useRouter();
   const desktop = useIsDesktop();
   if (desktop) return <Redirect href="/sign-in" />;
   return (
-    <LinearGradient colors={[colors.light['hero-from'], colors.light['hero-to']]} start={{ x: 0.1, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ flex: 1 }}>
+    <ThemeScope scheme="dark" style={BACKGROUND as never}>
       <SafeAreaView className="flex-1">
-        <View className="w-full max-w-[480px] flex-1 self-center px-6 pb-10">
+        <View className="w-full max-w-[480px] flex-1 self-center px-6 pb-7">
           <View className="flex-1 items-center justify-center gap-[18px]">
-            <Logo />
-            <Text variant="large-title" tone="white" accessibilityRole="header" className="text-[38px] leading-[44px]">
-              <Text variant="large-title" tone="white" className="text-[38px] font-bold">Common</Text>
-              <Text variant="large-title" tone="white" className="text-[38px] font-normal">Tab</Text>
+            <View aria-hidden className="h-[88px] w-[88px] items-center justify-center rounded-[26px] border border-site-line bg-hero-to">
+              <BrandMark size={60} />
+            </View>
+            <Text accessibilityRole="header" aria-label="CommonTab" tone="white" className="!text-[38px] tracking-[-1.52px]">
+              <Text tone="white" className="!text-[38px] font-bold">Common</Text>
+              <Text tone="white" className="!text-[38px] font-normal">Tab</Text>
             </Text>
-            <Text tone="hero-muted" className="max-w-[280px] text-center text-[17px] leading-6">
-              Nobody should do bill math twice.
-            </Text>
+            <Text tone="hero-muted" className="max-w-[280px] text-center !text-[19px] font-light leading-[26px]">Nobody should do bill math twice.</Text>
           </View>
           <View className="gap-3">
-            <Button label="Create account" variant="hero" onPress={() => router.push('/create-account')} />
-            <Button label="Sign in" variant="hero-outline" onPress={() => router.push('/sign-in')} />
-            <Pressable accessibilityRole="button" accessibilityLabel="Have an invite code? Join a group" onPress={() => router.push('/join-code')} className="min-h-touch items-center justify-center active:opacity-80">
-              <Text variant="body-small" tone="mint" className="text-[15px] font-semibold">Have an invite code? Join a group</Text>
-            </Pressable>
-            <Text variant="caption" tone="hero-muted" className="pt-1 text-center text-xs leading-[18px]">
-              By continuing you agree to the Terms and Privacy Policy.
-            </Text>
+            <Button label="Create account" variant="mint" onPress={() => router.push('/create-account')} />
+            <Button label="Sign in" variant="deep" onPress={() => router.push('/sign-in')} />
+            <Button label="Have an invite code? Join a group" variant="ghost" size="small" onPress={() => router.push('/join-code')} />
+            <AuthLegal center />
           </View>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </ThemeScope>
   );
 }

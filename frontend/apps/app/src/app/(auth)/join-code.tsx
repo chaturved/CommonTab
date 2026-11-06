@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { Button, FieldGroup, FieldRow } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
+import { AuthDivider } from '@/components/auth/AuthExtras';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 
@@ -18,10 +19,12 @@ export default function JoinWithCode() {
 
   return (
     <AuthScreen
-      footer={
-        <View className="gap-2.5">
-          <Button label="Create account" disabled={!ready} onPress={() => go('/create-account')} />
-          <Button label="I already have an account" variant="secondary" disabled={!ready} onPress={() => go('/sign-in')} />
+      heroText="Join a group with the code a friend sent you. Everyone sees the same balances."
+      footer={<Button label="Create account" variant="mint" disabled={!ready} onPress={() => go('/create-account')} />}
+      below={
+        <View className="gap-3">
+          <AuthDivider />
+          <Button label="I already have an account" variant="deep" disabled={!ready} onPress={() => go('/sign-in')} />
         </View>
       }
     >

@@ -23,7 +23,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <AuthScreen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Send code'} loading={busy} disabled={!ready} onPress={send} />}>
+    <AuthScreen footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Send code'} variant="mint" loading={busy} disabled={!ready} onPress={send} />}>
       <AuthHeader
         title="Reset your password"
         subtitle="Enter the email you signed up with. If there is an account, we will email you a code that works for an hour."

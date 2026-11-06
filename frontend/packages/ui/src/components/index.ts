@@ -16,3 +16,4 @@ export * from './BackButton';
 export * from './PasswordMeter';
 export * from './SegmentedControl';
 export * from './CheckRow';
+export * from './ThemeScope';
