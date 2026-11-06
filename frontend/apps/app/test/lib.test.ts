@@ -1,5 +1,5 @@
 import { ApiError, type SyncStatus } from '@commontab/core';
-import { currencySymbol, decimalOnly } from '@/lib/amountInput';
+import { capAmountText, currencySymbol, decimalOnly, percentOnly } from '@/lib/amountInput';
 import { dayOffset } from '@/lib/dates';
 import { explainGroupError } from '@/lib/groupErrors';
 import { syncLabel } from '@/lib/syncLabel';
@@ -9,6 +9,29 @@ describe('decimalOnly', () => {
     expect(decimalOnly('1a2.3.4,5')).toBe('12.345');
     expect(decimalOnly('')).toBe('');
     expect(decimalOnly('.5')).toBe('.5');
+  });
+});
+
+describe('percentOnly', () => {
+  it('caps a share at 100 and keeps two decimals', () => {
+    expect(percentOnly('200')).toBe('100');
+    expect(percentOnly('100.5')).toBe('100');
+    expect(percentOnly('33.333')).toBe('33.33');
+    expect(percentOnly('25')).toBe('25');
+    expect(percentOnly('')).toBe('');
+  });
+});
+
+describe('capAmountText', () => {
+  it('stops one person owing more than the expense total', () => {
+    expect(capAmountText('200', 16350, 'USD')).toBe('163.50');
+    expect(capAmountText('80.25', 16350, 'USD')).toBe('80.25');
+    expect(capAmountText('163.50', 16350, 'USD')).toBe('163.50');
+  });
+  it('does not cap while the amount is empty or half typed', () => {
+    expect(capAmountText('999', null, 'USD')).toBe('999');
+    expect(capAmountText('12.', 16350, 'USD')).toBe('12.');
+    expect(capAmountText('', 16350, 'USD')).toBe('');
   });
 });
 

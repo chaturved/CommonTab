@@ -20,6 +20,7 @@ import { useExpenseForm } from '@/hooks/useExpenseForm';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { currencySymbol, decimalOnly } from '@/lib/amountInput';
+import { splitProblem } from '@/lib/splitSummary';
 import type { GroupData } from '@/types/group';
 
 export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, initial }: {
@@ -111,7 +112,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const firstError = evaluated.errors.amount ?? evaluated.errors.participants ?? evaluated.errors.date ?? evaluated.errors.rate;
   const summary = evaluated.draft && evaluated.amountMinor !== null
     ? `${formatCurrency(evaluated.amountMinor, currency)} paid by ${nameOf(form.payerID)}, split ${sharing === 1 ? 'with 1 person' : `between ${sharing} people`}`
-    : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? (form.merchant.trim() === '' ? 'Add a description to continue.' : 'Check the split to continue.'));
+    : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? splitProblem(form, evaluated, byItem, currency) ?? (form.merchant.trim() === '' ? 'Add a description to continue.' : 'Check the split to continue.'));
 
   const multiGroup = Boolean(groups && groups.length > 1);
   const chipBox = 'min-h-touch flex-row items-center gap-2';
