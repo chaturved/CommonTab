@@ -18,3 +18,15 @@ export function DiscardSheet({ visible, onKeep, onDiscard }: Props) {
     </Sheet>
   );
 }
+
+export function DiscardBar({ onKeep, onDiscard }: { onKeep: () => void; onDiscard: () => void }) {
+  return (
+    <View className="w-full flex-row items-center justify-between gap-4">
+      <Text variant="body-small" tone="fg-soft" accessibilityRole="alert" className="min-w-0 flex-1">Discard this expense? What you entered won't be saved.</Text>
+      <View className="flex-row gap-2.5">
+        <Button label="Discard" variant="secondary" size="small" onPress={onDiscard} />
+        <Button label="Keep editing" size="small" onPress={onKeep} />
+      </View>
+    </View>
+  );
+}

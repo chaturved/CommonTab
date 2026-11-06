@@ -1,6 +1,6 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { displayName, formatCurrency } from '@commontab/core';
-import { Avatar, Banner, Button, Text } from '@commontab/ui';
+import { Avatar, Banner, Text } from '@commontab/ui';
 import { PickerRow } from '@/components/ui/PickerRow';
 import { splitMethodLabel, splitProblem, splitSummary } from '@/lib/splitSummary';
 import type { ExpenseDraft } from '@/state/expenseDraft';
@@ -33,7 +33,12 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
     <View className="gap-3 rounded-card bg-card p-4">
       <View className="flex-row items-center justify-between">
         <Text variant="section" accessibilityRole="header">Split</Text>
-        <Text variant="body-small" tone="muted">{splitMethodLabel(form, byItem)}</Text>
+        <View className="flex-row items-center gap-3">
+          <Text variant="body-small" tone="muted">{splitMethodLabel(form, byItem)}</Text>
+          <Pressable accessibilityRole="link" accessibilityLabel="Edit split" onPress={onEdit} className="min-h-touch justify-center active:opacity-80">
+            <Text variant="body-small" tone="accent" className="font-bold">Edit split</Text>
+          </Pressable>
+        </View>
       </View>
       {problem ? (
         <Banner tone="error" message={problem} />
@@ -54,7 +59,6 @@ export function SplitSummaryCard({ draft, byItem, onEdit }: Omit<Props, 'desktop
       ) : (
         <Text variant="body-small" tone="muted">{evaluated.amountMinor === null ? 'Enter an amount to see who pays what.' : 'Pick who shares this expense.'}</Text>
       )}
-      <Button label="Edit split" variant="secondary" size="small" className="self-start" onPress={onEdit} />
     </View>
   );
 }

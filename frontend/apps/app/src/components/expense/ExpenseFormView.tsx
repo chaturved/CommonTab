@@ -3,13 +3,15 @@ import { useRouter } from 'expo-router';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { BackButton, Banner, Button, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, Button, FieldGroup, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { OptionList } from '@/components/ui/OptionList';
 import { DateChooser } from '@/components/expense/DateChooser';
 import { ForeignRate } from '@/components/expense/ForeignRate';
-import { DiscardSheet } from '@/components/expense/DiscardSheet';
+import { DiscardBar, DiscardSheet } from '@/components/expense/DiscardSheet';
+import { DesktopDialog } from '@/components/ui/DesktopDialog';
+import { SplitPanel } from '@/components/expense/SplitPanel';
 import { ExpenseSheets, type ExpenseSheet } from '@/components/expense/ExpenseSheets';
 import { ExpenseActionBar } from '@/components/expense/ExpenseActionBar';
 import { Screen } from '@/components/layout/Screen';
@@ -17,6 +19,8 @@ import { SplitSummaryCard, SplitSummaryRow } from '@/components/expense/SplitSum
 import { PickerRow } from '@/components/ui/PickerRow';
 import { clearExpenseDraft, publishExpenseDraft, useExpenseDraft, type ExpenseDraft } from '@/state/expenseDraft';
 import { useExpenseForm } from '@/hooks/useExpenseForm';
+import { useGoBack } from '@/hooks/useGoBack';
+import { useSplitView } from '@/hooks/useSplitView';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { currencySymbol, decimalOnly } from '@/lib/amountInput';
@@ -40,14 +44,17 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const { form, setForm, patch, evaluated, entry, keptRate, foreign, quote, quoting, pickCurrency, note, busy, problem, dirty, save } = useExpenseForm({ mode, data, expense, initial });
   const [sheet, setSheet] = useState<ExpenseSheet | null>(null);
   const [discarding, setDiscarding] = useState(false);
-  const leave = () => (dirty ? setDiscarding(true) : router.back());
+  const goBack = useGoBack();
+  const leave = () => (dirty ? setDiscarding(true) : goBack());
   const { byItem } = useExpenseDraft();
-  const editSplit = () => (expense ? router.push({ pathname: '/expenses/[id]/edit/split', params: { id: expense.id } }) : router.push('/expenses/new/split'));
+  const [view, setView] = useState<'form' | 'split'>('form');
+  const editSplit = () => (desktop ? setView('split') : expense ? router.push({ pathname: '/expenses/[id]/edit/split', params: { id: expense.id } }) : router.push('/expenses/new/split'));
   const offline = status !== null && status.connectivity === 'offline';
   const memberIds = useMemo(() => group.members.map((m) => m.id), [group.members]);
   const people = useMemo(() => group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID), [group.members, form.participants, form.payerID]);
   const draft = useMemo<ExpenseDraft>(() => ({ mode, form, setForm, patch, evaluated, group, people, memberIds, note, dirty }), [mode, form, setForm, patch, evaluated, group, people, memberIds, note, dirty]);
   useEffect(() => publishExpenseDraft(draft), [draft]);
+  const splitView = useSplitView(draft, byItem);
   useEffect(() => clearExpenseDraft, []);
   const nameOf = (id: string) => {
     const member = group.members.find((m) => m.id === id);
@@ -90,7 +97,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   );
   const splitRow = <SplitSummaryRow draft={draft} byItem={byItem} onEdit={editSplit} />;
   const splitCard = <SplitSummaryCard draft={draft} byItem={byItem} onEdit={editSplit} />;
-  const discardSheet = <DiscardSheet visible={discarding} onKeep={() => setDiscarding(false)} onDiscard={() => { setDiscarding(false); router.back(); }} />;
+  const discardSheet = <DiscardSheet visible={discarding} onKeep={() => setDiscarding(false)} onDiscard={() => { setDiscarding(false); goBack(); }} />;
   const sheets = <ExpenseSheets sheet={sheet} onClose={() => setSheet(null)} form={form} patch={patch} evaluated={evaluated} people={people} group={group} groups={groups} onPickGroup={onPickGroup} />;
   const picker = (label: string, value: string, onSheet: (() => void) | undefined, content?: (close: () => void) => ReactNode, maxHeight?: number) => {
     if (!desktop || !content) return <PickerRow label={label} value={value} onPress={onSheet} />;
@@ -130,15 +137,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     <View accessible accessibilityLabel={`Group, ${group.name}`} className={chipBox}>{groupLabel}</View>
   );
 
-  const header = desktop ? (
-    <View className="min-h-touch flex-row items-center justify-between gap-3">
-      <View className="flex-row items-center gap-3">
-        <BackButton onPress={leave} />
-        <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{title}</Text>
-      </View>
-      {groupChip}
-    </View>
-  ) : (
+  const header = (
     <View className="min-h-touch flex-row items-center justify-between">
       <BackButton onPress={leave} />
       <Text variant="screen-title" accessibilityRole="header">{title}</Text>
@@ -201,16 +200,31 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     </View>
   );
 
-  const actions = <ExpenseActionBar desktop={desktop} label={saveLabel} summary={summary} ready={ready} busy={busy} onSave={save} pinned={!desktop} />;
+  const actions = <ExpenseActionBar desktop={false} label={saveLabel} summary={summary} ready={ready} busy={busy} onSave={save} />;
 
   if (desktop) {
+    const splitting = view === 'split' && splitView !== null;
+    const leaveDialog = () => { setDiscarding(false); goBack(); };
+    const footer = discarding
+      ? <DiscardBar onKeep={() => setDiscarding(false)} onDiscard={leaveDialog} />
+      : splitting
+      ? <ExpenseActionBar desktop label="Done" summary={splitView.summary} ready={splitView.ready} busy={false} onSave={() => setView('form')} flat />
+      : <ExpenseActionBar desktop label={saveLabel} summary={summary} ready={ready} busy={busy} onSave={save} flat />;
     return (
-      <Screen wide>
-        <View className="w-full max-w-[960px] gap-4 self-start">
-          {header}
-          {banners}
-          {amountCard}
-          <FieldLayoutProvider layout="stacked">
+      <DesktopDialog
+        title={splitting ? splitView.title : title}
+        onBack={splitting ? () => setView('form') : undefined}
+        onClose={leave}
+        headerRight={splitting ? null : groupChip}
+        width={960}
+        footer={footer}
+      >
+        {splitting ? (
+          <SplitPanel view={splitView} desktop />
+        ) : (
+          <>
+            {banners}
+            {amountCard}
             <View className="gap-3">
               {description}
               <View className="flex-row gap-3">
@@ -220,13 +234,11 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
               </View>
               {showNotes || form.notes !== '' ? notes : <Button label="Add a note" variant="ghost" size="small" className="self-start" icon={<Icon icon={Plus} size={16} strokeWidth={2.4} tone="accent" />} onPress={() => setShowNotes(true)} />}
             </View>
-          </FieldLayoutProvider>
-          {splitCard}
-          {actions}
-          {sheets}
-          {discardSheet}
-        </View>
-      </Screen>
+            {splitCard}
+          </>
+        )}
+        {sheets}
+      </DesktopDialog>
     );
   }
 
