@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronDown, ChevronUp, Users } from 'lucide-react-native';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
 import { BackButton, Banner, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
@@ -109,12 +109,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
 
   const multiGroup = Boolean(groups && groups.length > 1);
   const chipBox = 'min-h-touch flex-row items-center gap-2';
-  const groupLabel = (
-    <>
-      <Icon icon={Users} size={18} strokeWidth={2} tone="accent" />
-      <Text variant="body-small" className="font-bold">{group.name}</Text>
-    </>
-  );
+  const groupLabel = <Text variant="body-small" className="font-bold">{group.name}</Text>;
   const groupChip = multiGroup ? (
     <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={(groups ?? []).map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
       {(open, isOpen) => (
