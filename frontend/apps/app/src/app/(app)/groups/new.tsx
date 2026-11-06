@@ -47,7 +47,7 @@ export default function CreateGroup() {
       meIndex: 0,
     });
     void services.engine.sync();
-    router.replace({ pathname: '/group/[id]', params: { id: group.id } });
+    router.replace({ pathname: '/groups/[id]', params: { id: group.id } });
   };
 
   return (

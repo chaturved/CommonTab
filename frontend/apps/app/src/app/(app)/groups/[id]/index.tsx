@@ -31,7 +31,7 @@ export default function GroupDetail() {
         <Text variant="screen-title" accessibilityRole="header" numberOfLines={1}>{data?.group.name ?? ''}</Text>
         <SyncStatusChip />
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Group options" disabled={!data} onPress={() => router.push({ pathname: '/group/[id]/members', params: { id } })} className="h-11 w-11 items-center justify-center rounded-pill bg-card active:opacity-80">
+      <Pressable accessibilityRole="button" accessibilityLabel="Group options" disabled={!data} onPress={() => router.push({ pathname: '/groups/[id]/members', params: { id } })} className="h-11 w-11 items-center justify-center rounded-pill bg-card active:opacity-80">
         <Icon icon={Ellipsis} size={22} strokeWidth={2} tone="accent" />
       </Pressable>
     </View>
@@ -99,7 +99,7 @@ export default function GroupDetail() {
       {summary.counterparts.length > 0 ? (
         <>
           <SectionHeader title="Balances" />
-          <BalancesList data={data} onSettle={(memberId) => router.push({ pathname: '/group/[id]/settle', params: { id: group.id, with: memberId } })} />
+          <BalancesList data={data} onSettle={(memberId) => router.push({ pathname: '/groups/[id]/settle', params: { id: group.id, with: memberId } })} />
         </>
       ) : null}
 
@@ -119,7 +119,7 @@ export default function GroupDetail() {
       ) : (
         <Card className="overflow-hidden">
           {rows.map((row, i) => (
-            <Pressable key={row.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/expense/[id]', params: { id: row.id } })} className="active:opacity-80">
+            <Pressable key={row.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: row.id } })} className="active:opacity-80">
               <ExpenseRow row={row} currencyCode={currency} subtitle="group" divider={i < rows.length - 1} />
             </Pressable>
           ))}
@@ -137,7 +137,7 @@ export default function GroupDetail() {
         </Text>
       ) : null}
       <View className="gap-2.5">
-        <Button label="Add expense" onPress={() => router.push({ pathname: '/add-expense', params: { group: group.id } })} />
+        <Button label="Add expense" onPress={() => router.push({ pathname: '/expenses/new', params: { group: group.id } })} />
         {summary.status === 'settled' && !summary.archived ? <Button label="Archive group" variant="secondary" loading={lifecycle.busy} onPress={() => void lifecycle.archive()} /> : null}
       </View>
     </Screen>

@@ -16,7 +16,7 @@ export default function ExpenseScreen() {
   const desktop = useIsDesktop();
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/home'));
 
-  if (desktop && data) return <Redirect href={{ pathname: '/group/[id]', params: { id: data.group.id, expense: id } }} />;
+  if (desktop && data) return <Redirect href={{ pathname: '/groups/[id]', params: { id: data.group.id, expense: id } }} />;
 
   return (
     <Screen wide>
@@ -27,7 +27,7 @@ export default function ExpenseScreen() {
       </View>
       <View className="w-full max-w-[560px] self-center">
         {data && expense && !expense.deletedAt ? (
-          <ExpenseDetailContent expense={expense} data={data} afterDelete={() => router.replace({ pathname: '/group/[id]', params: { id: data.group.id } })} />
+          <ExpenseDetailContent expense={expense} data={data} afterDelete={() => router.replace({ pathname: '/groups/[id]', params: { id: data.group.id } })} />
         ) : ready ? (
           <View className="items-center gap-2 px-6 py-10">
             <Text variant="section" className="text-center">Expense not found</Text>

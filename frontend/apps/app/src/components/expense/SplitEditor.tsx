@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { TextInput, View } from 'react-native';
 import {
   addDifferenceTo, displayName, evenPercents, formatCurrency, splitIssueMessage, splitRestEqually, switchMethod, toggleParticipant,
@@ -20,11 +20,11 @@ interface Props {
   desktop: boolean;
   note: string | null;
   byItem: boolean;
-  onPickItems: () => void;
-  onLeaveItems: () => void;
+  onByItem: (on: boolean) => void;
+  itemized: ReactNode;
 }
 
-export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, byItem, onPickItems, onLeaveItems }: Props) {
+export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds, group, desktop, note, byItem, onByItem, itemized }: Props) {
   const colors = useThemeColors();
   const currency = group.currencyCode;
   const issue = evaluated.split && form.method !== 'equal' ? evaluated.split : null;
@@ -42,11 +42,12 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
         options={METHODS}
         value={byItem ? 'item' : form.method}
         onChange={(key) => {
-          if (key === 'item') return onPickItems();
-          onLeaveItems();
-          setForm((f) => switchMethod(f, key as FormMethod, currency));
+          onByItem(key === 'item');
+          if (key !== 'item') setForm((f) => switchMethod(f, key as FormMethod, currency));
         }}
       />
+      {byItem ? itemized : (
+      <>
       <FieldGroup>
         {people.map((member, i) => {
           const checked = form.participants.includes(member.id);
@@ -64,8 +65,6 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
               detail={form.method === 'percent' ? shareText : undefined}
               trailing={
                 form.method === 'equal' ? (
-                  shareText ? <Text variant="button">{shareText}</Text> : null
-                ) : checked && byItem ? (
                   shareText ? <Text variant="button">{shareText}</Text> : null
                 ) : checked ? (
                   <View className="flex-row items-center gap-1">
@@ -109,7 +108,8 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
         <Text variant="caption" tone="accent" className="px-1 font-semibold">{`Adds up to ${formatCurrency(evaluated.amountMinor, currency)}`}</Text>
       ) : null}
       {note ? <Text variant="body-small" tone="muted" className="px-1 text-[13px]">{note}</Text> : null}
-      {byItem ? <Button label="Edit items" variant="secondary" size="small" className="self-start" onPress={onPickItems} /> : null}
+      </>
+      )}
     </>
   );
 }

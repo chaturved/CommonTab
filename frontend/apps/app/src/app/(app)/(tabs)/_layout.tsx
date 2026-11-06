@@ -26,7 +26,7 @@ export default function TabsLayout() {
               tabs={TABS}
               activeKey={state.routes[state.index]?.name ?? 'home'}
               onSelect={(key) => router.navigate(TABS.find((t) => t.key === key)!.href)}
-              onAdd={() => router.push('/add-expense')}
+              onAdd={() => router.push('/expenses/new')}
             />
           </View>
         </View>

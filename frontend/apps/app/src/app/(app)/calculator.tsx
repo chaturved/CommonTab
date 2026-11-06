@@ -35,7 +35,7 @@ export default function Calculator() {
   const split = bill !== null ? tipSplit({ billMinor: bill, tipPercent: tip || '0', people }) : null;
   const show = (units: number) => formatCurrency(units, CURRENCY);
   const total = tab === 'person' ? split?.totalMinor : itemResult?.total;
-  const saveAsExpense = () => router.push({ pathname: '/add-expense', params: { amount: formatMinorUnits(total ?? 0, CURRENCY) } });
+  const saveAsExpense = () => router.push({ pathname: '/expenses/new', params: { amount: formatMinorUnits(total ?? 0, CURRENCY) } });
   const resultCard = split ? (
               <Card className="gap-1 p-4" accessible accessibilityLabel={`Tip ${show(split.tipMinor)}. Total ${show(split.totalMinor)}. Per person ${show(Math.max(...split.shares))}`}>
                 <Row label={`Tip (${tip || 0}%)`} value={show(split.tipMinor)} />

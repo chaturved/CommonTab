@@ -24,7 +24,7 @@ export default function JoinGroup() {
     try {
       const snapshot = await services.api.joinWithCode(code.trim());
       await services.engine.sync();
-      router.replace({ pathname: '/group/[id]', params: { id: snapshot.id } });
+      router.replace({ pathname: '/groups/[id]', params: { id: snapshot.id } });
     } catch (error) {
       setBusy(false);
       if (error instanceof ApiError && error.isNetwork) setProblem('Joining needs an internet connection. Try again when you are back online.');

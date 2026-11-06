@@ -15,8 +15,8 @@ export function FirstRun({ name }: { name: string }) {
   const router = useRouter();
   const desktop = useIsDesktop();
 
-  const create = <Button label="Create a group" variant="hero" icon={<Icon icon={Plus} size={20} strokeWidth={2.4} tone="hero-to" />} onPress={() => router.push('/create-group')} />;
-  const join = <Button label="Join with a code" variant="hero-outline" onPress={() => router.push('/join')} />;
+  const create = <Button label="Create a group" variant="hero" icon={<Icon icon={Plus} size={20} strokeWidth={2.4} tone="hero-to" />} onPress={() => router.push('/groups/new')} />;
+  const join = <Button label="Join with a code" variant="hero-outline" onPress={() => router.push('/groups/join')} />;
 
   const welcome = (
     <Hero padding={desktop ? 32 : 20} className={desktop ? 'flex-[1.3]' : undefined}>

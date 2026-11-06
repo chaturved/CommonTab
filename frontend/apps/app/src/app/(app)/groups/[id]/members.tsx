@@ -20,14 +20,14 @@ export default function Members() {
   const [sheet, setSheet] = useState<'leave' | 'delete' | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const members = (data?.group.members ?? []).filter((m) => !m.removedAt);
-  if (desktop) return <Redirect href={{ pathname: '/group/[id]', params: { id, tab: 'Members' } }} />;
+  if (desktop) return <Redirect href={{ pathname: '/groups/[id]', params: { id, tab: 'Members' } }} />;
 
   return (
     <Screen wide>
       <View className="min-h-touch flex-row items-center justify-between">
         <BackButton onPress={() => router.back()} />
         <Text variant="screen-title" accessibilityRole="header">Members</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Invite people" onPress={() => router.push({ pathname: '/group/[id]/invite', params: { id } })} className="h-11 w-11 items-center justify-center rounded-pill bg-card active:opacity-80">
+        <Pressable accessibilityRole="button" accessibilityLabel="Invite people" onPress={() => router.push({ pathname: '/groups/[id]/invite', params: { id } })} className="h-11 w-11 items-center justify-center rounded-pill bg-card active:opacity-80">
           <Icon icon={UserPlus} size={20} strokeWidth={2} tone="accent" />
         </Pressable>
       </View>

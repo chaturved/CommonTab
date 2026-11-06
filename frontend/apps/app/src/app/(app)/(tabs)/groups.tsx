@@ -29,7 +29,7 @@ export default function Groups() {
   const byId = (list: typeof ordered) => list.map((s) => groups.find((g) => g.group.id === s.id)!);
   const shown = byId({ active, settled, archived, closed }[tab]);
 
-  const open = (id: string) => router.push({ pathname: '/group/[id]', params: { id } });
+  const open = (id: string) => router.push({ pathname: '/groups/[id]', params: { id } });
 
   if (desktop) {
     const settledGroups = byId(settled);
@@ -43,8 +43,8 @@ export default function Groups() {
           subtitle={`${active.length} active, ${settled.length} settled${archived.length ? `, ${archived.length} archived` : ''}`}
           actions={
             <>
-              <Button label="Join with a code" variant="secondary" size="small" onPress={() => router.push('/join')} />
-              <Button label="Create group" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/create-group')} />
+              <Button label="Join with a code" variant="secondary" size="small" onPress={() => router.push('/groups/join')} />
+              <Button label="Create group" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="on-primary" />} onPress={() => router.push('/groups/new')} />
             </>
           }
         />
@@ -89,7 +89,7 @@ export default function Groups() {
     <Screen wide tabs>
       <View className="min-h-touch flex-row items-center justify-between px-1">
         <Text variant="large-title" accessibilityRole="header">Groups</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Create group" onPress={() => router.push('/create-group')} className="h-11 w-11 items-center justify-center rounded-pill bg-primary active:opacity-80">
+        <Pressable accessibilityRole="button" accessibilityLabel="Create group" onPress={() => router.push('/groups/new')} className="h-11 w-11 items-center justify-center rounded-pill bg-primary active:opacity-80">
           <Icon icon={Plus} size={22} strokeWidth={2.4} tone="on-primary" />
         </Pressable>
       </View>
@@ -105,7 +105,7 @@ export default function Groups() {
           <Text tone="muted" className="text-center">
             {tab === 'active' ? 'Create a group to start splitting costs.' : tab === 'settled' ? 'Groups where everyone is even show up here.' : 'Groups show up here after you archive them or leave.'}
           </Text>
-          {tab === 'active' ? <Button label="Create a group" onPress={() => router.push('/create-group')} /> : null}
+          {tab === 'active' ? <Button label="Create a group" onPress={() => router.push('/groups/new')} /> : null}
         </View>
       ) : null}
       {shown.length > 0 ? <Eyebrow>{{ active: 'NEEDS SETTLING', settled: 'SETTLED', archived: 'ARCHIVED', closed: 'NO LONGER IN' }[tab]}</Eyebrow> : null}
@@ -114,7 +114,7 @@ export default function Groups() {
           <GroupCard key={g.group.id} data={g} detail offline={offline} onPress={() => open(g.group.id)} />
         ))}
       </View>
-      <Button label="Have an invite code? Join a group" variant="ghost" onPress={() => router.push('/join')} />
+      <Button label="Have an invite code? Join a group" variant="ghost" onPress={() => router.push('/groups/join')} />
     </Screen>
   );
 }

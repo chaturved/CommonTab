@@ -43,8 +43,8 @@ export default function Activity() {
 
   const open = (row: ActivityRow) => {
     const expense = row.subjectID ? groups.flatMap((g) => g.expenses).find((e) => e.id === row.subjectID && !e.deletedAt) : undefined;
-    if (row.filter === 'expenses' && expense) router.push({ pathname: '/expense/[id]', params: { id: expense.id } });
-    else router.push({ pathname: '/group/[id]', params: { id: row.groupID } });
+    if (row.filter === 'expenses' && expense) router.push({ pathname: '/expenses/[id]', params: { id: expense.id } });
+    else router.push({ pathname: '/groups/[id]', params: { id: row.groupID } });
   };
 
   const chips = (

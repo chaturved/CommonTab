@@ -74,7 +74,7 @@ export default function Settle() {
     try {
       await services.actions.addSettlement(group.id, { fromID: direction.fromID, toID: direction.toID, amountMinor: check.amountMinor });
       void services.engine.sync();
-      router.replace({ pathname: '/group/[id]', params: { id: group.id } });
+      router.replace({ pathname: '/groups/[id]', params: { id: group.id } });
     } catch (error) {
       setProblem(error instanceof Error ? error.message : 'Could not record this payment.');
       setBusy(false);
