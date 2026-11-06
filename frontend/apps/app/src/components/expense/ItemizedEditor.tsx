@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { decimalOnly } from '@/lib/amountInput';
 import { Plus, X } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
 import { evaluateItemized, formatCurrency, type ItemizedResult, type ItemRow } from '@commontab/core';
@@ -8,12 +9,6 @@ export interface Person {
   id: string;
   name: string;
 }
-
-const decimalOnly = (text: string) => {
-  const cleaned = text.replace(/[^\d.]/g, '');
-  const [whole = '', ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${whole}.${rest.join('')}` : whole;
-};
 
 export function ItemizedEditor({ people, currencyCode, onResult }: { people: Person[]; currencyCode: string; onResult: (result: ItemizedResult | null) => void }) {
   const colors = useThemeColors();

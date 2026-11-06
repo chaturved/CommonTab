@@ -17,12 +17,13 @@ The API address comes from `EXPO_PUBLIC_API_URL` (default `http://localhost:8000
 src/
   app/          routes only (Expo Router); screens stay thin
   components/   ui, layout, sync, auth, group, expense, account, landing
-  hooks/        useViewport, useLiveQuery, useGroups, useGroupActions, useSubmit, ...
+  hooks/        one hook per file: useViewport, useLiveQuery, useExpenseForm, useGroupActions, ...
   context/      AppContext (session and services provider)
   services/     createServices and the per-platform storage and token drivers
   lib/          pure helpers (labels, errors, export)
   constants/    config, layout breakpoints, currencies
   types/        shared types
+test/           unit tests for lib/ (npm test)
 ```
 
 Import with the `@/` alias (it maps to `src/`). Anything inside `src/app` becomes a route, so nothing else goes there.
