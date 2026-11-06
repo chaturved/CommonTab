@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { BackButton, Banner, Button, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, Button, FieldGroup, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { FieldDropdown, OptionList, SelectField } from '@/components/ui/SelectField';
+import { OptionList } from '@/components/ui/OptionList';
 import { DateChooser } from '@/components/expense/DateChooser';
 import { ForeignRate } from '@/components/expense/ForeignRate';
 import { ExpenseSheets, type ExpenseSheet } from '@/components/expense/ExpenseSheets';
@@ -66,7 +66,6 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     </CurrencySelect>
   );
   const dateLabel = evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`);
-  const groupCurrencyNote = foreign ? <Text variant="caption" tone="muted">Group currency: {currency} {currencySymbol(currency)}</Text> : null;
   const banners = (
     <>
       {mode === 'edit' && offline ? (
@@ -77,63 +76,25 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   );
   const split = <SplitEditor form={form} setForm={setForm} patch={patch} evaluated={evaluated} people={people} memberIds={memberIds} group={group} desktop={desktop} note={note} onPickItems={() => setSheet('item')} />;
   const sheets = <ExpenseSheets sheet={sheet} onClose={() => setSheet(null)} form={form} setForm={setForm} patch={patch} evaluated={evaluated} people={people} group={group} groups={groups} onPickGroup={onPickGroup} />;
-  const fieldBox = 'min-h-[44px] flex-row items-center justify-between rounded-input border bg-card px-3.5';
-
-  if (desktop) {
+  const picker = (label: string, value: string, onSheet: (() => void) | undefined, content?: (close: () => void) => ReactNode) => {
+    if (!desktop || !content) return <PickerRow label={label} value={value} onPress={onSheet} />;
     return (
-      <FieldLayoutProvider layout="stacked">
-      <View className="w-full max-w-[720px] gap-4 self-start">
-        <View className="min-h-touch flex-row items-center justify-between gap-3">
-          <View className="flex-row items-center gap-3">
-            <BackButton onPress={() => router.back()} />
-            <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{mode === 'add' ? 'Add expense' : 'Edit expense'}</Text>
-          </View>
-          {groups && groups.length > 1 ? (
-            <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
-              {(open) => <Button label={`${group.name} ▾`} variant="ghost" size="small" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} />}
-            </Dropdown>
-          ) : <Text variant="body-small" tone="muted">{group.name}</Text>}
-        </View>
-        {banners}
-        <View className="flex-row gap-3">
-          <View className="flex-[1.4]">
-            <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
-          </View>
-          <View className="flex-1 gap-1.5">
-            <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
-            <View className={fieldBox} style={{ borderColor: colors['field-border'] }}>
-              {currencyChip}
-              <TextInput accessibilityLabel="Amount" value={form.amountText} onChangeText={(text) => patch({ amountText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} autoFocus={mode === 'add'} className="min-h-[44px] min-w-0 flex-1 pl-2 text-body font-semibold text-fg" style={{ outlineStyle: 'none' } as never} />
-            </View>
-            {groupCurrencyNote}
-          </View>
-        </View>
-        {rateBlock}
-        <View className="flex-row gap-3">
-          <View className="flex-1"><SelectField label="Paid by" value={nameOf(form.payerID)} options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => patch({ payerID })} /></View>
-          <View className="flex-1">
-            <FieldDropdown label="Date" value={dateLabel} width={280} content={(close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>} />
-          </View>
-          <View className="flex-1"><SelectField label="Category" value={CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other'} options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => patch({ category })} /></View>
-        </View>
-        <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} />
-        {split}
-        <View className="flex-row justify-end gap-2.5 pt-2">
-          <Button label="Cancel" variant="secondary" size="small" onPress={() => router.back()} />
-          <Button label={mode === 'add' ? 'Save expense' : 'Save changes'} size="small" loading={busy} disabled={!evaluated.draft} onPress={save} />
-        </View>
-        {sheets}
-      </View>
-      </FieldLayoutProvider>
+      <Dropdown label={label} width={320} align="end" content={content}>
+        {(open, isOpen) => <PickerRow label={label} value={value} onPress={open} dropdown expanded={isOpen} />}
+      </Dropdown>
     );
-  }
+  };
+  const choose = (close: () => void, changes: Partial<ExpenseForm>) => {
+    patch(changes);
+    close();
+  };
 
   return (
-    <View className="w-full gap-4">
+    <View className="w-full max-w-[560px] gap-4 self-start">
       <View className="min-h-touch flex-row items-center justify-between">
-        <Button label="Cancel" variant="ghost" size="small" onPress={() => router.back()} />
+        <BackButton onPress={() => router.back()} />
         <Text variant="screen-title" accessibilityRole="header">{mode === 'add' ? 'Add expense' : 'Edit expense'}</Text>
-        <View className="w-[72px]" />
+        <View className="w-11" />
       </View>
 
       {banners}
@@ -167,9 +128,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
 
       <FieldGroup>
         <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
-        <PickerRow label="Group" value={group.name} onPress={groups && groups.length > 1 ? () => setSheet('group') : undefined} />
-        <PickerRow label="Paid by" value={nameOf(form.payerID)} onPress={() => setSheet('payer')} />
-        <PickerRow label="Date" value={dateLabel} onPress={() => setSheet('date')} />
+        {picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined)}
+        {picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />)}
+        {picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>)}
         <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />
       </FieldGroup>
 

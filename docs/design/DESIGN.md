@@ -48,7 +48,7 @@ Phone screens are the base; `HomeDesktop.dc.html` (1280 wide) is the first deskt
 3. A card never spans the whole window.
 4. An empty sidebar section says what is missing and offers one action ("No groups yet." and "+ Create a group").
 5. Each card has one main action; the second is an outline or text button.
-6. Add and edit expense are full pages (form column at most 720px, back button, Cancel and Save at the bottom), not dialogs. Selection fields (Paid by, Date, Category, Group) are dropdowns with a down arrow, up while open. The currency control is a pill with the code and symbol (EUR €) at the left of the amount.
+6. Add and edit expense are full pages with the same layout as the phone screens (back button, amount card with the currency pill, grouped rows, category chips, split, Save), in a column of at most 560px, not dialogs. On desktop the picker rows (Group, Paid by, Date) are dropdowns with a down arrow, up while open; on phone they open sheets. The currency control is a pill with the code and symbol (EUR €) at the left of the amount.
 
 ## Frontend UI stack (decided)
 - Expo (React Native) with Expo Router; one app for iOS, Android and web.

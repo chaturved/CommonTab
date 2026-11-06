@@ -8,7 +8,7 @@ import { Avatar, Banner, Button, FieldGroup, Hero, Icon, ListRow, Sheet, Text, u
 import { useApp } from '@/context/AppContext';
 import { FormPage } from '@/components/layout/FormPage';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { OptionList } from '@/components/ui/SelectField';
+import { OptionList } from '@/components/ui/OptionList';
 import { SwitchRow } from '@/components/ui/SwitchRow';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useGroup } from '@/hooks/useGroups';
