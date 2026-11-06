@@ -37,7 +37,7 @@ export function SplitEditor({ form, setForm, patch, evaluated, people, memberIds
 
   return (
     <>
-      {desktop ? null : <Text variant="section" accessibilityRole="header" className="px-1 pt-1">Split</Text>}
+      <Text variant="section" accessibilityRole="header" className="px-1 pt-1">Split</Text>
       <SegmentedControl
         options={METHODS}
         value={form.method}

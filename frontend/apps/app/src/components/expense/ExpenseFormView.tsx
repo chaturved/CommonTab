@@ -89,52 +89,59 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     close();
   };
 
-  return (
-    <View className="w-full max-w-[560px] gap-4 self-start">
-      <View className="min-h-touch flex-row items-center justify-between">
-        <BackButton onPress={() => router.back()} />
-        <Text variant="screen-title" accessibilityRole="header">{mode === 'add' ? 'Add expense' : 'Edit expense'}</Text>
-        <View className="w-11" />
+  const title = mode === 'add' ? 'Add expense' : 'Edit expense';
+  const header = desktop ? (
+    <View className="min-h-touch flex-row items-center gap-3">
+      <BackButton onPress={() => router.back()} />
+      <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{title}</Text>
+    </View>
+  ) : (
+    <View className="min-h-touch flex-row items-center justify-between">
+      <BackButton onPress={() => router.back()} />
+      <Text variant="screen-title" accessibilityRole="header">{title}</Text>
+      <View className="w-11" />
+    </View>
+  );
+
+  const amountCard = (
+    <View className="gap-1 rounded-card bg-card px-4 py-3">
+      <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
+      <View className="flex-row items-center gap-2">
+        {currencyChip}
+        <TextInput
+          accessibilityLabel="Amount"
+          value={form.amountText}
+          onChangeText={(text) => patch({ amountText: decimalOnly(text) })}
+          keyboardType="decimal-pad"
+          placeholder="0.00"
+          placeholderTextColor={colors.muted}
+          autoFocus={mode === 'add'}
+          className="min-h-[48px] min-w-0 flex-1 text-[34px] font-extrabold text-fg"
+          style={{ outlineStyle: 'none' } as never}
+        />
       </View>
-
-      {banners}
-
-      <View className="gap-1 rounded-card bg-card px-4 py-3">
-        <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
-        <View className="flex-row items-center gap-2">
-          {currencyChip}
-          <TextInput
-            accessibilityLabel="Amount"
-            value={form.amountText}
-            onChangeText={(text) => patch({ amountText: decimalOnly(text) })}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            placeholderTextColor={colors.muted}
-            autoFocus={mode === 'add'}
-            className="min-h-[48px] min-w-0 flex-1 text-[34px] font-extrabold text-fg"
-            style={{ outlineStyle: 'none' } as never}
-          />
+      {foreign ? (
+        <View className="mt-1 flex-row items-center justify-between border-t border-divider pt-3">
+          <Text variant="body-small" tone="fg-soft">Group currency</Text>
+          <Text variant="body-small" className="font-bold">{currency} {currencySymbol(currency)}</Text>
         </View>
-        {foreign ? (
-          <View className="mt-1 flex-row items-center justify-between border-t border-divider pt-3">
-            <Text variant="body-small" tone="fg-soft">Group currency</Text>
-            <Text variant="body-small" className="font-bold">{currency} {currencySymbol(currency)}</Text>
-          </View>
-        ) : null}
-        {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
-      </View>
+      ) : null}
+      {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
+    </View>
+  );
 
-      {rateBlock}
+  const details = (
+    <FieldGroup>
+      <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
+      {picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined)}
+      {picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />)}
+      {picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>)}
+      <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />
+    </FieldGroup>
+  );
 
-      <FieldGroup>
-        <FieldRow label="Description" value={form.merchant} onChangeText={(merchant) => patch({ merchant })} placeholder="Dinner at Uchi" maxLength={120} autoCapitalize="sentences" />
-        {picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined)}
-        {picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />)}
-        {picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>)}
-        <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />
-      </FieldGroup>
-
-      <View className="w-full overflow-hidden">
+  const categories = (
+    <View className="w-full overflow-hidden">
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-0.5 py-1" accessibilityLabel="Category">
         {CATEGORIES.map((c) => {
           const selected = form.category === c.id;
@@ -145,12 +152,43 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           );
         })}
       </ScrollView>
+    </View>
+  );
+
+  const saveButton = <Button label={mode === 'add' ? 'Save expense' : 'Save changes'} loading={busy} disabled={!evaluated.draft} onPress={save} />;
+
+  if (desktop) {
+    return (
+      <View className="w-full max-w-[960px] gap-4 self-start">
+        {header}
+        {banners}
+        <View className="flex-row items-start gap-6">
+          <View className="min-w-0 flex-1 gap-4">
+            {amountCard}
+            {rateBlock}
+            {details}
+            {categories}
+          </View>
+          <View className="min-w-0 flex-1 gap-4">
+            {split}
+            {saveButton}
+          </View>
+        </View>
+        {sheets}
       </View>
+    );
+  }
 
+  return (
+    <View className="w-full gap-4">
+      {header}
+      {banners}
+      {amountCard}
+      {rateBlock}
+      {details}
+      {categories}
       {split}
-
-      <Button label={mode === 'add' ? 'Save expense' : 'Save changes'} loading={busy} disabled={!evaluated.draft} onPress={save} />
-
+      {saveButton}
       {sheets}
     </View>
   );
