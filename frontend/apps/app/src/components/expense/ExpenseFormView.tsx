@@ -140,17 +140,20 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     </FieldGroup>
   );
 
-  const categories = (
+  const categoryChips = CATEGORIES.map((c) => {
+    const selected = form.category === c.id;
+    return (
+      <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`Category ${c.label}`} accessibilityState={{ selected }} onPress={() => patch({ category: c.id })} className={`min-h-touch justify-center rounded-pill px-4 ${selected ? 'bg-primary' : 'bg-card'}`}>
+        <Text variant="body-small" tone={selected ? 'on-primary' : 'fg-soft'} className="font-semibold">{c.label}</Text>
+      </Pressable>
+    );
+  });
+  const categories = desktop ? (
+    <View accessibilityLabel="Category" className="flex-row flex-wrap gap-2">{categoryChips}</View>
+  ) : (
     <View className="w-full overflow-hidden">
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-0.5 py-1" accessibilityLabel="Category">
-        {CATEGORIES.map((c) => {
-          const selected = form.category === c.id;
-          return (
-            <Pressable key={c.id} accessibilityRole="button" accessibilityLabel={`Category ${c.label}`} accessibilityState={{ selected }} onPress={() => patch({ category: c.id })} className={`min-h-touch justify-center rounded-pill px-4 ${selected ? 'bg-primary' : 'bg-card'}`}>
-              <Text variant="body-small" tone={selected ? 'on-primary' : 'fg-soft'} className="font-semibold">{c.label}</Text>
-            </Pressable>
-          );
-        })}
+        {categoryChips}
       </ScrollView>
     </View>
   );
