@@ -67,11 +67,11 @@ export default function Home() {
             <View className={desktop ? 'min-w-0 flex-1 gap-3' : 'gap-4'}>
               <SectionHeader
                 title="Groups"
-                action={<Button label="Create group" variant="ghost" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="accent" />} onPress={() => router.push('/create-group')} />}
+                action={<Button label="Create group" variant="ghost" size="small" icon={<Icon icon={Plus} size={18} strokeWidth={2.4} tone="accent" />} onPress={() => router.push('/groups/new')} />}
               />
               <View className="gap-2.5">
                 {sortForList(live.map((g) => g.summary)).map((s) => groups.find((g) => g.group.id === s.id)!).map((g) => (
-                  <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.group.id } })} />
+                  <GroupCard key={g.group.id} data={g} offline={offline} onPress={() => router.push({ pathname: '/groups/[id]', params: { id: g.group.id } })} />
                 ))}
               </View>
             </View>
@@ -89,7 +89,7 @@ export default function Home() {
                     <Text variant="body" className="font-semibold">No expenses yet</Text>
                     <Text variant="body-small" tone="muted">Add one and it shows up here.</Text>
                   </View>
-                  <Button label="Add expense" variant="secondary" size="small" onPress={() => router.push('/add-expense')} />
+                  <Button label="Add expense" variant="secondary" size="small" onPress={() => router.push('/expenses/new')} />
                 </Card>
               )}
             </View>

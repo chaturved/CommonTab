@@ -45,7 +45,7 @@ export function LeaveGroupSheet({ visible, onClose, data }: Props) {
             </View>
           ))}
         </View>
-        <Button label="Go to settle up" onPress={() => { close(); router.push({ pathname: '/group/[id]/settle', params: { id: group.id } }); }} />
+        <Button label="Go to settle up" onPress={() => { close(); router.push({ pathname: '/groups/[id]/settle', params: { id: group.id } }); }} />
         <Button label="Cancel" variant="ghost" onPress={close} />
       </Sheet>
     );

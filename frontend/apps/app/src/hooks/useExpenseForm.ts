@@ -21,6 +21,8 @@ export function useExpenseForm({ mode, data, expense, initial }: Options) {
   const { group } = data;
   const currency = group.currencyCode;
   const [form, setForm] = useState<ExpenseForm>(() => (expense ? formFromExpense(expense, currency) : { ...newExpenseForm(group, Date.now()), ...initial }));
+  const [baseline] = useState(() => form);
+  const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(baseline), [form, baseline]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -51,12 +53,12 @@ export function useExpenseForm({ mode, data, expense, initial }: Options) {
       const saved = await services.actions.saveExpense(group.id, { ...evaluated.draft, id: expense?.id });
       void services.engine.sync();
       if (mode === 'edit') router.back();
-      else router.replace({ pathname: '/group/[id]', params: { id: saved.groupID } });
+      else router.replace({ pathname: '/groups/[id]', params: { id: saved.groupID } });
     } catch (error) {
       setProblem(error instanceof Error ? error.message : 'Could not save this expense.');
       setBusy(false);
     }
   };
 
-  return { form, setForm, patch, evaluated, entry, foreign, keptRate, quote, quoting, pickCurrency, note, busy, problem, save };
+  return { form, setForm, patch, evaluated, entry, foreign, keptRate, quote, quoting, pickCurrency, note, busy, problem, dirty, save };
 }
