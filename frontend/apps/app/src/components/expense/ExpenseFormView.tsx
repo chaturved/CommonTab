@@ -46,7 +46,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const offline = status !== null && status.connectivity === 'offline';
   const memberIds = useMemo(() => group.members.map((m) => m.id), [group.members]);
   const people = useMemo(() => group.members.filter((m) => !m.removedAt || form.participants.includes(m.id) || m.id === form.payerID), [group.members, form.participants, form.payerID]);
-  const draft = useMemo<ExpenseDraft>(() => ({ mode, form, setForm, patch, evaluated, group, people, memberIds, note }), [mode, form, setForm, patch, evaluated, group, people, memberIds, note]);
+  const draft = useMemo<ExpenseDraft>(() => ({ mode, form, setForm, patch, evaluated, group, people, memberIds, note, dirty }), [mode, form, setForm, patch, evaluated, group, people, memberIds, note, dirty]);
   useEffect(() => publishExpenseDraft(draft), [draft]);
   useEffect(() => clearExpenseDraft, []);
   const nameOf = (id: string) => {

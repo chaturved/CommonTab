@@ -12,6 +12,7 @@ export interface ExpenseDraft {
   people: Member[];
   memberIds: string[];
   note: string | null;
+  dirty: boolean;
 }
 
 interface State {
