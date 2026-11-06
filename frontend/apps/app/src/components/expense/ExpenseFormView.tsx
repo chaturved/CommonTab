@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { CATEGORIES, displayName, formatCurrency, longDate, type ExpenseForm, type LocalExpense } from '@commontab/core';
-import { Banner, Button, FieldGroup, FieldRow, Text, useThemeColors } from '@commontab/ui';
+import { BackButton, Banner, Button, FieldGroup, FieldLayoutProvider, FieldRow, Icon, Text, useThemeColors } from '@commontab/ui';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { FieldDropdown, OptionList, SelectField } from '@/components/ui/SelectField';
 import { DateChooser } from '@/components/expense/DateChooser';
-import { DesktopDialog } from '@/components/ui/DesktopDialog';
 import { ForeignRate } from '@/components/expense/ForeignRate';
 import { ExpenseSheets, type ExpenseSheet } from '@/components/expense/ExpenseSheets';
 import { SplitEditor } from '@/components/expense/SplitEditor';
@@ -57,14 +57,16 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   ) : null;
   const currencyChip = (
     <CurrencySelect value={entry} onChange={pickCurrency}>
-      {(open) => (
-        <Pressable accessibilityRole="button" accessibilityLabel={`Currency, ${entry}. Change`} onPress={open} className="min-h-touch justify-center rounded-pill bg-tint px-3 active:opacity-80">
-          <Text variant="body-small" tone="accent" className="font-bold">{entry} ▾</Text>
+      {(open, isOpen) => (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Currency, ${entry}. Change`} onPress={open} className="min-h-touch flex-row items-center gap-1.5 rounded-pill border-[1.5px] border-accent bg-tint px-3.5 active:opacity-80">
+          <Text variant="body-small" tone="accent" className="font-bold">{entry} {currencySymbol(entry)}</Text>
+          <Icon icon={isOpen ? ChevronUp : ChevronDown} size={14} strokeWidth={2.4} tone="accent" />
         </Pressable>
       )}
     </CurrencySelect>
   );
   const dateLabel = evaluated.errors.date ? form.date : longDate(`${form.date}T12:00:00Z`);
+  const groupCurrencyNote = foreign ? <Text variant="caption" tone="muted">Group currency: {currency} {currencySymbol(currency)}</Text> : null;
   const banners = (
     <>
       {mode === 'edit' && offline ? (
@@ -79,16 +81,19 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
 
   if (desktop) {
     return (
-      <DesktopDialog
-        title={mode === 'add' ? 'Add expense' : 'Edit expense'}
-        onClose={() => router.back()}
-        headerRight={groups && groups.length > 1 ? (
-          <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
-            {(open) => <Button label={`${group.name} ▾`} variant="ghost" size="small" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} />}
-          </Dropdown>
-        ) : <Text variant="body-small" tone="muted">{group.name}</Text>}
-        primary={{ label: mode === 'add' ? 'Save expense' : 'Save changes', onPress: save, disabled: !evaluated.draft, loading: busy }}
-      >
+      <FieldLayoutProvider layout="stacked">
+      <View className="w-full max-w-[720px] gap-4 self-start">
+        <View className="min-h-touch flex-row items-center justify-between gap-3">
+          <View className="flex-row items-center gap-3">
+            <BackButton onPress={() => router.back()} />
+            <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{mode === 'add' ? 'Add expense' : 'Edit expense'}</Text>
+          </View>
+          {groups && groups.length > 1 ? (
+            <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
+              {(open) => <Button label={`${group.name} ▾`} variant="ghost" size="small" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} />}
+            </Dropdown>
+          ) : <Text variant="body-small" tone="muted">{group.name}</Text>}
+        </View>
         {banners}
         <View className="flex-row gap-3">
           <View className="flex-[1.4]">
@@ -97,10 +102,10 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           <View className="flex-1 gap-1.5">
             <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
             <View className={fieldBox} style={{ borderColor: colors['field-border'] }}>
-              <Text variant="body" tone="muted">{currencySymbol(entry)}</Text>
-              <TextInput accessibilityLabel="Amount" value={form.amountText} onChangeText={(text) => patch({ amountText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} autoFocus={mode === 'add'} className="min-h-[44px] min-w-0 flex-1 pl-2 text-body font-semibold text-fg" style={{ outlineStyle: 'none' } as never} />
               {currencyChip}
+              <TextInput accessibilityLabel="Amount" value={form.amountText} onChangeText={(text) => patch({ amountText: decimalOnly(text) })} keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor={colors.muted} autoFocus={mode === 'add'} className="min-h-[44px] min-w-0 flex-1 pl-2 text-body font-semibold text-fg" style={{ outlineStyle: 'none' } as never} />
             </View>
+            {groupCurrencyNote}
           </View>
         </View>
         {rateBlock}
@@ -113,8 +118,13 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
         </View>
         <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} />
         {split}
+        <View className="flex-row justify-end gap-2.5 pt-2">
+          <Button label="Cancel" variant="secondary" size="small" onPress={() => router.back()} />
+          <Button label={mode === 'add' ? 'Save expense' : 'Save changes'} size="small" loading={busy} disabled={!evaluated.draft} onPress={save} />
+        </View>
         {sheets}
-      </DesktopDialog>
+      </View>
+      </FieldLayoutProvider>
     );
   }
 
@@ -131,7 +141,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
       <View className="gap-1 rounded-card bg-card px-4 py-3">
         <Text variant="caption" tone="muted" className="text-[13px] font-bold">Amount</Text>
         <View className="flex-row items-center gap-2">
-          <Text variant="large-title" tone="muted" className="text-[34px]">{currencySymbol(entry)}</Text>
+          {currencyChip}
           <TextInput
             accessibilityLabel="Amount"
             value={form.amountText}
@@ -143,8 +153,13 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
             className="min-h-[48px] min-w-0 flex-1 text-[34px] font-extrabold text-fg"
             style={{ outlineStyle: 'none' } as never}
           />
-          {currencyChip}
         </View>
+        {foreign ? (
+          <View className="mt-1 flex-row items-center justify-between border-t border-divider pt-3">
+            <Text variant="body-small" tone="fg-soft">Group currency</Text>
+            <Text variant="body-small" className="font-bold">{currency} {currencySymbol(currency)}</Text>
+          </View>
+        ) : null}
         {evaluated.errors.amount && form.amountText !== '' ? <Text variant="caption" tone="owe">{evaluated.errors.amount}</Text> : null}
       </View>
 

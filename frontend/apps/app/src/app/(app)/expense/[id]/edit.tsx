@@ -4,16 +4,12 @@ import { Text } from '@commontab/ui';
 import { ExpenseFormView } from '@/components/expense/ExpenseFormView';
 import { Screen } from '@/components/layout/Screen';
 import { useGroups } from '@/hooks/useGroups';
-import { useIsDesktop } from '@/hooks/useViewport';
 
 export default function EditExpense() {
-  const desktop = useIsDesktop();
   const id = useRouteParam('id');
   const { ready, groups } = useGroups();
   const data = groups.find((g) => g.expenses.some((e) => e.id === id));
   const expense = data?.expenses.find((e) => e.id === id);
-
-  if (desktop && data && expense && !expense.deletedAt) return <ExpenseFormView key={expense.id} mode="edit" data={data} expense={expense} />;
 
   return (
     <Screen wide>
