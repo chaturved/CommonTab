@@ -108,7 +108,7 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
     : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? (form.merchant.trim() === '' ? 'Add a description to continue.' : 'Check the split to continue.'));
 
   const multiGroup = Boolean(groups && groups.length > 1);
-  const chipBox = 'min-h-touch flex-row items-center gap-2 rounded-pill border-[1.5px] border-divider bg-card px-4';
+  const chipBox = 'min-h-touch flex-row items-center gap-2';
   const groupLabel = (
     <>
       <Icon icon={Users} size={18} strokeWidth={2} tone="accent" />
