@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { looksLikeEmail } from '@commontab/core';
 import { Banner, Button, FieldGroup, FieldRow, Text } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
+import { AuthDivider, AuthLegal } from '@/components/auth/AuthExtras';
 import { FailureBanner } from '@/components/auth/FailureBanner';
 import { useSubmit } from '@/hooks/useSubmit';
 import { AuthHeader } from '@/components/auth/AuthHeader';
@@ -22,14 +23,23 @@ export default function SignIn() {
   const ready = looksLikeEmail(email) && password.length > 0;
 
   const submit = () => run(() => signIn(email.trim(), password));
-  const button = <Button label={failure?.kind === 'offline' ? 'Try again' : 'Sign in'} loading={busy} disabled={!ready} onPress={submit} />;
-  const createLink = <Button label="New here? Create an account" variant="ghost" size="small" onPress={() => router.replace('/create-account')} />;
-  const invite = <Button label="Have an invite code? Join a group" variant="ghost" size="small" onPress={() => router.push('/join-code')} />;
-  const forgot = <Button label="Forgot password?" variant="ghost" size="small" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })} />;
 
   return (
     <AuthScreen
-      footer={desktop ? <View className="gap-3.5">{button}<View className="items-center">{createLink}</View><View className="items-center border-t border-field-border pt-4">{invite}</View></View> : button}
+      footer={<Button label={failure?.kind === 'offline' ? 'Try again' : 'Sign in'} variant="mint" loading={busy} disabled={!ready} onPress={submit} />}
+      below={
+        <View className="gap-3">
+          {desktop ? null : (
+            <Text variant="body-small" tone="muted" className="px-3 text-center text-[13px] leading-[18px]">
+              Signing in needs an internet connection the first time. After that the app works offline.
+            </Text>
+          )}
+          <Button label="New here? Create an account" variant="ghost" size="small" onPress={() => router.replace('/create-account')} />
+          <AuthDivider />
+          <Button label="Have an invite code? Join a group" variant="deep" onPress={() => router.push('/join-code')} />
+          <AuthLegal center={!desktop} />
+        </View>
+      }
     >
       <AuthHeader
         title="Pick up where you left off."
@@ -41,20 +51,9 @@ export default function SignIn() {
         <FieldRow label="Email" value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" autoCorrect={false} />
         <FieldRow label="Password" value={password} onChangeText={setPassword} placeholder="Required" secureTextEntry autoComplete="current-password" textContentType="password" last onSubmitEditing={() => ready && submit()} />
       </FieldGroup>
-      {desktop ? (
-        <View className="items-end">{forgot}</View>
-      ) : (
-        <>
-          <View className="items-center">
-            {forgot}
-            {createLink}
-            {invite}
-          </View>
-          <Text variant="body-small" tone="muted" className="px-7 text-center text-[13px] leading-[18px]">
-            Signing in needs an internet connection the first time. After that the app works offline.
-          </Text>
-        </>
-      )}
+      <View className="items-end">
+        <Button label="Forgot password?" variant="ghost" size="small" onPress={() => router.push({ pathname: '/forgot-password', params: { email: email.trim() } })} />
+      </View>
     </AuthScreen>
   );
 }

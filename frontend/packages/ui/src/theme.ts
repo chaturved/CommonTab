@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
 import { Appearance, useColorScheme } from 'react-native';
 import { colors, ColorName, ColorScheme } from './tokens';
 
@@ -33,9 +33,12 @@ export function useAppearance(): AppearanceMode {
   );
 }
 
+export const ThemeScopeContext = createContext<ColorScheme | null>(null);
+
 export function useThemeColors(): Record<ColorName, string> & { scheme: ColorScheme } {
   const chosen = useAppearance();
+  const forced = useContext(ThemeScopeContext);
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const scheme: ColorScheme = chosen === 'system' ? system : chosen;
+  const scheme: ColorScheme = forced ?? (chosen === 'system' ? system : chosen);
   return { ...colors[scheme], scheme };
 }

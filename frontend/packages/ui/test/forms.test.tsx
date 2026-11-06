@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { BackButton, CheckRow, FieldGroup, FieldLayoutProvider, FieldRow, PasswordMeter, SegmentedControl } from '../src';
+import { Text as RNText } from 'react-native';
+import { BackButton, Button, CheckRow, FieldGroup, FieldLayoutProvider, FieldRow, PasswordMeter, SegmentedControl, ThemeScope, useThemeColors } from '../src';
 
 describe('FieldRow', () => {
   test('the input is found by its label and reports typing', async () => {
@@ -89,5 +90,41 @@ describe('CheckRow', () => {
     expect(box.props.accessibilityState).toMatchObject({ checked: false });
     await fireEvent.press(box);
     expect(onToggle).toHaveBeenCalled();
+  });
+});
+
+describe('pill field layout', () => {
+  test('puts the label above a pill input that is still found by its label', async () => {
+    const onChangeText = jest.fn();
+    await render(
+      <FieldLayoutProvider layout="pill">
+        <FieldGroup>
+          <FieldRow label="Email" onChangeText={onChangeText} />
+        </FieldGroup>
+      </FieldLayoutProvider>,
+    );
+    const input = screen.getByLabelText('Email');
+    expect(String(input.props.className)).toContain('rounded-pill');
+    await fireEvent.changeText(input, 'a@b.co');
+    expect(onChangeText).toHaveBeenCalledWith('a@b.co');
+  });
+});
+
+describe('ThemeScope', () => {
+  test('forces the scheme for the colors read inside it', async () => {
+    function Probe() {
+      return <RNText testID="scheme">{useThemeColors().scheme}</RNText>;
+    }
+    await render(<ThemeScope scheme="dark"><Probe /></ThemeScope>);
+    expect(screen.getByTestId('scheme').children).toContain('dark');
+  });
+});
+
+describe('deep button', () => {
+  test('renders its label and reports presses', async () => {
+    const onPress = jest.fn();
+    await render(<Button label="Sign in" variant="deep" onPress={onPress} />);
+    await fireEvent.press(screen.getByLabelText('Sign in'));
+    expect(onPress).toHaveBeenCalled();
   });
 });
