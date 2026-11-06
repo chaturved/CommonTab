@@ -105,12 +105,29 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const firstError = evaluated.errors.amount ?? evaluated.errors.participants ?? evaluated.errors.date ?? evaluated.errors.rate;
   const summary = evaluated.draft && evaluated.amountMinor !== null
     ? `${formatCurrency(evaluated.amountMinor, currency)} paid by ${nameOf(form.payerID)}, split ${sharing === 1 ? 'with 1 person' : `between ${sharing} people`}`
-    : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? 'Check the split to continue.');
+    : form.amountText === '' ? 'Enter an amount to continue.' : (firstError ?? (form.merchant.trim() === '' ? 'Add a description to continue.' : 'Check the split to continue.'));
+
+  const multiGroup = Boolean(groups && groups.length > 1);
+  const groupChip = multiGroup ? (
+    <Dropdown label="Group" width={260} align="end" content={(close) => <OptionList options={(groups ?? []).map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} />}>
+      {(open, isOpen) => (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Group, ${group.name}. Change group`} onPress={open} className="min-h-touch flex-row items-center gap-1.5 rounded-pill bg-background px-3.5 active:opacity-80">
+          <Text variant="body-small" className="font-semibold">{group.name}</Text>
+          <Icon icon={isOpen ? ChevronUp : ChevronDown} size={14} strokeWidth={2.4} tone="muted" />
+        </Pressable>
+      )}
+    </Dropdown>
+  ) : (
+    <Text variant="body-small" tone="muted" accessibilityLabel={`Group, ${group.name}`}>{group.name}</Text>
+  );
 
   const header = desktop ? (
-    <View className="min-h-touch flex-row items-center gap-3">
-      <BackButton onPress={() => router.back()} />
-      <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{title}</Text>
+    <View className="min-h-touch flex-row items-center justify-between gap-3">
+      <View className="flex-row items-center gap-3">
+        <BackButton onPress={() => router.back()} />
+        <Text variant="large-title" accessibilityRole="header" className="text-2xl leading-8">{title}</Text>
+      </View>
+      {groupChip}
     </View>
   ) : (
     <View className="min-h-touch flex-row items-center justify-between">
@@ -187,7 +204,6 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
           <FieldLayoutProvider layout="stacked">
             <View className="gap-3">
               <View className="flex-row gap-3">
-                <View className="min-w-0 flex-1">{groupPicker}</View>
                 <View className="min-w-0 flex-1">{payerPicker}</View>
                 <View className="min-w-0 flex-1">{datePicker}</View>
                 <View className="min-w-0 flex-1">{categoryPicker}</View>
