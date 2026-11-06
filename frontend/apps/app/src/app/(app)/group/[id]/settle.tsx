@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { decimalOnly } from '@/lib/amountInput';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowRight, ChevronRight } from 'lucide-react-native';
+import { ArrowRight, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
 import { checkSettlement, directPayments, directionWith, displayName, formatCurrency, formatMinorUnits, halfOf, simplifyDebts, type Payment } from '@commontab/core';
 import { Avatar, Banner, Button, FieldGroup, Hero, Icon, ListRow, Sheet, Text, useThemeColors } from '@commontab/ui';
 import { useApp } from '@/context/AppContext';
 import { FormPage } from '@/components/layout/FormPage';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { OptionList } from '@/components/ui/SelectField';
 import { SwitchRow } from '@/components/ui/SwitchRow';
 import { useIsDesktop } from '@/hooks/useViewport';
 import { useGroup } from '@/hooks/useGroups';
@@ -41,6 +43,13 @@ export default function Settle() {
     const member = group?.members.find((m) => m.id === memberId);
     return member ? displayName(member, group!.meMemberID) : 'Someone';
   };
+  const withRow = (onPress: () => void, chevron: typeof ChevronRight) => (
+    <Pressable accessibilityRole="button" accessibilityLabel={`With, ${chosenId ? nameOf(chosenId) : 'nobody'}`} onPress={onPress} className="min-h-row flex-row items-center gap-3 border-b border-divider px-4 active:opacity-80">
+      <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">With</Text>
+      <Text variant="body" className="flex-1">{chosenId ? nameOf(chosenId) : 'Pick someone'}</Text>
+      <Icon icon={chevron} size={16} strokeWidth={2.2} tone="muted" />
+    </Pressable>
+  );
   const realName = (memberId: string) => group?.members.find((m) => m.id === memberId)?.name ?? '?';
 
   const payments: Payment[] = !data ? [] : simplify ? simplifyDebts(balances).map((t) => ({ fromID: t.fromID, toID: t.toID, minorUnits: t.minorUnits })) : directPayments({ members: data.group.members.map((m) => m.id), expenses: data.expenses, settlements: data.settlements });
@@ -154,11 +163,11 @@ export default function Settle() {
           ) : null}
           {amount !== '' && !check.ok ? <Text variant="caption" tone="owe" accessibilityRole="alert">{check.message}</Text> : null}
           <FieldGroup>
-            <Pressable accessibilityRole="button" accessibilityLabel={`With, ${chosenId ? nameOf(chosenId) : 'nobody'}`} onPress={() => setPicking(true)} className="min-h-row flex-row items-center gap-3 border-b border-divider px-4 active:opacity-80">
-              <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">With</Text>
-              <Text variant="body" className="flex-1">{chosenId ? nameOf(chosenId) : 'Pick someone'}</Text>
-              <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" />
-            </Pressable>
+            {desktop ? (
+              <Dropdown label="Settle up with" content={(close) => <OptionList options={others.map((m) => ({ id: m.id, label: m.name }))} selectedId={chosenId ?? undefined} onSelect={(id) => { setOtherId(id); setAmountText(null); close(); }} />}>
+                {(open, isOpen) => withRow(open, isOpen ? ChevronUp : ChevronDown)}
+              </Dropdown>
+            ) : withRow(() => setPicking(true), ChevronRight)}
             <View accessible accessibilityLabel={direction ? `From ${nameOf(direction.fromID)}` : 'From'} className="min-h-row flex-row items-center gap-3 border-b border-divider px-4">
               <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">From</Text>
               <Text variant="body" className="flex-1">{direction ? nameOf(direction.fromID) : '—'}</Text>

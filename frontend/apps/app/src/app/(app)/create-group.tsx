@@ -55,7 +55,7 @@ export default function CreateGroup() {
       <FieldGroup>
         <FieldRow label={desktop ? 'Group name' : 'Name'} value={name} onChangeText={setName} placeholder="Austin Trip" maxLength={80} autoCapitalize="words" />
         <CurrencySelect value={currency} onChange={setCurrency}>
-          {(open) => <PickerRow label="Currency" value={currencyLabel(currency)} onPress={open} last />}
+          {(open, isOpen) => <PickerRow label="Currency" value={currencyLabel(currency)} onPress={open} last dropdown={desktop} expanded={isOpen} />}
         </CurrencySelect>
       </FieldGroup>
       {desktop ? (

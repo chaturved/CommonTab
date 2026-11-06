@@ -1,9 +1,10 @@
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { Icon, Text, useFieldLayout, useThemeColors } from '@commontab/ui';
 
-export function PickerRow({ label, value, onPress, last }: { label: string; value: string; onPress?: () => void; last?: boolean }) {
+export function PickerRow({ label, value, onPress, last, dropdown, expanded }: { label: string; value: string; onPress?: () => void; last?: boolean; dropdown?: boolean; expanded?: boolean }) {
   const colors = useThemeColors();
+  const chevron = dropdown ? (expanded ? ChevronUp : ChevronDown) : ChevronRight;
   const stacked = useFieldLayout() === 'stacked';
   if (stacked) {
     return (
@@ -11,7 +12,7 @@ export function PickerRow({ label, value, onPress, last }: { label: string; valu
         <Text variant="caption" tone="muted" className="text-[13px] font-bold" accessible={false}>{label}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={`${label}, ${value}`} onPress={onPress} disabled={!onPress} className="min-h-[44px] flex-row items-center justify-between gap-2 rounded-input border bg-card px-3.5 active:opacity-80" style={{ borderColor: colors['field-border'] }}>
           <Text variant="body" numberOfLines={1} className="min-w-0 flex-1">{value}</Text>
-          {onPress ? <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" /> : null}
+          {onPress ? <Icon icon={chevron} size={16} strokeWidth={2.2} tone="muted" /> : null}
         </Pressable>
       </View>
     );
@@ -20,7 +21,7 @@ export function PickerRow({ label, value, onPress, last }: { label: string; valu
     <>
       <Text variant="body-small" tone="muted" className="w-[84px] shrink-0">{label}</Text>
       <Text variant="body" className="flex-1">{value}</Text>
-      {onPress ? <Icon icon={ChevronRight} size={16} strokeWidth={2.2} tone="muted" /> : null}
+      {onPress ? <Icon icon={chevron} size={16} strokeWidth={2.2} tone="muted" /> : null}
     </>
   );
   const box = `min-h-row flex-row items-center gap-3 px-4 ${last ? '' : 'border-b border-divider'}`;

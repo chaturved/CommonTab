@@ -9,7 +9,7 @@ import { useIsDesktop } from '@/hooks/useViewport';
 
 const WIDTH = 300;
 
-export function CurrencySelect({ value, onChange, children }: { value: string; onChange: (code: string) => void; children: (open: () => void) => ReactNode }) {
+export function CurrencySelect({ value, onChange, children }: { value: string; onChange: (code: string) => void; children: (open: () => void, isOpen: boolean) => ReactNode }) {
   const desktop = useIsDesktop();
   const colors = useThemeColors();
   const { ref: anchorRef, box: anchor, measure } = useWindowAnchor();
@@ -49,7 +49,7 @@ export function CurrencySelect({ value, onChange, children }: { value: string; o
 
   return (
     <>
-      <View ref={anchorRef} collapsable={false}>{children(show)}</View>
+      <View ref={anchorRef} collapsable={false}>{children(show, open)}</View>
       {desktop ? (
         <Popover visible={open} onClose={close} anchor={anchor} label="Currency" width={WIDTH} align="end">
           {list}
