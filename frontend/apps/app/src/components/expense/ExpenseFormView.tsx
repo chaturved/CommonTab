@@ -92,10 +92,10 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   const splitCard = <SplitSummaryCard draft={draft} byItem={byItem} onEdit={editSplit} />;
   const discardSheet = <DiscardSheet visible={discarding} onKeep={() => setDiscarding(false)} onDiscard={() => { setDiscarding(false); router.back(); }} />;
   const sheets = <ExpenseSheets sheet={sheet} onClose={() => setSheet(null)} form={form} patch={patch} evaluated={evaluated} people={people} group={group} groups={groups} onPickGroup={onPickGroup} />;
-  const picker = (label: string, value: string, onSheet: (() => void) | undefined, content?: (close: () => void) => ReactNode) => {
+  const picker = (label: string, value: string, onSheet: (() => void) | undefined, content?: (close: () => void) => ReactNode, maxHeight?: number) => {
     if (!desktop || !content) return <PickerRow label={label} value={value} onPress={onSheet} />;
     return (
-      <Dropdown label={label} width={320} align="end" content={content}>
+      <Dropdown label={label} width={320} align="end" maxHeight={maxHeight} content={content}>
         {(open, isOpen) => <PickerRow label={label} value={value} onPress={open} dropdown expanded={isOpen} />}
       </Dropdown>
     );
@@ -180,9 +180,9 @@ export function ExpenseFormView({ mode, data, expense, groups, onPickGroup, init
   );
 
   const groupPicker = picker('Group', group.name, groups && groups.length > 1 ? () => setSheet('group') : undefined, groups && groups.length > 1 ? (close) => <OptionList options={groups.map((g) => ({ id: g.group.id, label: g.group.name }))} selectedId={group.id} onSelect={(id) => { close(); onPickGroup?.(id); }} /> : undefined);
-  const payerPicker = picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />);
-  const datePicker = picker('Date', dateLabel, () => setSheet('date'), (close) => <View className="gap-3 p-3.5"><DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={close} /></View>);
-  const categoryPicker = picker('Category', CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other', () => setSheet('category'), (close) => <OptionList options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => choose(close, { category })} />);
+  const payerPicker = picker('Paid by', nameOf(form.payerID), () => setSheet('payer'), (close) => <OptionList searchable options={people.map((m) => ({ id: m.id, label: displayName(m, group.meMemberID) }))} selectedId={form.payerID} onSelect={(payerID) => choose(close, { payerID })} />);
+  const datePicker = picker('Date', dateLabel, () => setSheet('date'), (close) => <ScrollView className="shrink" contentContainerClassName="gap-3 p-3.5"><DateChooser date={form.date} onChange={(date) => patch({ date })} onDone={close} /></ScrollView>, 500);
+  const categoryPicker = picker('Category', CATEGORIES.find((c) => c.id === form.category)?.label ?? 'Other', () => setSheet('category'), (close) => <OptionList searchable options={CATEGORIES.map((c) => ({ id: c.id, label: c.label }))} selectedId={form.category} onSelect={(category) => choose(close, { category })} />);
   const [showNotes, setShowNotes] = useState(false);
   const notes = <FieldRow label="Notes" value={form.notes} onChangeText={(notes) => patch({ notes })} placeholder="Optional" maxLength={500} last />;
 

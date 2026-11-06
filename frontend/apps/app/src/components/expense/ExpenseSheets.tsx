@@ -34,7 +34,7 @@ export function ExpenseSheets({ sheet, onClose, form, patch, evaluated, people, 
         </View>
       </Sheet>
       <Sheet visible={sheet === 'date'} onClose={onClose} title="Date">
-        <DateChooser date={form.date} error={evaluated.errors.date} onChange={(date) => patch({ date })} onDone={onClose} />
+        <DateChooser date={form.date} onChange={(date) => patch({ date })} onDone={onClose} />
       </Sheet>
       <Sheet visible={sheet === 'category'} onClose={onClose} title="Category">
         <View className="overflow-hidden rounded-2xl bg-background">
