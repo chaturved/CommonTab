@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, PressableProps } from 'react-native';
 import { cx } from '../theme';
 import { Text, TextTone } from './Text';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'hero' | 'hero-outline' | 'mint' | 'deep';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'hero' | 'hero-outline' | 'mint' | 'deep' | 'outline' | 'invert';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'accessibilityLabel'> {
   label: string;
@@ -23,6 +23,8 @@ const BOX: Record<ButtonVariant, string> = {
   'hero-outline': 'border-[1.5px] border-white/50',
   mint: 'bg-mint',
   deep: 'border border-site-line bg-hero-to',
+  outline: 'border border-fg',
+  invert: 'border border-white',
 };
 
 const TONE: Record<ButtonVariant, TextTone> = {
@@ -33,9 +35,11 @@ const TONE: Record<ButtonVariant, TextTone> = {
   'hero-outline': 'white',
   mint: 'site-bg',
   deep: 'white',
+  outline: 'fg',
+  invert: 'white',
 };
 
-const SPINNER: Record<ButtonVariant, string> = { primary: '#FFFFFF', secondary: '#0B6B58', ghost: '#0B6B58', hero: '#06222B', 'hero-outline': '#FFFFFF', mint: '#061A20', deep: '#FFFFFF' };
+const SPINNER: Record<ButtonVariant, string> = { primary: '#FFFFFF', secondary: '#0B6B58', ghost: '#0B6B58', hero: '#06222B', 'hero-outline': '#FFFFFF', mint: '#061A20', deep: '#FFFFFF', outline: '#0E1A1C', invert: '#FFFFFF' };
 
 export function Button({ label, variant = 'primary', size = 'large', icon, loading, disabled, accessibilityLabel, className, ...props }: ButtonProps) {
   const inactive = Boolean(disabled || loading);
