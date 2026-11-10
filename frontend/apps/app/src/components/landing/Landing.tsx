@@ -59,7 +59,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
               <View className="flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <View style={{ maxWidth: 720 }}>
                   <Text accessibilityRole="header" className="leading-none" style={BAND_HEADING as never}>Make a group. Add a bill. Settle up.</Text>
-                  <Text style={{ fontSize: 20, lineHeight: 28, letterSpacing: -0.4, color: '#FFFFFF', marginTop: 16 }}>A trip, an apartment, a dinner crew. Invite people with a code.</Text>
+                  <Text style={{ fontSize: 20, lineHeight: 28, letterSpacing: -0.4, color: '#FFFFFF', marginTop: 16 }}>A trip, an apartment, a dinner crew. It takes about a minute to start.</Text>
                 </View>
                 <Button label="Start a group" variant="invert" size="small" className="self-start" onPress={() => go(start())} />
               </View>
@@ -69,7 +69,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
 
           <View {...mark('download')} className={`${BAND} pb-24`}>
             <View className="w-full max-w-[1480px]">
-              <Text accessibilityRole="header" className="leading-none" style={{ ...BAND_HEADING, maxWidth: 760 } as never}>Built so the numbers always match.</Text>
+              <Text accessibilityRole="header" className="leading-none" style={{ ...BAND_HEADING, maxWidth: 760 } as never}>Take it with you.</Text>
               <StatCards cta={signedIn ? 'Open the app' : 'Sign up now'} onCta={() => go(start())} />
             </View>
           </View>

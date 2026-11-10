@@ -73,4 +73,4 @@ export function SettleScreen() {
   );
 }
 
-export const FEATURE_SCREENS = [SplitScreen, OfflineScreen, CurrencyScreen, SettleScreen];
+export const FEATURE_SCREENS = [SettleScreen, SplitScreen, OfflineScreen, CurrencyScreen];
