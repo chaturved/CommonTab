@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
+import { Button } from '@commontab/ui';
 import { ScrollView, Text, View } from 'react-native';
 import { HeroPhone } from '@/components/landing/HeroPhone';
 import { PinnedFeatures } from '@/components/landing/PinnedFeatures';
-import { Pill } from '@/components/landing/Pill';
 import { StatCards } from '@/components/landing/StatCards';
 import { TallCards } from '@/components/landing/TallCards';
 import { TopBar } from '@/components/landing/TopBar';
@@ -29,7 +29,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
   const heroCopy = (
     <View style={{ maxWidth: 340, gap: 24 }}>
       <Text style={{ fontSize: 20, lineHeight: 26, letterSpacing: -0.4, color: '#FFFFFF' }}>CommonTab splits every bill to the cent, keeps the balances, and works when your signal doesn't.</Text>
-      <Pill label={startLabel} look="fill" onPress={() => go(start())} />
+      <Button label={startLabel} variant="mint" size="small" className="self-start" onPress={() => go(start())} />
     </View>
   );
 
@@ -60,7 +60,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
                 <Text accessibilityRole="header" className="leading-none" style={BAND_HEADING as never}>Make a group. Add a bill. Settle up.</Text>
                 <Text style={{ fontSize: 20, lineHeight: 28, letterSpacing: -0.4, color: '#FFFFFF', marginTop: 16 }}>A trip, an apartment, a dinner crew. Invite people with a code.</Text>
               </View>
-              <Pill label="Start a group" look="invert" onPress={() => go(start())} />
+              <Button label="Start a group" variant="invert" size="small" className="self-start" onPress={() => go(start())} />
             </View>
             <TallCards />
           </View>

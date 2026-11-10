@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
-import { DESKTOP_MIN_WIDTH, PRERENDER_WIDTH } from '@/constants/layout';
+import { DESKTOP_MIN_WIDTH } from '@/constants/layout';
 
 
 let hydrated = Platform.OS !== 'web';
@@ -21,10 +21,4 @@ export function useIsDesktop(): boolean {
   const { width } = useWindowDimensions();
   const ready = useSyncExternalStore(subscribe, () => hydrated, () => false);
   return ready && width >= DESKTOP_MIN_WIDTH;
-}
-
-export function useViewportWidth(): number {
-  const { width } = useWindowDimensions();
-  const ready = useSyncExternalStore(subscribe, () => hydrated, () => false);
-  return ready ? width : PRERENDER_WIDTH;
 }
